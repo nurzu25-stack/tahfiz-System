@@ -1,0 +1,65 @@
+import { useAppStore, getStudentAttendanceRate } from '../../store/AppContext';
+
+export function ViewAttendance() {
+  const { state } = useAppStore();
+  const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
+  const parentUser = state.users.find(u => u.name === authUser.name && u.role === 'parent') ?? state.users.find(u => u.role === 'parent')!;
+  const child = state.students.find(s => s.id === parentUser?.linkedId) ?? state.students[0];
+  const records = [...state.attendance.filter(a => a.studentId === child?.id)].sort((a, b) => b.date.localeCompare(a.date));
+  const rate = getStudentAttendanceRate(state, child?.id ?? '');
+
+  const statusBadge = (s: string) => {
+    const map: Record<string, string> = { Hadir: 'bg-green-100 text-green-700', 'Tidak Hadir': 'bg-red-100 text-red-700', Lewat: 'bg-orange-100 text-orange-700' };
+    return <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${map[s] ?? ''}`}>{s}</span>;
+  };
+
+  const presentCount = records.filter(r => r.status === 'Hadir').length;
+  const absentCount = records.filter(r => r.status === 'Tidak Hadir').length;
+  const lateCount = records.filter(r => r.status === 'Lewat').length;
+
+  return (
+    <div className="space-y-6">
+      <div><h2 className="text-2xl font-semibold text-gray-900">Sejarah Kehadiran</h2><p className="text-gray-600 mt-1">Rekod kehadiran untuk {child?.name}</p></div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Kadar Kehadiran', value: `${rate}%`, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Hadir', value: presentCount, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Tidak Hadir', value: absentCount, color: 'text-red-600', bg: 'bg-red-50' },
+          { label: 'Lewat', value: lateCount, color: 'text-orange-600', bg: 'bg-orange-50' },
+        ].map(s => (
+          <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center`}>
+            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+            <p className="text-sm text-gray-600">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Rate bar */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex justify-between text-sm mb-2"><span className="text-gray-600">Kadar Kehadiran</span><span className="font-bold text-green-700">{rate}%</span></div>
+        <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full" style={{ width: `${rate}%` }} />
+        </div>
+      </div>
+
+      {/* History */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="p-4 bg-gray-50 border-b"><h3 className="font-semibold text-gray-900">Butiran Kehadiran</h3></div>
+        {records.length === 0 && <p className="px-6 py-10 text-center text-gray-400 text-sm">Tiada rekod lagi.</p>}
+        <div className="divide-y divide-gray-100">
+          {records.map(rec => (
+            <div key={rec.id} className="flex items-center justify-between px-6 py-4">
+              <div>
+                <p className="font-medium text-gray-900 text-sm">{rec.date}</p>
+                {rec.remarks && <p className="text-xs text-gray-500 mt-0.5">📝 {rec.remarks}</p>}
+              </div>
+              {statusBadge(rec.status)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

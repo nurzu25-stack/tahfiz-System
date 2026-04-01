@@ -1,0 +1,186 @@
+import { useState } from 'react';
+import { BookOpen, Users, Calendar, FileText, Brain, LogOut, LayoutDashboard, Upload, X } from 'lucide-react';
+import { RecordHafazan } from './RecordHafazan';
+import { ManageAttendance } from './ManageAttendance';
+import { UploadReport } from './UploadReport';
+import { StudentList } from './StudentList';
+import { TeacherAIPrediction } from './TeacherAIPrediction';
+import { useAppStore } from '../../store/AppContext';
+
+interface TeacherDashboardProps {
+  userName: string;
+  onLogout: () => void;
+}
+
+type TeacherView = 'home' | 'hafazan' | 'attendance' | 'report' | 'students' | 'ai';
+
+const navItems: { id: TeacherView; label: string; icon: React.ReactNode }[] = [
+  { id: 'home',       label: 'Papan Pemuka',         icon: <LayoutDashboard size={20} /> },
+  { id: 'hafazan',    label: 'Rekod Hafazan',        icon: <BookOpen size={20} /> },
+  { id: 'attendance', label: 'Urus Kehadiran',       icon: <Calendar size={20} /> },
+  { id: 'report',     label: 'Muat Naik Laporan',     icon: <Upload size={20} /> },
+  { id: 'students',   label: 'Lihat Pelajar',        icon: <Users size={20} /> },
+  { id: 'ai',         label: 'Ramalan AI',            icon: <Brain size={20} /> },
+];
+
+export function TeacherDashboard({ userName, onLogout }: TeacherDashboardProps) {
+  const [currentView, setCurrentView] = useState<TeacherView>('home');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { state } = useAppStore();
+
+  const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
+  const teacher = state.teachers.find(t => t.name.includes(authUser.name?.split(' ').slice(-1)[0] ?? '')) ?? state.teachers[0];
+  const teacherClasses = state.classes.filter(c => teacher?.classIds.includes(c.id));
+  const myStudentCount = state.students.filter(s => s.teacherId === teacher?.id).length;
+  const todayName = new Date().toLocaleDateString('ms-MY', { weekday: 'long' });
+
+  const todaySchedule = teacherClasses.flatMap(cls =>
+    (cls.schedule ?? []).filter(s => s.day === todayName).map(s => ({
+      class: cls.name,
+      time: s.time,
+      students: cls.studentIds.length,
+      topic: s.topic,
+    }))
+  );
+
+  const pendingRecords = new Set(
+    state.students.filter(s => s.teacherId === teacher?.id).map(s => s.id)
+  ).size - new Set(state.hafazanRecords.filter(h => h.date === new Date().toISOString().split('T')[0]).map(h => h.studentId)).size;
+
+  const stats = [
+    { label: 'Pelajar Saya',     value: String(myStudentCount),                icon: <Users size={28} />,    color: '#3b82f6', bg: '#eff6ff' },
+    { label: 'Kelas Hari Ini',   value: String(todaySchedule.length || teacherClasses.length), icon: <Calendar size={28} />, color: '#10b981', bg: '#f0fdf4' },
+    { label: 'Rekod Tertunggak', value: String(Math.max(0, pendingRecords)),   icon: <FileText size={28} />, color: '#f59e0b', bg: '#fffbeb' },
+  ];
+
+  const renderContent = () => {
+    switch (currentView) {
+      case 'hafazan':    return <RecordHafazan />;
+      case 'attendance': return <ManageAttendance />;
+      case 'report':     return <UploadReport />;
+      case 'students':   return <StudentList />;
+      case 'ai':         return <TeacherAIPrediction />;
+      default:
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#111', margin: 0 }}>
+                Selamat Kembali, {userName} !
+              </h2>
+              <p style={{ color: '#6b7280', marginTop: '0.25rem', fontSize: '0.9rem' }}>
+                Hari ini ialah {todayName} — berikut adalah ringkasan anda.
+              </p>
+            </div>
+
+            {/* Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+              {stats.map((s) => (
+                <div key={s.label} style={{ background: s.bg, borderRadius: '16px', padding: '1.25rem', border: '1px solid rgba(0,0,0,0.05)' }}>
+                  <span style={{ color: s.color }}>{s.icon}</span>
+                  <p style={{ fontSize: '1.6rem', fontWeight: 800, color: '#111', margin: '0.4rem 0 0' }}>{s.value}</p>
+                  <p style={{ fontSize: '0.82rem', color: '#6b7280', margin: 0 }}>{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Today's Schedule */}
+            <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e5e7eb' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111', margin: '0 0 1rem' }}>Jadual Hari Ini</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                {todaySchedule.map((s, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.9rem 1rem', background: '#f9fafb', borderRadius: '12px' }}>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: '#111' }}>{s.class}</p>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#6b7280' }}>{s.topic}</p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: 600, color: '#374151' }}>{s.time}</p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>{s.students} students</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <button onClick={() => setCurrentView('hafazan')}
+                style={{ padding: '1.25rem', background: 'linear-gradient(135deg,#16a34a,#14532d)', color: '#fff', border: 'none', borderRadius: '16px', cursor: 'pointer', textAlign: 'left' }}>
+                <BookOpen size={28} style={{ marginBottom: '0.5rem' }} />
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '1rem' }}>Rekod Hafazan</p>
+                <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', opacity: 0.8 }}>Rekod Sabaq, Sabaqi, Manzil</p>
+              </button>
+              <button onClick={() => setCurrentView('attendance')}
+                style={{ padding: '1.25rem', background: 'linear-gradient(135deg,#2563eb,#1e3a8a)', color: '#fff', border: 'none', borderRadius: '16px', cursor: 'pointer', textAlign: 'left' }}>
+                <Calendar size={28} style={{ marginBottom: '0.5rem' }} />
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '1rem' }}>Urus Kehadiran</p>
+                <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', opacity: 0.8 }}>Tandakan kehadiran hari ini</p>
+              </button>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', background: '#f3f4f6', overflow: 'hidden' }}>
+      {/* ─── SIDEBAR ─── */}
+      {sidebarOpen && (
+        <aside style={{
+          width: '185px', flexShrink: 0,
+          background: 'linear-gradient(180deg, #2d3748 0%, #1a3a2a 60%, #14532d 100%)',
+          display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto',
+        }}>
+          <div style={{ padding: '1.25rem 1rem 1rem' }}>
+            <p style={{ color: '#fff', fontWeight: 700, fontSize: '1rem', margin: 0 }}>Panel Ustaz/Ustazah</p>
+            <p style={{ color: '#a0aec0', fontSize: '0.78rem', margin: '0.2rem 0 0' }}>{userName}</p>
+          </div>
+          <nav style={{ flex: 1, padding: '0.5rem 0.6rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+            {navItems.map((item) => {
+              const isActive = currentView === item.id;
+              return (
+                <button key={item.id} onClick={() => setCurrentView(item.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.6rem',
+                    padding: '0.6rem 0.8rem', borderRadius: '999px', border: 'none', cursor: 'pointer',
+                    background: isActive ? '#4ade80' : 'transparent',
+                    color: isActive ? '#14532d' : '#e2e8f0',
+                    fontWeight: isActive ? 700 : 500, fontSize: '0.82rem', width: '100%', textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)'; }}
+                  onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                >
+                  <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>{item.icon}</span>
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
+          <div style={{ padding: '0.75rem 0.6rem 1.25rem' }}>
+            <button onClick={onLogout}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.6rem',
+                padding: '0.6rem 0.8rem', borderRadius: '999px', border: 'none', cursor: 'pointer',
+                background: 'transparent', color: '#f87171', fontWeight: 600, fontSize: '0.82rem', width: '100%',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(248,113,113,0.12)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+            >
+              <LogOut size={20} /> Log Keluar
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* ─── MAIN ─── */}
+      <main style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem' }}>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#374151', padding: '0.2rem', marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
+          <X size={22} />
+        </button>
+        {renderContent()}
+      </main>
+    </div>
+  );
+}

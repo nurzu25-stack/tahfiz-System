@@ -1,0 +1,394 @@
+import { useRef, useState } from 'react';
+import { FileText, Download, BarChart, Loader2 } from 'lucide-react';
+import {
+  BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, LineChart, Line,
+} from 'recharts';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { useAppStore, getStudentAttendanceRate } from '../../store/AppContext';
+
+/* ─── helper: render a hidden "print-ready" div, capture it as PDF ─────────── */
+async function captureElementAsPDF(
+  element: HTMLElement,
+  filename: string,
+): Promise<void> {
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff',
+  });
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pdfW = pdf.internal.pageSize.getWidth();
+  const pdfH = pdf.internal.pageSize.getHeight();
+  const imgW = pdfW;
+  const imgH = (canvas.height / canvas.width) * imgW;
+  let heightLeft = imgH;
+  let position = 0;
+  pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH);
+  heightLeft -= pdfH;
+  while (heightLeft > 0) {
+    position -= pdfH;
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH);
+    heightLeft -= pdfH;
+  }
+  pdf.save(filename);
+}
+
+/* ─── Printable Hafazan Report ─────────────────────────────────────────────── */
+function HafazanPrintView({ state, hafazanData }: { state: any; hafazanData: any[] }) {
+  const now = new Date().toLocaleDateString('en-MY', { day: 'numeric', month: 'long', year: 'numeric' });
+  return (
+    <div style={{ fontFamily: 'Arial, sans-serif', padding: '24px', background: '#fff', color: '#111', width: '780px' }}>
+      {/* Header */}
+      <div style={{ borderBottom: '3px solid #16a34a', paddingBottom: '12px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '22px', color: '#16a34a', fontWeight: 900 }}>AKMAL — Hafazan Report</h1>
+          <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#555' }}>Akademi Al-Quran Amalillah</p>
+        </div>
+        <div style={{ textAlign: 'right', fontSize: '11px', color: '#555' }}>
+          <div>Generated: {now}</div>
+          <div>Total Records: {state.hafazanRecords.length}</div>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+        {[
+          { label: 'Jumlah Sesi', value: state.hafazanRecords.length, color: '#16a34a' },
+          { label: 'Pelajar Aktif', value: state.students.filter((s: any) => s.status === 'Aktif').length, color: '#2563eb' },
+          { label: 'Jumlah Kelas', value: state.classes.length, color: '#7c3aed' },
+        ].map(item => (
+          <div key={item.label} style={{ flex: 1, border: `2px solid ${item.color}`, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+            <div style={{ fontSize: '26px', fontWeight: 900, color: item.color }}>{item.value}</div>
+            <div style={{ fontSize: '11px', color: '#555', marginTop: '2px' }}>{item.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Monthly Trend Table */}
+      <div style={{ marginBottom: '20px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a', marginBottom: '8px', borderLeft: '4px solid #16a34a', paddingLeft: '8px' }}>Sesi Hafazan Bulanan</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+          <thead>
+            <tr style={{ background: '#f0fdf4' }}>
+              <th style={{ border: '1px solid #d1fae5', padding: '8px', textAlign: 'left' }}>Bulan</th>
+              <th style={{ border: '1px solid #d1fae5', padding: '8px', textAlign: 'right' }}>Sesi Direkod</th>
+              <th style={{ border: '1px solid #d1fae5', padding: '8px', textAlign: 'right' }}>Bar Kemajuan</th>
+            </tr>
+          </thead>
+          <tbody>
+            {hafazanData.map((row, i) => {
+              const max = Math.max(...hafazanData.map(d => d.sessions), 1);
+              return (
+                <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                  <td style={{ border: '1px solid #e5e7eb', padding: '8px', fontWeight: 600 }}>{row.name}</td>
+                  <td style={{ border: '1px solid #e5e7eb', padding: '8px', textAlign: 'right' }}>{row.sessions}</td>
+                  <td style={{ border: '1px solid #e5e7eb', padding: '8px' }}>
+                    <div style={{ background: '#e5e7eb', borderRadius: '4px', height: '8px', width: '100%' }}>
+                      <div style={{ background: '#16a34a', borderRadius: '4px', height: '8px', width: `${Math.round((row.sessions / max) * 100)}%` }} />
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Hafazan Records Detail */}
+      <div>
+        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a', marginBottom: '8px', borderLeft: '4px solid #16a34a', paddingLeft: '8px' }}>Butiran Rekod Hafazan</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+          <thead>
+            <tr style={{ background: '#f0fdf4' }}>
+              {['Tarikh', 'Pelajar', 'Surah (Sabaq)', 'Ayat', 'Gred', 'Catatan'].map(h => (
+                <th key={h} style={{ border: '1px solid #d1fae5', padding: '6px 8px', textAlign: 'left', fontWeight: 700 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[...state.hafazanRecords]
+              .sort((a: any, b: any) => b.date.localeCompare(a.date))
+              .slice(0, 20)
+              .map((r: any, i: number) => {
+                const student = state.students.find((s: any) => s.id === r.studentId);
+                return (
+                  <tr key={r.id} style={{ background: i % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px' }}>{r.date}</td>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px', fontWeight: 600 }}>{student?.name ?? '—'}</td>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px' }}>{r.sabaq?.surah ?? '—'} ({r.sabaq?.from}–{r.sabaq?.to})</td>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px', textAlign: 'center' }}>{r.ayahCount ?? '—'}</td>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px' }}>
+                      <span style={{ padding: '2px 6px', borderRadius: '9999px', background: r.sabaq?.grade === 'Mumtaz' ? '#dcfce7' : r.sabaq?.grade === 'Jayyid' ? '#dbeafe' : '#fef9c3', color: r.sabaq?.grade === 'Mumtaz' ? '#15803d' : r.sabaq?.grade === 'Jayyid' ? '#1d4ed8' : '#854d0e', fontSize: '10px', fontWeight: 700 }}>
+                        {r.sabaq?.grade ?? '—'}
+                      </span>
+                    </td>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px', color: '#555' }}>{r.remarks || '—'}</td>
+                  </tr>
+                );
+              })}
+          </tbody>
+        </table>
+        {state.hafazanRecords.length > 20 && (
+          <p style={{ fontSize: '11px', color: '#888', marginTop: '6px' }}>Menunjukkan 20 terkini daripada {state.hafazanRecords.length} rekod.</p>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{ borderTop: '1px solid #e5e7eb', marginTop: '20px', paddingTop: '10px', fontSize: '10px', color: '#aaa', textAlign: 'center' }}>
+        AKMAL Sistem Pengurusan Tahfiz — Laporan Sulit — {now}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Printable Payment Report ─────────────────────────────────────────────── */
+function PaymentPrintView({ state }: { state: any }) {
+  const now = new Date().toLocaleDateString('en-MY', { day: 'numeric', month: 'long', year: 'numeric' });
+  const total = state.payments.reduce((s: number, p: any) => s + p.amount, 0);
+  const paid = state.payments.filter((p: any) => p.status === 'Paid').reduce((s: number, p: any) => s + p.amount, 0);
+  const pending = total - paid;
+  return (
+    <div style={{ fontFamily: 'Arial, sans-serif', padding: '24px', background: '#fff', color: '#111', width: '780px' }}>
+      {/* Header */}
+      <div style={{ borderBottom: '3px solid #2563eb', paddingBottom: '12px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '22px', color: '#2563eb', fontWeight: 900 }}>AKMAL — Laporan Pembayaran</h1>
+          <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#555' }}>Akademi Al-Quran Amalillah</p>
+        </div>
+        <div style={{ textAlign: 'right', fontSize: '11px', color: '#555' }}>
+          <div>Dijana: {now}</div>
+          <div>Jumlah Invois: {state.payments.length}</div>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+        {[
+          { label: 'Jumlah Bil', value: `RM ${total.toLocaleString()}`, color: '#1a1a1a' },
+          { label: 'Terkumpul', value: `RM ${paid.toLocaleString()}`, color: '#16a34a' },
+          { label: 'Belum Bayar', value: `RM ${pending.toLocaleString()}`, color: '#dc2626' },
+          { label: 'Kadar Kutipan', value: total > 0 ? `${Math.round((paid / total) * 100)}%` : '0%', color: '#2563eb' },
+        ].map(item => (
+          <div key={item.label} style={{ flex: 1, border: '2px solid #e5e7eb', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+            <div style={{ fontSize: '20px', fontWeight: 900, color: item.color }}>{item.value}</div>
+            <div style={{ fontSize: '11px', color: '#555', marginTop: '2px' }}>{item.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Payments Detail */}
+      <div>
+        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a', marginBottom: '8px', borderLeft: '4px solid #2563eb', paddingLeft: '8px' }}>Lejar Pembayaran</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+          <thead>
+            <tr style={{ background: '#eff6ff' }}>
+              {['Pelajar', 'Bulan / Tahun', 'Jumlah', 'Status', 'Tarikh Akhir', 'Tarikh Bayar'].map(h => (
+                <th key={h} style={{ border: '1px solid #bfdbfe', padding: '7px 8px', textAlign: 'left', fontWeight: 700 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[...state.payments]
+              .sort((a: any, b: any) => `${b.year}-${String(b.month).padStart(2,'0')}`.localeCompare(`${a.year}-${String(a.month).padStart(2,'0')}`))
+              .map((p: any, i: number) => {
+                const student = state.students.find((s: any) => s.id === p.studentId);
+                const monthName = new Date(p.year, p.month - 1).toLocaleString('ms-MY', { month: 'long', year: 'numeric' });
+                return (
+                  <tr key={p.id} style={{ background: i % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px', fontWeight: 600 }}>{student?.name ?? '—'}</td>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px' }}>{monthName}</td>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px', fontWeight: 700 }}>RM {p.amount}</td>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px' }}>
+                      <span style={{ padding: '2px 8px', borderRadius: '9999px', background: p.status === 'Dibayar' ? '#dcfce7' : '#fee2e2', color: p.status === 'Dibayar' ? '#15803d' : '#dc2626', fontSize: '10px', fontWeight: 700 }}>
+                        {p.status}
+                      </span>
+                    </td>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px', color: '#555' }}>{p.dueDate ?? '—'}</td>
+                    <td style={{ border: '1px solid #e5e7eb', padding: '5px 8px', color: '#555' }}>{p.paidDate ?? '—'}</td>
+                  </tr>
+                );
+              })}
+          </tbody>
+          <tfoot>
+            <tr style={{ background: '#eff6ff', fontWeight: 700 }}>
+              <td colSpan={2} style={{ border: '1px solid #bfdbfe', padding: '7px 8px' }}>JUMLAH</td>
+              <td style={{ border: '1px solid #bfdbfe', padding: '7px 8px' }}>RM {total.toLocaleString()}</td>
+              <td colSpan={3} style={{ border: '1px solid #bfdbfe', padding: '7px 8px', color: '#16a34a' }}>RM {paid.toLocaleString()} dikutip</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* Footer */}
+      <div style={{ borderTop: '1px solid #e5e7eb', marginTop: '20px', paddingTop: '10px', fontSize: '10px', color: '#aaa', textAlign: 'center' }}>
+        AKMAL Sistem Pengurusan Tahfiz — Laporan Sulit — {now}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main ViewReports component ────────────────────────────────────────────── */
+export function ViewReports() {
+  const { state } = useAppStore();
+  const hafazanPrintRef = useRef<HTMLDivElement>(null);
+  const paymentPrintRef = useRef<HTMLDivElement>(null);
+  const [generatingHafazan, setGeneratingHafazan] = useState(false);
+  const [generatingPayment, setGeneratingPayment] = useState(false);
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now = new Date();
+
+  const hafazanData = Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 4 + i, 1);
+    const m = d.getMonth(); const y = d.getFullYear();
+    const sessions = state.hafazanRecords
+      .filter((r: any) => { const rd = new Date(r.date); return rd.getMonth() === m && rd.getFullYear() === y; })
+      .length;
+    return { name: monthNames[m], sessions };
+  });
+
+  const attendanceData = state.classes.map((cls: any) => {
+    if (!cls.studentIds.length) return { class: cls.name, rate: 0 };
+    const rate = Math.round(
+      cls.studentIds.reduce((sum: number, sid: string) => sum + getStudentAttendanceRate(state, sid), 0) / cls.studentIds.length
+    );
+    return { class: cls.name, rate };
+  });
+
+  const downloadHafazanPDF = async () => {
+    if (!hafazanPrintRef.current) return;
+    setGeneratingHafazan(true);
+    try {
+      await captureElementAsPDF(hafazanPrintRef.current, `AKMAL_Hafazan_Report_${now.toISOString().slice(0,10)}.pdf`);
+    } finally {
+      setGeneratingHafazan(false);
+    }
+  };
+
+  const downloadPaymentPDF = async () => {
+    if (!paymentPrintRef.current) return;
+    setGeneratingPayment(true);
+    try {
+      await captureElementAsPDF(paymentPrintRef.current, `AKMAL_Payment_Report_${now.toISOString().slice(0,10)}.pdf`);
+    } finally {
+      setGeneratingPayment(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900">Lihat Laporan</h2>
+          <p className="text-gray-600 mt-1">Analitik daripada data sistem langsung — eksport sebagai PDF</p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={downloadHafazanPDF}
+            disabled={generatingHafazan}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {generatingHafazan
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Menjana…</>
+              : <><Download className="w-4 h-4" /> PDF Hafazan</>}
+          </button>
+          <button
+            onClick={downloadPaymentPDF}
+            disabled={generatingPayment}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {generatingPayment
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Menjana…</>
+              : <><Download className="w-4 h-4" /> PDF Pembayaran</>}
+          </button>
+        </div>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-3 gap-6">
+        {[
+          { label: 'Jumlah Rekod Hafazan',    value: state.hafazanRecords.length, color: 'text-green-600', bg: 'bg-green-50', icon: <FileText className="w-6 h-6 text-green-600" /> },
+          { label: 'Jumlah Rekod Kehadiran',  value: state.attendance.length,    color: 'text-blue-600',  bg: 'bg-blue-50',  icon: <BarChart className="w-6 h-6 text-blue-600" /> },
+          { label: 'Jumlah Laporan Kelas',    value: state.reports.length,       color: 'text-purple-600', bg: 'bg-purple-50', icon: <FileText className="w-6 h-6 text-purple-600" /> },
+        ].map(c => (
+          <div key={c.label} className="bg-white rounded-xl p-6 border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className={`p-3 ${c.bg} rounded-lg`}>{c.icon}</div>
+              <div>
+                <p className="text-sm text-gray-600">{c.label}</p>
+                <p className={`text-2xl font-semibold ${c.color}`}>{c.value}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Hafazan sessions trend */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Sesi Rekod Hafazan (Bulanan)</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={hafazanData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="name" stroke="#6b7280" />
+            <YAxis stroke="#6b7280" />
+            <Tooltip />
+            <Line type="monotone" dataKey="sessions" stroke="#10b981" strokeWidth={2} dot={{ fill: '#10b981' }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Attendance by class */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Kadar Kehadiran Mengikut Kelas (%)</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <RechartsBarChart data={attendanceData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="class" stroke="#6b7280" />
+            <YAxis domain={[0, 100]} stroke="#6b7280" />
+            <Tooltip formatter={(v) => `${Number(v)}%`} />
+            <Bar dataKey="rate" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+          </RechartsBarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Recent class reports */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Laporan Kelas Terkini</h3>
+        <div className="space-y-3">
+          {[...state.reports].sort((a: any, b: any) => b.date.localeCompare(a.date)).slice(0, 5).map((r: any) => (
+            <div key={r.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+              <FileText className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between">
+                  <p className="font-medium text-sm text-gray-900">
+                    {state.classes.find((c: any) => c.id === r.classId)?.name} · {state.teachers.find((t: any) => t.id === r.teacherId)?.name}
+                  </p>
+                  <span className="text-xs text-gray-500">{r.date}</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{r.content}</p>
+                {r.fileName && <p className="text-xs text-blue-500 mt-1">📎 {r.fileName}</p>}
+              </div>
+            </div>
+          ))}
+          {state.reports.length === 0 && <p className="text-gray-400 text-sm">Tiada laporan diserahkan lagi.</p>}
+        </div>
+      </div>
+
+      {/* ── Off-screen print containers (invisible, used only for PDF capture) ── */}
+      <div style={{ position: 'fixed', top: '-9999px', left: '-9999px', zIndex: -1 }}>
+        <div ref={hafazanPrintRef}>
+          <HafazanPrintView state={state} hafazanData={hafazanData} />
+        </div>
+        <div ref={paymentPrintRef}>
+          <PaymentPrintView state={state} />
+        </div>
+      </div>
+    </div>
+  );
+}
