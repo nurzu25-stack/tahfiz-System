@@ -11,9 +11,19 @@ class TeacherController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Teacher::all());
+        $search = $request->query('search');
+
+        $teachers = Teacher::query()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(8);
+
+        return response()->json($teachers);
     }
 
     /**

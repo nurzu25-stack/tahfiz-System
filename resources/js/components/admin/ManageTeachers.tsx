@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppStore } from '../../store/AppContext';
 import axios from 'axios';
 
@@ -7,19 +7,48 @@ export function ManageTeachers() {
   const { state, dispatch } = useAppStore();
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({ name: '', email: '', phone: '', specialization: '' });
+  
+  // Search and Pagination state
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [paginationInfo, setPaginationInfo] = useState({ total: 0, last_page: 1, from: 0, to: 0 });
+
   const inputCls = 'w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500';
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1); // Reset to first page on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        const response = await axios.get('/api/teachers');
-        dispatch({ type: 'SET_TEACHERS', payload: response.data });
+        const response = await axios.get('/api/teachers', {
+          params: {
+            page: page,
+            search: debouncedSearch
+          }
+        });
+        // Laravel paginator returns data in .data.data
+        const { data, ...info } = response.data;
+        dispatch({ type: 'SET_TEACHERS', payload: data });
+        setPaginationInfo({
+          total: info.total,
+          last_page: info.last_page,
+          from: info.from,
+          to: info.to
+        });
       } catch (error) {
         console.error('Error fetching teachers:', error);
       }
     };
     fetchTeachers();
-  }, [dispatch]);
+  }, [dispatch, page, debouncedSearch]);
 
   const getStudentCount = (teacherId: string | number) =>
     state.students.filter(s => String(s.teacherId) === String(teacherId)).length;
@@ -72,14 +101,26 @@ export function ManageTeachers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">Manage Teachers & Classes</h2>
-          <p className="text-gray-600 mt-1">Manage teachers and assign classes ({state.teachers.length} total)</p>
+          <p className="text-gray-600 mt-1">Manage teachers and assign classes ({paginationInfo.total} total)</p>
         </div>
-        <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-          <Plus className="w-5 h-5" /> Tambah Guru
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input 
+              type="text" 
+              placeholder="Cari nama atau emel..." 
+              className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none w-64"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+            <Plus className="w-5 h-5" /> Tambah Guru
+          </button>
+        </div>
       </div>
 
       {/* Teachers Grid */}
@@ -114,6 +155,45 @@ export function ManageTeachers() {
           </div>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {paginationInfo.total > 0 && (
+        <div className="flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-gray-200">
+          <p className="text-sm text-gray-600">
+            Menunjukkan <span className="font-medium text-gray-900">{paginationInfo.from}</span> hingga <span className="font-medium text-gray-900">{paginationInfo.to}</span> daripada <span className="font-medium text-gray-900">{paginationInfo.total}</span> guru
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div className="flex items-center px-4 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg bg-gray-50">
+              Muka Surat {page} daripada {paginationInfo.last_page}
+            </div>
+            <button
+              onClick={() => setPage((p: number) => Math.min(paginationInfo.last_page, p + 1))}
+              disabled={page === paginationInfo.last_page}
+              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {paginationInfo.total === 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900">Tiada guru dijumpai</h3>
+          <p className="text-gray-500 mt-1">Cuba tukar carian anda atau tambah guru baharu.</p>
+        </div>
+      )}
 
       {/* Classes Overview */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
