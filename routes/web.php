@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Landing page ─────────────────────────────────────────────────────────────
@@ -26,6 +27,8 @@ Route::prefix('api')->group(function () {
     Route::post('/register', [AuthController::class, 'apiRegister']);
     Route::post('/logout',   [AuthController::class, 'apiLogout']);
     Route::get('/me',        [AuthController::class, 'me']);
+
+    Route::apiResource('teachers', TeacherController::class);
 });
 
 // ─── Authenticated dashboard (blade fallback redirect) ────────────────────────

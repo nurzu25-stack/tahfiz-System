@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useAppStore } from '../../store/AppContext';
+import axios from 'axios';
 
 export function ManageTeachers() {
   const { state, dispatch } = useAppStore();
@@ -8,22 +9,64 @@ export function ManageTeachers() {
   const [addForm, setAddForm] = useState({ name: '', email: '', phone: '', specialization: '' });
   const inputCls = 'w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500';
 
-  const getStudentCount = (teacherId: string) =>
-    state.students.filter(s => s.teacherId === teacherId).length;
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const response = await axios.get('/api/teachers');
+        dispatch({ type: 'SET_TEACHERS', payload: response.data });
+      } catch (error) {
+        console.error('Error fetching teachers:', error);
+      }
+    };
+    fetchTeachers();
+  }, [dispatch]);
 
-  const getClassNames = (classIds: string[]) =>
-    classIds.map(id => state.classes.find(c => c.id === id)?.name ?? id).join(', ') || '—';
+  const getStudentCount = (teacherId: string | number) =>
+    state.students.filter(s => String(s.teacherId) === String(teacherId)).length;
 
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch({ type: 'ADD_TEACHER', payload: { name: addForm.name, email: addForm.email, phone: addForm.phone, specialization: addForm.specialization, classIds: [] } });
-    setAddForm({ name: '', email: '', phone: '', specialization: '' });
-    setShowAddModal(false);
+  const getClassNames = (classIds: any) => {
+    if (!classIds) return '—';
+    const ids = Array.isArray(classIds) ? classIds : JSON.parse(classIds || '[]');
+    return ids.map((id: any) => state.classes.find(c => String(c.id) === String(id))?.name ?? id).join(', ') || '—';
   };
 
-  const handleDelete = (teacher: any) => {
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('/api/teachers', {
+        ...addForm,
+        joined_date: new Date().toISOString().split('T')[0],
+        status: 'Aktif'
+      });
+      dispatch({ type: 'ADD_TEACHER', payload: response.data });
+      setAddForm({ name: '', email: '', phone: '', specialization: '' });
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Error adding teacher:', error);
+      alert('Gagal menambah guru. Sila semak input anda.');
+    }
+  };
+
+  const handleDelete = async (teacher: any) => {
     if (confirm(`Padam ${teacher.name} daripada sistem?`)) {
-      dispatch({ type: 'DELETE_TEACHER', payload: { id: teacher.id } });
+      try {
+        await axios.delete(`/api/teachers/${teacher.id}`);
+        dispatch({ type: 'DELETE_TEACHER', payload: { id: teacher.id } });
+      } catch (error) {
+        console.error('Error deleting teacher:', error);
+        alert('Gagal memadam guru.');
+      }
+    }
+  };
+
+  const toggleStatus = async (teacher: any) => {
+    const newStatus = teacher.status === 'Aktif' ? 'Tidak Aktif' : 'Aktif';
+    try {
+      const response = await axios.put(`/api/teachers/${teacher.id}`, { status: newStatus });
+      dispatch({ type: 'EDIT_TEACHER', payload: response.data });
+    } catch (error) {
+      console.error('Error toggling teacher status:', error);
+      alert('Gagal mengemas kini status guru.');
     }
   };
 
@@ -63,7 +106,7 @@ export function ManageTeachers() {
               <div className="flex justify-between"><span className="text-gray-600">Kepakaran:</span><span className="text-gray-900">{teacher.specialization}</span></div>
             </div>
             <div className="mt-4 pt-4 border-t border-gray-200">
-              <button onClick={() => dispatch({ type: 'EDIT_TEACHER', payload: { id: teacher.id, status: teacher.status === 'Aktif' ? 'Tidak Aktif' : 'Aktif' } })}
+              <button onClick={() => toggleStatus(teacher)}
                 className={`w-full py-2 rounded-lg text-sm font-medium ${teacher.status === 'Aktif' ? 'bg-orange-50 text-orange-600 hover:bg-orange-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}>
                 {teacher.status === 'Aktif' ? 'Tidak Aktifkan' : 'Aktifkan'}
               </button>

@@ -13,9 +13,10 @@ type Action =
   | { type: 'EDIT_STUDENT'; payload: Partial<Student> & { id: string } }
   | { type: 'DELETE_STUDENT'; payload: { id: string } }
   // Teachers
-  | { type: 'ADD_TEACHER'; payload: Omit<Teacher, 'id' | 'joinedDate' | 'status'> }
-  | { type: 'EDIT_TEACHER'; payload: Partial<Teacher> & { id: string } }
-  | { type: 'DELETE_TEACHER'; payload: { id: string } }
+  | { type: 'SET_TEACHERS'; payload: Teacher[] }
+  | { type: 'ADD_TEACHER'; payload: Teacher }
+  | { type: 'EDIT_TEACHER'; payload: Partial<Teacher> & { id: string | number } }
+  | { type: 'DELETE_TEACHER'; payload: { id: string | number } }
   // Hafazan
   | { type: 'RECORD_HAFAZAN'; payload: Omit<HafazanRecord, 'id'> }
   // Attendance
@@ -85,13 +86,15 @@ function reducer(state: AppState, action: Action): AppState {
     }
 
     // ── Teachers ──
-    case 'ADD_TEACHER': {
-      const teacher: Teacher = {
-        ...action.payload,
-        id: genId('t'),
-        status: 'Aktif',
-        joinedDate: now.split('T')[0],
+    case 'SET_TEACHERS': {
+      return {
+        ...state,
+        teachers: action.payload,
       };
+    }
+
+    case 'ADD_TEACHER': {
+      const teacher = action.payload;
       return {
         ...state,
         teachers: [...state.teachers, teacher],
@@ -105,15 +108,16 @@ function reducer(state: AppState, action: Action): AppState {
     case 'EDIT_TEACHER': {
       return {
         ...state,
-        teachers: state.teachers.map(t => t.id === action.payload.id ? { ...t, ...action.payload } : t),
+        teachers: state.teachers.map(t => String(t.id) === String(action.payload.id) ? { ...t, ...action.payload } : t),
       };
     }
 
     case 'DELETE_TEACHER': {
-      const name = state.teachers.find(t => t.id === action.payload.id)?.name ?? '';
+      const teacherIdString = String(action.payload.id);
+      const name = state.teachers.find(t => String(t.id) === teacherIdString)?.name ?? '';
       return {
         ...state,
-        teachers: state.teachers.filter(t => t.id !== action.payload.id),
+        teachers: state.teachers.filter(t => String(t.id) !== teacherIdString),
         activityLog: [
           { id: genId('log'), type: 'teacher_deleted', description: 'Guru Dipadam', subDescription: name, timestamp: now },
           ...state.activityLog,
