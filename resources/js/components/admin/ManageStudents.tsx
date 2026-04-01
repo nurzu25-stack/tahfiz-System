@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { useAppStore } from '../../store/AppContext';
-import { genId } from '../../store/mockData';
+import axios from 'axios';
 
 export function ManageStudents() {
   const { state, dispatch } = useAppStore();
@@ -11,39 +11,88 @@ export function ManageStudents() {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [classFilter, setClassFilter] = useState('');
-  const [addForm, setAddForm] = useState({ name: '', age: '', classId: 'c1', teacherId: 't1', parentId: 'u4' });
-  const [editForm, setEditForm] = useState<any>({});
+  const [addForm, setAddForm] = useState({ name: '', age: '', classId: '', teacherId: '', parentId: '1' });
+  const [editForm, setEditForm] = useState<any>(null);
 
-  const getClassName = (classId: string) => state.classes.find(c => c.id === classId)?.name ?? classId;
-  const getTeacherName = (teacherId: string) => state.teachers.find(t => t.id === teacherId)?.name ?? teacherId;
-  const getAttendance = (studentId: string) => {
-    const recs = state.attendance.filter(a => a.studentId === studentId);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [studentsRes, classesRes, teachersRes] = await Promise.all([
+          axios.get('/api/students'),
+          axios.get('/api/classes'),
+          axios.get('/api/teachers')
+        ]);
+        dispatch({ type: 'SET_STUDENTS', payload: studentsRes.data });
+        dispatch({ type: 'SET_CLASSES', payload: classesRes.data });
+        // Handle teachers paginated or all
+        dispatch({ type: 'SET_TEACHERS', payload: Array.isArray(teachersRes.data) ? teachersRes.data : teachersRes.data.data });
+        
+        // Auto-select first IDs for add form
+        if (classesRes.data.length > 0) setAddForm(prev => ({ ...prev, classId: classesRes.data[0].id }));
+        if (teachersRes.data.data?.length > 0) setAddForm(prev => ({ ...prev, teacherId: teachersRes.data.data[0].id }));
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchData();
+  }, [dispatch]);
+
+  const getClassName = (classId: string | number) => state.classes.find(c => String(c.id) === String(classId))?.name ?? classId;
+  const getTeacherName = (teacherId: string | number) => state.teachers.find(t => String(t.id) === String(teacherId))?.name ?? teacherId;
+  
+  const getAttendance = (studentId: string | number) => {
+    const recs = state.attendance.filter(a => String(a.studentId) === String(studentId));
     if (!recs.length) return 'N/A';
     const present = recs.filter(a => a.status !== 'Tidak Hadir').length;
     return `${Math.round((present / recs.length) * 100)}%`;
   };
 
   const filtered = state.students.filter(s =>
-    (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || getClassName(s.classId).toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (!classFilter || s.classId === classFilter)
+    (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || getClassName(s.classId).toString().toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (!classFilter || String(s.classId) === String(classFilter))
   );
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch({ type: 'ADD_STUDENT', payload: { name: addForm.name, age: Number(addForm.age), classId: addForm.classId, teacherId: addForm.teacherId, parentId: addForm.parentId } });
-    setAddForm({ name: '', age: '', classId: 'c1', teacherId: 't1', parentId: 'u4' });
-    setShowAddModal(false);
+    try {
+      const response = await axios.post('/api/students', {
+        ...addForm,
+        age: Number(addForm.age),
+        enrolledDate: new Date().toISOString().split('T')[0],
+        juzukCompleted: 0,
+        status: 'Aktif'
+      });
+      dispatch({ type: 'ADD_STUDENT', payload: response.data });
+      setAddForm({ name: '', age: '', classId: state.classes[0]?.id || '', teacherId: state.teachers[0]?.id || '', parentId: '1' });
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Error adding student:', error);
+      alert('Gagal menambah pelajar.');
+    }
   };
 
-  const handleEdit = (e: React.FormEvent) => {
+  const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch({ type: 'EDIT_STUDENT', payload: { id: editForm.id, name: editForm.name, age: Number(editForm.age), classId: editForm.classId } });
-    setShowEditModal(false);
+    try {
+      const response = await axios.put(`/api/students/${editForm.id}`, editForm);
+      dispatch({ type: 'EDIT_STUDENT', payload: response.data });
+      setShowEditModal(false);
+      setEditForm(null);
+    } catch (error) {
+      console.error('Error editing student:', error);
+      alert('Gagal mengemaskini pelajar.');
+    }
   };
 
-  const handleDelete = (student: any) => {
+  const handleDelete = async (student: any) => {
     if (confirm(`Adakah anda pasti mahu memadam ${student.name}?`)) {
-      dispatch({ type: 'DELETE_STUDENT', payload: { id: student.id } });
+      try {
+        await axios.delete(`/api/students/${student.id}`);
+        dispatch({ type: 'DELETE_STUDENT', payload: { id: student.id } });
+      } catch (error) {
+        console.error('Error deleting student:', error);
+        alert('Gagal memadam pelajar.');
+      }
     }
   };
 
@@ -115,7 +164,7 @@ export function ManageStudents() {
 
       {/* Add Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-2xl w-full p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Tambah Pelajar Baharu</h3>
             <form className="space-y-4" onSubmit={handleAdd}>
@@ -146,7 +195,7 @@ export function ManageStudents() {
 
       {/* Edit Modal */}
       {showEditModal && editForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-lg w-full p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Kemaskini Pelajar</h3>
             <form className="space-y-4" onSubmit={handleEdit}>
@@ -168,7 +217,7 @@ export function ManageStudents() {
 
       {/* View Modal */}
       {showViewModal && selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-2xl w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-gray-900">Profil Pelajar</h3>

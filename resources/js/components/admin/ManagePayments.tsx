@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DollarSign, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { useAppStore, getMonthlyRevenue, getTotalRevenue, getPendingRevenue } from '../../store/AppContext';
-import { Payment } from '../../store/mockData';
+import axios from 'axios';
 
 const MONTHS = ['','Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
 
@@ -11,27 +11,63 @@ export function ManagePayments() {
   const [invoiceForm, setInvoiceForm] = useState({ studentId: '', month: new Date().getMonth() + 1, year: new Date().getFullYear(), amount: 200 });
   const inputCls = 'w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500';
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [paymentsRes, studentsRes] = await Promise.all([
+          axios.get('/api/payments'),
+          axios.get('/api/students')
+        ]);
+        dispatch({ type: 'SET_PAYMENTS', payload: paymentsRes.data });
+        dispatch({ type: 'SET_STUDENTS', payload: studentsRes.data });
+      } catch (err) {
+        console.error('Error fetching payments:', err);
+      }
+    };
+    fetchData();
+  }, [dispatch]);
+
   const total = getTotalRevenue(state);
   const monthly = getMonthlyRevenue(state);
   const pending = getPendingRevenue(state);
 
-  const getStudentName = (id: string) => state.students.find(s => s.id === id)?.name ?? id;
+  const getStudentName = (id: string | number) => state.students.find(s => String(s.id) === String(id))?.name ?? id;
 
   const sortedPayments = [...state.payments].sort((a, b) => {
     if (a.year !== b.year) return b.year - a.year;
     return b.month - a.month;
   });
 
-  const handleInvoice = (e: React.FormEvent) => {
+  const handleInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!invoiceForm.studentId) return;
     const dueDate = new Date(invoiceForm.year, invoiceForm.month - 1, 5).toISOString().split('T')[0];
-    dispatch({ type: 'ADD_PAYMENT', payload: { studentId: invoiceForm.studentId, month: invoiceForm.month, year: invoiceForm.year, amount: invoiceForm.amount, status: 'Belum Bayar', dueDate } });
-    setShowInvoiceModal(false);
+    try {
+      const res = await axios.post('/api/payments', {
+        ...invoiceForm,
+        status: 'Belum Bayar',
+        dueDate
+      });
+      dispatch({ type: 'ADD_PAYMENT', payload: res.data });
+      setShowInvoiceModal(false);
+    } catch (err) {
+      console.error('Error creating invoice:', err);
+      alert('Gagal menjana invois.');
+    }
   };
 
-  const handleToggle = (p: Payment) => {
-    dispatch({ type: 'TOGGLE_PAYMENT', payload: { id: p.id, status: p.status === 'Dibayar' ? 'Belum Bayar' : 'Dibayar' } });
+  const handleToggle = async (p: any) => {
+    const newStatus = p.status === 'Dibayar' ? 'Belum Bayar' : 'Dibayar';
+    try {
+      const res = await axios.put(`/api/payments/${p.id}`, { status: newStatus });
+      dispatch({ type: 'TOGGLE_PAYMENT', payload: { id: p.id, status: newStatus } });
+      // Reload for side effects (activity log handled in reducer but maybe date changed)
+      const paymentsRes = await axios.get('/api/payments');
+      dispatch({ type: 'SET_PAYMENTS', payload: paymentsRes.data });
+    } catch (err) {
+      console.error('Error updating payment:', err);
+      alert('Gagal mengemaskini status bayaran.');
+    }
   };
 
   const statusBadge = (s: string) => {
@@ -105,7 +141,7 @@ export function ManagePayments() {
 
       {/* Invoice Modal */}
       {showInvoiceModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Jana Invois</h3>
             <form className="space-y-4" onSubmit={handleInvoice}>
