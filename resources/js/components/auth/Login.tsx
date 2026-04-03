@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { BookOpen, Lock, Mail, LogIn } from 'lucide-react';
+import { BookOpen, Lock, Mail, LogIn, AlertCircle } from 'lucide-react';
+import { useAppStore } from '../../store/AppContext';
 
 type UserRole = 'admin' | 'teacher' | 'parent' | 'student';
 
@@ -9,22 +10,27 @@ interface LoginProps {
 }
 
 export function Login({ onLogin, onSwitchToRegister }: LoginProps) {
+  const { state } = useAppStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Mock login - determine role based on email
-    if (email.includes('admin')) {
-      onLogin('admin', 'Admin User');
-    } else if (email.includes('teacher')) {
-      onLogin('teacher', 'Ustaz Ahmad');
-    } else if (email.includes('parent')) {
-      onLogin('parent', 'Mr. Hassan');
+    setError(null);
+
+    // Find user in mock store
+    const user = state.users.find(u => u.email === email && u.password === password);
+
+    if (user) {
+      if (user.status === 'pending') {
+        setError('Akaun anda masih belum diluluskan oleh Admin/Mudir. Sila tunggu kelulusan.');
+        return;
+      }
+      onLogin(user.role, user.name);
     } else {
-      onLogin('student', 'Ahmad bin Hassan');
+      setError('Emel atau kata laluan tidak sah.');
     }
   };
 
@@ -87,6 +93,12 @@ export function Login({ onLogin, onSwitchToRegister }: LoginProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-red-600 text-sm animate-in fade-in zoom-in duration-300">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email / Username
