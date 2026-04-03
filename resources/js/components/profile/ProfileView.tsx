@@ -211,6 +211,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
     <div className="p-4 md:p-8 animate-in fade-in duration-500">
       <div className="max-width-1200 mx-auto">
         
+        {/* Page Title & Subtitle like AI page */}
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">
+            Profil Saya — <span className="text-slate-500 font-medium">{user.name.toLowerCase()}</span>
+          </h2>
+          <p className="text-slate-500 mt-2 text-[15px] leading-relaxed">
+            Urus maklumat peribadi, latar belakang pendidikan, dan tetapan kecemasan dalam satu portal berpusat.
+          </p>
+        </div>
+
         {/* Header Area */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
           <div className="flex items-center gap-5">

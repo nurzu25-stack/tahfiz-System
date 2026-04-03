@@ -125,9 +125,9 @@ export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) 
       {sidebarOpen && (
         <aside style={{
           width: '200px', flexShrink: 0,
-          background: 'linear-gradient(180deg, #5FB3B7 0%, #6FC7CB 100%)',
+          background: 'linear-gradient(180deg, #1A4D50 0%, #6FC7CB 100%)',
           display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto',
-          boxShadow: '4px 0 15px rgba(0,0,0,0.05)',
+          boxShadow: '8px 0 30px rgba(0,0,0,0.1)',
         }}>
           <div style={{ padding: '1.5rem 1rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
             <img src="/images/logo.png" alt="Logo" style={{ height: '55px', marginBottom: '0.75rem' }} />
