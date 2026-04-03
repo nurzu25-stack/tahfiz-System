@@ -877,6 +877,7 @@
             <nav class="nav-links">
                 <a href="#home">Home</a>
                 <a href="#features">Features</a>
+                <a href="#locations">Locations</a>
                 <a href="#about">About</a>
                 <a href="#contact">Contact</a>
             </nav>
@@ -1008,6 +1009,96 @@
                         <div class="widget3-amount">RM 150.00</div>
                         <div class="widget3-meta">February • 2026 • Monthly Fee</div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LOCATIONS SECTION -->
+    <section id="locations" style="padding: 5rem 1rem; background: #f8fafc;">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+            <h2 style="font-size: 2.2rem; font-weight: 800; color: #5FB3B7; margin-bottom: 3rem;">Lokasi AKMAL</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                <!-- 1. AKMAL PRIMA -->
+                <div style="background: #fff; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #6FC7CB;">AKMAL PRIMA</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">📍 NO1, Jalan Anggerik 2D/2, Prima Beruntung, 48300 Rawang, Selangor.</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=AKMAL+PRIMA+Rawang+Selangor" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 0.5rem; color: #5FB3B7; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #6FC7CB; padding: 0.5rem 1rem; border-radius: 999px; width: fit-content; transition: all 0.2s;">
+                        Open in Maps <span style="font-size: 1rem;">↗</span>
+                    </a>
+                </div>
+
+                <!-- 2. AKMAL SHAH ALAM -->
+                <div style="background: #fff; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #6FC7CB;">AKMAL SHAH ALAM</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">📍 No. 58, Jalan Kampung Tengah, 27/48, Taman Bunga Negara, 40400 Shah Alam, Selangor.</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=AKMAL+SHAH+ALAM+Shah+Alam" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 0.5rem; color: #5FB3B7; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #6FC7CB; padding: 0.5rem 1rem; border-radius: 999px; width: fit-content;">
+                        Open in Maps ↗
+                    </a>
+                </div>
+
+                <!-- 3. AKMAL BATU PAHAT -->
+                <div style="background: #fff; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #6FC7CB;">AKMAL BATU PAHAT</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">📍 No 38, jalan bandar baru 5, pusat bandar baru ayer hitam, 86100, ayer hitam, johor.</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=AKMAL+BATU+PAHAT+Ayer+Hitam" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 0.5rem; color: #5FB3B7; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #6FC7CB; padding: 0.5rem 1rem; border-radius: 999px; width: fit-content;">
+                        Open in Maps ↗
+                    </a>
+                </div>
+
+                <!-- 4. AKMAL HQ TERENGGANU -->
+                <div style="background: #fff; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #6FC7CB;">AKMAL HQ TERENGGANU</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">📍 Lot 2123, Kampung Tebakang Bukit Payung, 21400 Marang Terengganu.</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=AKMAL+HQ+Marang+Terengganu" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 0.5rem; color: #5FB3B7; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #6FC7CB; padding: 0.5rem 1rem; border-radius: 999px; width: fit-content;">
+                        Open in Maps ↗
+                    </a>
+                </div>
+
+                <!-- 5. AKMAL TAHFIZ ONLINE -->
+                <div style="background: #fff; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #6FC7CB;">AKMAL TAHFIZ ONLINE</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">📍 T171, Kampung Undang, 21600 Bukit Payong, Terengganu.</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=AKMAL+Tahfiz+Online+Terengganu" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 0.5rem; color: #5FB3B7; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #6FC7CB; padding: 0.5rem 1rem; border-radius: 999px; width: fit-content;">
+                        Open in Maps ↗
+                    </a>
+                </div>
+
+                <!-- 6. AKMAL NURUL AMAN -->
+                <div style="background: #fff; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #6FC7CB;">AKMAL NURUL AMAN</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">📍 Lot 112, Kg Bakong, Alor Pasir, 17000 Pasir Mas, Kelantan.</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=AKMAL+Nurul+Aman+Kelantan" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 0.5rem; color: #5FB3B7; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #6FC7CB; padding: 0.5rem 1rem; border-radius: 999px; width: fit-content;">
+                        Open in Maps ↗
+                    </a>
+                </div>
+
+                <!-- 7. AKMAL KLIA -->
+                <div style="background: #fff; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #6FC7CB;">AKMAL KLIA</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">📍 Lot 4846, Jalan Tembaga, Kampong Bukit Changgang, 42700 Banting, Selangor.</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=AKMAL+KLIA+Banting" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 0.5rem; color: #5FB3B7; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #6FC7CB; padding: 0.5rem 1rem; border-radius: 999px; width: fit-content;">
+                        Open in Maps ↗
+                    </a>
+                </div>
+
+                <!-- 8. AKMAL AR-RAHIMIYYAH -->
+                <div style="background: #fff; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #6FC7CB;">AKMAL AR-RAHIMIYYAH</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">📍 Lot 17524 kg Kuala sentul, 26500 maran, Pahang.</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=AKMAL+Ar-Rahimiyyah+Maran+Pahang" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 0.5rem; color: #5FB3B7; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #6FC7CB; padding: 0.5rem 1rem; border-radius: 999px; width: fit-content;">
+                        Open in Maps ↗
+                    </a>
+                </div>
+
+                <!-- 9. AKMAL PENANG -->
+                <div style="background: #fff; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #6FC7CB;">AKMAL PENANG</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.5;">📍 SB 5878 Permatang Manggis 13300, 13100 Tasek Gelugor, Penang.</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=AKMAL+Penang+Tasek+Gelugor" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 0.5rem; color: #5FB3B7; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #6FC7CB; padding: 0.5rem 1rem; border-radius: 999px; width: fit-content;">
+                        Open in Maps ↗
+                    </a>
                 </div>
             </div>
         </div>
