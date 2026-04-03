@@ -127,13 +127,15 @@ export function TeacherDashboard({ userName, onLogout }: TeacherDashboardProps) 
       {/* ─── SIDEBAR ─── */}
       {sidebarOpen && (
         <aside style={{
-          width: '185px', flexShrink: 0,
-          background: 'linear-gradient(180deg, #2d3748 0%, #1a3a2a 60%, #14532d 100%)',
+          width: '200px', flexShrink: 0,
+          background: 'linear-gradient(180deg, #5FB3B7 0%, #6FC7CB 100%)',
           display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto',
+          boxShadow: '4px 0 15px rgba(0,0,0,0.05)',
         }}>
-          <div style={{ padding: '1.25rem 1rem 1rem' }}>
-            <p style={{ color: '#fff', fontWeight: 700, fontSize: '1rem', margin: 0 }}>Panel Ustaz/Ustazah</p>
-            <p style={{ color: '#a0aec0', fontSize: '0.78rem', margin: '0.2rem 0 0' }}>{userName}</p>
+          <div style={{ padding: '1.5rem 1rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <img src="/images/logo.png" alt="Logo" style={{ height: '55px', marginBottom: '0.75rem', filter: 'brightness(0) invert(1)' }} />
+            <p style={{ color: '#fff', fontWeight: 800, fontSize: '0.9rem', margin: 0, letterSpacing: '0.05em' }}>USTAZ / USTAZAH</p>
+            <p style={{ color: '#E8F6F7', fontSize: '0.75rem', margin: '0.2rem 0 0', opacity: 0.9 }}>{userName}</p>
           </div>
           <nav style={{ flex: 1, padding: '0.5rem 0.6rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
             {navItems.map((item) => {
@@ -143,10 +145,11 @@ export function TeacherDashboard({ userName, onLogout }: TeacherDashboardProps) 
                   style={{
                     display: 'flex', alignItems: 'center', gap: '0.6rem',
                     padding: '0.6rem 0.8rem', borderRadius: '999px', border: 'none', cursor: 'pointer',
-                    background: isActive ? '#4ade80' : 'transparent',
-                    color: isActive ? '#14532d' : '#e2e8f0',
-                    fontWeight: isActive ? 700 : 500, fontSize: '0.82rem', width: '100%', textAlign: 'left',
+                    background: isActive ? '#fff' : 'transparent',
+                    color: isActive ? '#6FC7CB' : '#fff',
+                    fontWeight: isActive ? 800 : 500, fontSize: '0.82rem', width: '100%', textAlign: 'left',
                     transition: 'all 0.15s ease',
+                    boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
                   }}
                   onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)'; }}
                   onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}

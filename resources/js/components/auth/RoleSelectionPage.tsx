@@ -39,68 +39,15 @@ const roles: RoleOption[] = [
 
 /** AKMAL Logo SVG — matches the leaf/globe design style */
 function AkmalLogo({ size = 'lg' }: { size?: 'sm' | 'lg' }) {
-  const textSize = size === 'lg' ? '1' : '0.65';
-  const svgSize = size === 'lg' ? 180 : 100;
+  const width = size === 'lg' ? 240 : 120;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: size === 'lg' ? '0.5rem' : '0.2rem' }}>
-      {/* Logo mark */}
-      <svg width={svgSize} height={svgSize * 0.65} viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Globe circle */}
-        <circle cx="70" cy="65" r="42" fill="none" stroke="#1a8080" strokeWidth="3" opacity="0.8"/>
-        <ellipse cx="70" cy="65" rx="20" ry="42" fill="none" stroke="#1a8080" strokeWidth="2" opacity="0.6"/>
-        <line x1="28" y1="65" x2="112" y2="65" stroke="#1a8080" strokeWidth="2" opacity="0.6"/>
-        <line x1="35" y1="44" x2="105" y2="44" stroke="#1a8080" strokeWidth="1.5" opacity="0.4"/>
-        <line x1="35" y1="86" x2="105" y2="86" stroke="#1a8080" strokeWidth="1.5" opacity="0.4"/>
-        {/* Feather/leaf coming from globe */}
-        <path
-          d="M85 30 C110 10, 170 20, 175 55 C165 35, 130 30, 108 50 C120 38, 145 40, 150 62 C140 48, 118 48, 105 62 C113 55, 128 58, 130 70 C118 62, 108 65, 105 75 L95 90 L90 65 Z"
-          fill="url(#featherGrad)"
-        />
-        {/* Orange accent stroke on feather */}
-        <path
-          d="M95 90 L105 30"
-          stroke="#e07030"
-          strokeWidth="2"
-          strokeLinecap="round"
-          opacity="0.9"
-        />
-        <defs>
-          <linearGradient id="featherGrad" x1="95" y1="90" x2="175" y2="20" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#1a8080"/>
-            <stop offset="50%" stopColor="#2da89a"/>
-            <stop offset="100%" stopColor="#4ece8e"/>
-          </linearGradient>
-        </defs>
-      </svg>
-
-      {/* Text */}
-      <div style={{ textAlign: 'center', lineHeight: 1.1 }}>
-        <div style={{
-          fontSize: `${parseFloat(textSize) * 2.2}rem`,
-          fontWeight: 900,
-          color: '#1a8080',
-          letterSpacing: '0.08em',
-          fontFamily: 'Georgia, serif',
-        }}>
-          AKMAL
-        </div>
-        <div style={{
-          fontSize: `${parseFloat(textSize) * 0.65}rem`,
-          fontWeight: 600,
-          color: '#2da89a',
-          letterSpacing: '0.15em',
-        }}>
-          AKADEMI AL-QURAN
-        </div>
-        <div style={{
-          fontSize: `${parseFloat(textSize) * 0.65}rem`,
-          fontWeight: 600,
-          color: '#2da89a',
-          letterSpacing: '0.15em',
-        }}>
-          AMALILLAH
-        </div>
-      </div>
+    <div className="flex flex-col items-center gap-2">
+      <img 
+        src="/images/logo.png" 
+        alt="AKMAL Logo" 
+        style={{ width: `${width}px`, height: 'auto' }}
+        className="drop-shadow-md"
+      />
     </div>
   );
 }
@@ -141,14 +88,14 @@ export function RoleSelectionPage() {
               gap: '0.35rem',
               padding: '0.45rem 1.1rem',
               borderRadius: '999px',
-              background: '#2da89a',
+              background: '#6FC7CB',
               color: '#fff',
               fontWeight: 700,
               fontSize: '0.85rem',
               border: 'none',
               cursor: 'pointer',
               letterSpacing: '0.05em',
-              boxShadow: '0 2px 8px rgba(45,168,154,0.3)',
+              boxShadow: '0 2px 8px rgba(111,199,203,0.3)',
             }}
           >
             ← KEMBALI
@@ -169,7 +116,7 @@ export function RoleSelectionPage() {
           <h2 style={{
             fontSize: '1.9rem',
             fontWeight: 800,
-            color: '#1a8080',
+            color: '#5FB3B7',
             textAlign: 'center',
             margin: 0,
             lineHeight: 1.2,
@@ -182,7 +129,7 @@ export function RoleSelectionPage() {
       {/* ─── RIGHT PANEL ─── Green gradient */}
       <div style={{
         flex: 1,
-        background: 'linear-gradient(160deg, #5bbf6e 0%, #3da862 40%, #8dd87a 100%)',
+        background: 'linear-gradient(160deg, #6FC7CB 0%, #5FB3B7 40%, #A8DEE0 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -230,12 +177,12 @@ export function RoleSelectionPage() {
                     gap: '0.75rem',
                     padding: '0.75rem 1rem',
                     borderRadius: '14px',
-                    background: isSelected ? '#b8ddd8' : '#c8dede',
-                    border: isSelected ? '2px solid #2da89a' : '2px solid transparent',
+                    background: isSelected ? '#D1EEF0' : '#E8F6F7',
+                    border: isSelected ? '2px solid #6FC7CB' : '2px solid transparent',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.15s ease',
-                    boxShadow: isSelected ? '0 2px 8px rgba(45,168,154,0.25)' : 'none',
+                    boxShadow: isSelected ? '0 2px 8px rgba(111,199,203,0.25)' : 'none',
                   }}
                 >
                   {/* Radio circle */}
@@ -244,8 +191,8 @@ export function RoleSelectionPage() {
                     width: '20px',
                     height: '20px',
                     borderRadius: '50%',
-                    border: `2px solid ${isSelected ? '#2da89a' : '#999'}`,
-                    background: isSelected ? '#2da89a' : '#fff',
+                    border: `2px solid ${isSelected ? '#6FC7CB' : '#999'}`,
+                    background: isSelected ? '#6FC7CB' : '#fff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -310,7 +257,7 @@ export function RoleSelectionPage() {
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#2da89a',
+                color: '#6FC7CB',
                 fontWeight: 700,
                 fontSize: '0.8rem',
                 cursor: 'pointer',

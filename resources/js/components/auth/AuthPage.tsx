@@ -26,9 +26,9 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
         <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem', fontWeight: 700 }}>Reset Password</h3>
         {sent ? (
           <>
-            <p style={{ color: '#16a34a', fontWeight: 600 }}>✅ Password reset instructions sent!</p>
+            <p style={{ color: '#6FC7CB', fontWeight: 600 }}>✅ Password reset instructions sent!</p>
             <p style={{ color: '#555', fontSize: '0.9rem' }}>Check your inbox at <strong>{email}</strong>.<br/>Demo credentials: see your role's default password (e.g. admin123, teacher123, parent123, student123).</p>
-            <button onClick={onClose} style={{ marginTop: '1rem', width: '100%', padding: '0.6rem', background: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>Close</button>
+            <button onClick={onClose} style={{ marginTop: '1rem', width: '100%', padding: '0.6rem', background: '#6FC7CB', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>Close</button>
           </>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -36,7 +36,7 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
             <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com"
               style={{ width: '100%', padding: '0.6rem 0.8rem', border: '1px solid #d1d5db', borderRadius: '8px', marginBottom: '1rem', boxSizing: 'border-box' }} />
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button type="submit" style={{ flex: 1, padding: '0.6rem', background: '#14532d', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>Send Instructions</button>
+              <button type="submit" style={{ flex: 1, padding: '0.6rem', background: '#5FB3B7', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>Send Instructions</button>
               <button type="button" onClick={onClose} style={{ padding: '0.6rem 1rem', border: '1px solid #d1d5db', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
             </div>
           </form>
@@ -49,40 +49,8 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
 /** AKMAL Logo — compact version for the auth card */
 function AkmalLogoCard() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' }}>
-      {/* Logo mark */}
-      <svg width="64" height="46" viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="70" cy="65" r="42" fill="none" stroke="#1a8080" strokeWidth="3" opacity="0.8"/>
-        <ellipse cx="70" cy="65" rx="20" ry="42" fill="none" stroke="#1a8080" strokeWidth="2" opacity="0.6"/>
-        <line x1="28" y1="65" x2="112" y2="65" stroke="#1a8080" strokeWidth="2" opacity="0.6"/>
-        <line x1="35" y1="44" x2="105" y2="44" stroke="#1a8080" strokeWidth="1.5" opacity="0.4"/>
-        <line x1="35" y1="86" x2="105" y2="86" stroke="#1a8080" strokeWidth="1.5" opacity="0.4"/>
-        <path
-          d="M85 30 C110 10, 170 20, 175 55 C165 35, 130 30, 108 50 C120 38, 145 40, 150 62 C140 48, 118 48, 105 62 C113 55, 128 58, 130 70 C118 62, 108 65, 105 75 L95 90 L90 65 Z"
-          fill="url(#featherGradCard)"
-        />
-        <path d="M95 90 L105 30" stroke="#e07030" strokeWidth="2" strokeLinecap="round" opacity="0.9"/>
-        <defs>
-          <linearGradient id="featherGradCard" x1="95" y1="90" x2="175" y2="20" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#1a8080"/>
-            <stop offset="50%" stopColor="#2da89a"/>
-            <stop offset="100%" stopColor="#4ece8e"/>
-          </linearGradient>
-        </defs>
-      </svg>
-
-      {/* Text group */}
-      <div style={{ lineHeight: 1.15 }}>
-        <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#1a8080', letterSpacing: '0.06em', fontFamily: 'Georgia, serif' }}>
-          AKMAL
-        </div>
-        <div style={{ fontSize: '0.52rem', fontWeight: 600, color: '#5a5a5a', letterSpacing: '0.12em' }}>
-          AKADEMI AL-QURAN
-        </div>
-        <div style={{ fontSize: '0.52rem', fontWeight: 600, color: '#5a5a5a', letterSpacing: '0.12em' }}>
-          AMALILLAH
-        </div>
-      </div>
+    <div className="flex flex-col items-center justify-center gap-2">
+      <img src="/images/logo.png" alt="AKMAL Logo" className="w-40 h-auto" />
     </div>
   );
 }
@@ -279,7 +247,7 @@ export function AuthPage() {
         {/* Left white side */}
         <div style={{ flex: '0 0 44%', background: '#ffffff' }} />
         {/* Right green side */}
-        <div style={{ flex: 1, background: 'linear-gradient(160deg, #5bbf6e 0%, #3da862 40%, #8dd87a 100%)' }} />
+        <div style={{ flex: 1, background: 'linear-gradient(160deg, #6FC7CB 0%, #5FB3B7 40%, #A8DEE0 100%)' }} />
       </div>
       {/* Dark overlay */}
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.18)' }} />
@@ -350,7 +318,7 @@ export function AuthPage() {
                     onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                     style={inputStyle}
                     required
-                    onFocus={(e) => { e.target.style.borderColor = '#2da89a'; e.target.style.background = '#fff'; }}
+                    onFocus={(e) => { e.target.style.borderColor = '#6FC7CB'; e.target.style.background = '#fff'; }}
                     onBlur={(e) => { e.target.style.borderColor = '#d0d0d0'; e.target.style.background = '#fafafa'; }}
                   />
                 </div>
@@ -370,7 +338,7 @@ export function AuthPage() {
                     onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                     style={{ ...inputStyle, paddingRight: '2.5rem' }}
                     required
-                    onFocus={(e) => { e.target.style.borderColor = '#2da89a'; e.target.style.background = '#fff'; }}
+                    onFocus={(e) => { e.target.style.borderColor = '#6FC7CB'; e.target.style.background = '#fff'; }}
                     onBlur={(e) => { e.target.style.borderColor = '#d0d0d0'; e.target.style.background = '#fafafa'; }}
                   />
                   <button
@@ -393,14 +361,14 @@ export function AuthPage() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    style={{ width: '14px', height: '14px', accentColor: '#16a34a' }}
+                    style={{ width: '14px', height: '14px', accentColor: '#6FC7CB' }}
                   />
                   Remember me
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
-                  style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: 0 }}
+                  style={{ background: 'none', border: 'none', color: '#6FC7CB', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: 0 }}
                 >
                   Forgot Password?
                 </button>
@@ -413,7 +381,7 @@ export function AuthPage() {
                 style={{
                   width: '100%',
                   padding: '0.78rem',
-                  background: isLoading ? '#4ade80' : '#16a34a',
+                  background: isLoading ? '#A8DEE0' : '#6FC7CB',
                   color: '#fff',
                   fontWeight: 700,
                   fontSize: '0.95rem',
@@ -426,8 +394,8 @@ export function AuthPage() {
                   gap: '0.4rem',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#15803d'; }}
-                onMouseLeave={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#16a34a'; }}
+                onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#5FB3B7'; }}
+                onMouseLeave={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#6FC7CB'; }}
               >
                 {isLoading ? (
                   <div style={{ width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
@@ -449,7 +417,7 @@ export function AuthPage() {
                 <button
                   type="button"
                   onClick={() => setMode('register')}
-                  style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: '0.82rem' }}
+                  style={{ background: 'none', border: 'none', color: '#6FC7CB', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: '0.82rem' }}
                 >
                   Register
                 </button>
@@ -474,7 +442,7 @@ export function AuthPage() {
                     onChange={(e) => setRegisterData({ ...registerData, fullName: e.target.value })}
                     style={inputStyle}
                     required
-                    onFocus={(e) => { e.target.style.borderColor = '#2da89a'; e.target.style.background = '#fff'; }}
+                    onFocus={(e) => { e.target.style.borderColor = '#6FC7CB'; e.target.style.background = '#fff'; }}
                     onBlur={(e) => { e.target.style.borderColor = '#d0d0d0'; e.target.style.background = '#fafafa'; }}
                   />
                 </div>
@@ -494,7 +462,7 @@ export function AuthPage() {
                     onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                     style={inputStyle}
                     required
-                    onFocus={(e) => { e.target.style.borderColor = '#2da89a'; e.target.style.background = '#fff'; }}
+                    onFocus={(e) => { e.target.style.borderColor = '#6FC7CB'; e.target.style.background = '#fff'; }}
                     onBlur={(e) => { e.target.style.borderColor = '#d0d0d0'; e.target.style.background = '#fafafa'; }}
                   />
                 </div>
@@ -514,7 +482,7 @@ export function AuthPage() {
                     onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                     style={{ ...inputStyle, paddingRight: '2.5rem' }}
                     required
-                    onFocus={(e) => { e.target.style.borderColor = '#2da89a'; e.target.style.background = '#fff'; }}
+                    onFocus={(e) => { e.target.style.borderColor = '#6FC7CB'; e.target.style.background = '#fff'; }}
                     onBlur={(e) => { e.target.style.borderColor = '#d0d0d0'; e.target.style.background = '#fafafa'; }}
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
@@ -541,7 +509,7 @@ export function AuthPage() {
                     onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
                     style={{ ...inputStyle, paddingRight: '2.5rem' }}
                     required
-                    onFocus={(e) => { e.target.style.borderColor = '#2da89a'; e.target.style.background = '#fff'; }}
+                    onFocus={(e) => { e.target.style.borderColor = '#6FC7CB'; e.target.style.background = '#fff'; }}
                     onBlur={(e) => { e.target.style.borderColor = '#d0d0d0'; e.target.style.background = '#fafafa'; }}
                   />
                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -561,7 +529,7 @@ export function AuthPage() {
                 style={{
                   width: '100%',
                   padding: '0.78rem',
-                  background: isLoading ? '#4ade80' : '#16a34a',
+                  background: isLoading ? '#A8DEE0' : '#6FC7CB',
                   color: '#fff',
                   fontWeight: 700,
                   fontSize: '0.95rem',
@@ -573,8 +541,8 @@ export function AuthPage() {
                   justifyContent: 'center',
                   gap: '0.4rem',
                 }}
-                onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#15803d'; }}
-                onMouseLeave={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#16a34a'; }}
+                onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#5FB3B7'; }}
+                onMouseLeave={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.background = '#6FC7CB'; }}
               >
                 {isLoading
                   ? <div style={{ width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
@@ -588,7 +556,7 @@ export function AuthPage() {
                 <button
                   type="button"
                   onClick={() => setMode('login')}
-                  style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: '0.82rem' }}
+                  style={{ background: 'none', border: 'none', color: '#6FC7CB', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: '0.82rem' }}
                 >
                   Login
                 </button>

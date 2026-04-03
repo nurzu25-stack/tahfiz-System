@@ -9,11 +9,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --blue: #2563eb;
-            --blue-dark: #1d4ed8;
-            --green: #16a34a;
-            --green-dark: #15803d;
-            --green-light: #bbf7d0;
+            --blue: #6FC7CB;
+            --blue-dark: #5FB3B7;
+            --green: #6FC7CB;
+            --green-dark: #5FB3B7;
+            --green-light: #D1EEF0;
             --slate-900: #0f172a;
             --slate-800: #1f2937;
             --slate-700: #374151;
@@ -72,7 +72,7 @@
             height: 36px;
             width: 36px;
             border-radius: 14px;
-            background: linear-gradient(135deg, #22c55e, #2563eb);
+            background: linear-gradient(135deg, #6FC7CB, #6FC7CB);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -473,7 +473,7 @@
             width: 6px;
             height: 6px;
             border-radius: 999px;
-            background: #22c55e;
+            background: #6FC7CB;
         }
 
         .widget-subtext {
@@ -770,7 +770,7 @@
 
         .auth-card-right {
             padding: 2.5rem;
-            background: radial-gradient(circle at top left, #bbf7d0, #22c55e 40%, #14532d 100%);
+            background: radial-gradient(circle at top left, #D1EEF0, #6FC7CB 40%, #5FB3B7 100%);
             color: #ecfdf5;
             display: flex;
             flex-direction: column;
@@ -870,8 +870,8 @@
     <header class="navbar">
         <div class="navbar-inner">
             <div class="nav-logo">
-                <div class="nav-logo-icon">AK</div>
-                <span class="nav-logo-text">AKMAL Tahfiz</span>
+                <img src="/images/logo.png" alt="AKMAL Logo" style="height: 48px;">
+                <span class="nav-logo-text" style="color: #6FC7CB; font-size: 1.25rem;">AKMAL Tahfiz</span>
             </div>
 
             <nav class="nav-links">
@@ -946,17 +946,7 @@
                         <div class="hero-main-image-card">
                             <!-- Replace this block with a real tahfiz-related photo -->
                             <div class="hero-main-image-placeholder">
-                                <div>
-                                    <div class="hero-main-image-placeholder-title">
-                                        Tahfiz Environment
-                                    </div>
-                                    <div class="hero-main-image-placeholder-text">
-                                        Replace this card with a<br>
-                                        <span class="hero-main-image-placeholder-highlight">
-                                            tahfiz-related image
-                                        </span>
-                                    </div>
-                                </div>
+                                <img src="/images/logo.png" alt="Akmal Logo" style="width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(111,199,203,0.4));">
                             </div>
                         </div>
                     </div>
@@ -983,7 +973,7 @@
                             <div class="widget-bar-inner" style="height:85%;"></div>
                         </div>
                         <div class="widget-bar-outer">
-                            <div class="widget-bar-inner" style="height:95%; background:#1d4ed8;"></div>
+                            <div class="widget-bar-inner" style="height:95%; background:#5FB3B7;"></div>
                         </div>
                     </div>
                 </div>
@@ -998,7 +988,7 @@
                         </div>
                     </div>
                     <div class="widget2-pill">
-                        <span style="width:10px;height:10px;border-radius:999px;border:2px solid #16a34a;border-top:none;border-left:none;transform:rotate(45deg);display:inline-block;"></span>
+                        <span style="width:10px;height:10px;border-radius:999px;border:2px solid #6FC7CB;border-top:none;border-left:none;transform:rotate(45deg);display:inline-block;"></span>
                         Attendance Marked
                     </div>
                     <div class="widget-timestamp">Today • 07:45 AM</div>
