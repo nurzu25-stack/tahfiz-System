@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use App\Models\Teacher;
 
 class TeacherController extends Controller
@@ -21,12 +20,31 @@ class TeacherController extends Controller
                       ->orWhere('email', 'like', "%{$search}%");
             })
             ->latest()
-            ->paginate(8);
+            ->paginate(10);
 
         // Map classIds from class_rooms table
         $teachers->getCollection()->transform(function($t) {
             $t->classIds = \App\Models\ClassRoom::where('teacher_id', $t->id)->pluck('id');
-            return $t;
+            // camelCase for consistency
+            return [
+                'id' => $t->id,
+                'name' => $t->name,
+                'email' => $t->email,
+                'phone' => $t->phone,
+                'icNo' => $t->ic_no,
+                'specialization' => $t->specialization,
+                'status' => $t->status,
+                'joinedDate' => $t->joined_date,
+                'qualification' => $t->qualification,
+                'experience' => $t->experience,
+                'medicalHistory' => $t->medical_history,
+                'emergencyContactName' => $t->emergency_contact_name,
+                'emergencyContactPhone' => $t->emergency_contact_phone,
+                'dependentsCount' => $t->dependents_count,
+                'residence' => $t->residence,
+                'serviceStartDate' => $t->service_start_date,
+                'classIds' => $t->classIds
+            ];
         });
 
         return response()->json($teachers);
@@ -41,16 +59,39 @@ class TeacherController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:teachers,email',
             'phone' => 'required|string|max:20',
+            'icNo' => 'nullable|string',
             'specialization' => 'nullable|string|max:255',
             'status' => 'string|in:Aktif,Tidak Aktif',
-            'joined_date' => 'date',
+            'joinedDate' => 'nullable|date',
+            'qualification' => 'nullable|string',
+            'experience' => 'nullable|string',
+            'medicalHistory' => 'nullable|string',
+            'emergencyContactName' => 'nullable|string',
+            'emergencyContactPhone' => 'nullable|string',
+            'dependentsCount' => 'nullable|integer',
+            'residence' => 'nullable|string',
+            'serviceStartDate' => 'nullable|date',
         ]);
 
-        if (!isset($validated['joined_date'])) {
-            $validated['joined_date'] = now()->format('Y-m-d');
-        }
+        $data = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'ic_no' => $validated['icNo'] ?? null,
+            'specialization' => $validated['specialization'] ?? null,
+            'status' => $validated['status'] ?? 'Aktif',
+            'joined_date' => $validated['joinedDate'] ?? now()->format('Y-m-d'),
+            'qualification' => $validated['qualification'] ?? null,
+            'experience' => $validated['experience'] ?? null,
+            'medical_history' => $validated['medicalHistory'] ?? null,
+            'emergency_contact_name' => $validated['emergencyContactName'] ?? null,
+            'emergency_contact_phone' => $validated['emergencyContactPhone'] ?? null,
+            'dependents_count' => $validated['dependentsCount'] ?? 0,
+            'residence' => $validated['residence'] ?? null,
+            'service_start_date' => $validated['serviceStartDate'] ?? null,
+        ];
 
-        $teacher = Teacher::create($validated);
+        $teacher = Teacher::create($data);
 
         return response()->json($teacher, 201);
     }
@@ -58,18 +99,31 @@ class TeacherController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Teacher $teacher)
+    public function update(Request $request, string $id)
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:teachers,email,' . $teacher->id,
-            'phone' => 'sometimes|required|string|max:20',
-            'specialization' => 'nullable|string|max:255',
-            'status' => 'sometimes|string|in:Aktif,Tidak Aktif',
-            'joined_date' => 'sometimes|date',
-        ]);
+        $teacher = Teacher::findOrFail($id);
+        
+        $data = $request->all();
+        
+        // Map camelCase to snake_case for DB
+        $updateData = [];
+        if (isset($data['name'])) $updateData['name'] = $data['name'];
+        if (isset($data['email'])) $updateData['email'] = $data['email'];
+        if (isset($data['phone'])) $updateData['phone'] = $data['phone'];
+        if (isset($data['icNo'])) $updateData['ic_no'] = $data['icNo'];
+        if (isset($data['specialization'])) $updateData['specialization'] = $data['specialization'];
+        if (isset($data['status'])) $updateData['status'] = $data['status'];
+        if (isset($data['joinedDate'])) $updateData['joined_date'] = $data['joinedDate'];
+        if (isset($data['qualification'])) $updateData['qualification'] = $data['qualification'];
+        if (isset($data['experience'])) $updateData['experience'] = $data['experience'];
+        if (isset($data['medicalHistory'])) $updateData['medical_history'] = $data['medicalHistory'];
+        if (isset($data['emergencyContactName'])) $updateData['emergency_contact_name'] = $data['emergencyContactName'];
+        if (isset($data['emergencyContactPhone'])) $updateData['emergency_contact_phone'] = $data['emergencyContactPhone'];
+        if (isset($data['dependentsCount'])) $updateData['dependents_count'] = $data['dependentsCount'];
+        if (isset($data['residence'])) $updateData['residence'] = $data['residence'];
+        if (isset($data['serviceStartDate'])) $updateData['service_start_date'] = $data['serviceStartDate'];
 
-        $teacher->update($validated);
+        $teacher->update($updateData);
 
         return response()->json($teacher);
     }
@@ -77,10 +131,10 @@ class TeacherController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Teacher $teacher)
+    public function destroy(string $id)
     {
+        $teacher = Teacher::findOrFail($id);
         $teacher->delete();
-
         return response()->json(null, 204);
     }
 }
