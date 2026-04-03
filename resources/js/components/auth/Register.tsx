@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { BookOpen, Mail, Lock, User, Phone, UserPlus, X } from 'lucide-react';
+import { BookOpen, Mail, Lock, User, Phone, UserPlus, X, CheckCircle2 } from 'lucide-react';
+import { useAppStore } from '../../store/AppContext';
+import { genId } from '../../store/mockData';
 
 interface RegisterProps {
   onRegister: (role: 'student' | 'parent', name: string) => void;
@@ -7,7 +9,9 @@ interface RegisterProps {
 }
 
 export function Register({ onRegister, onSwitchToLogin }: RegisterProps) {
+  const { dispatch } = useAppStore();
   const [role, setRole] = useState<'student' | 'parent'>('student');
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -21,12 +25,57 @@ export function Register({ onRegister, onSwitchToLogin }: RegisterProps) {
     // Parent specific
     childName: '',
     childAge: '',
+    // Detailed Parent
+    job: '',
+    income: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onRegister(role, formData.fullName);
+    
+    // Add user to store with pending status
+    const userId = genId('u');
+    dispatch({
+      type: 'ADD_USER',
+      payload: {
+        id: userId,
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        role: role,
+        status: 'pending',
+        phone: formData.phone,
+        // Detailed Parent
+        job: role === 'parent' ? formData.job : undefined,
+        wage: role === 'parent' ? Number(formData.income) : undefined,
+      }
+    });
+
+    setIsSubmitted(true);
   };
+
+  if (isSubmitted) {
+    return (
+      <div className="size-full flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
+        <div className="w-full max-w-md p-10 bg-white rounded-3xl shadow-xl border border-green-100 text-center animate-in fade-in zoom-in duration-500">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
+            <CheckCircle2 className="w-10 h-10 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Pendaftaran Berjaya!</h2>
+          <p className="text-gray-600 leading-relaxed mb-8">
+            Terima kasih kerana mendaftar. Akaun anda sedang dalam proses semakan. 
+            Sila tunggu kelulusan daripada <strong>Mudir (Admin)</strong> sebelum anda boleh log masuk ke dalam portal.
+          </p>
+          <button
+            onClick={onSwitchToLogin}
+            className="w-full py-3.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all font-bold shadow-lg shadow-green-100"
+          >
+            KEMBALI KE LOG MASUK
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="size-full flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4 overflow-auto">
@@ -198,6 +247,34 @@ export function Register({ onRegister, onSwitchToLogin }: RegisterProps) {
                   value={formData.childAge}
                   onChange={(e) => setFormData({ ...formData, childAge: e.target.value })}
                   placeholder="Child's age"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pekerjaan *
+                </label>
+                <input
+                  type="text"
+                  value={formData.job}
+                  onChange={(e) => setFormData({ ...formData, job: e.target.value })}
+                  placeholder="Contoh: Pegawai Bank"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pendapatan Bulanan (RM) *
+                </label>
+                <input
+                  type="number"
+                  value={formData.income}
+                  onChange={(e) => setFormData({ ...formData, income: e.target.value })}
+                  placeholder="Contoh: 5000"
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   required
                 />

@@ -14,10 +14,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
   const user = state.users.find(u => u.id === userId);
   
   // Role-specific data
-  const teacher = user?.role === 'teacher' ? state.teachers.find(t => t.id === user.linkedId) : null;
-  const student = user?.role === 'student' ? state.students.find(s => s.id === user.linkedId) : null;
-  // If parent, the parent object is the user itself in our current model, but we link to student for educational/context
-  const linkedStudent = user?.role === 'parent' ? state.students.find(s => s.id === user.linkedId) : null;
+  const teacher = user?.role === 'teacher' ? state.teachers.find(t => String(t.id) === String(user.linkedId)) : null;
+  const student = user?.role === 'student' ? state.students.find(s => String(s.id) === String(user.linkedId)) : null;
 
   // Local state for editing fields
   const [formData, setFormData] = useState({
@@ -56,6 +54,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
     officePhone: '',
     childCount: 0,
     reference: '',
+    // Murabbi Fields
+    serviceStartDate: '',
+    residence: '',
+    dependentsCount: 0,
   });
 
   useEffect(() => {
@@ -75,7 +77,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
         pob: student?.pob || '',
         race: student?.race || '',
         religion: student?.religion || '',
-        gender: student?.gender || 'M',
+        gender: (student?.gender as any) || 'M',
         bloodType: student?.bloodType || '',
         maritalStatus: student?.maritalStatus || '',
         citizenship: student?.citizenship || 'MAL',
@@ -96,6 +98,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
         officePhone: user.officePhone || '',
         childCount: user.childCount || 0,
         reference: user.reference || '',
+        // Murabbi
+        serviceStartDate: teacher?.serviceStartDate || '',
+        residence: teacher?.residence || '',
+        dependentsCount: teacher?.dependentsCount || 0,
       });
     }
   }, [user, teacher, student]);
@@ -112,7 +118,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
         phone: formData.phone,
         address: formData.address,
         wage: formData.wage,
-        // Detailed Profile
         relation: formData.relation,
         postcode: formData.postcode,
         city: formData.city,
@@ -142,6 +147,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
           medicalHistory: formData.medicalHistory,
           emergencyContactName: formData.emergencyContactName,
           emergencyContactPhone: formData.emergencyContactPhone,
+          serviceStartDate: formData.serviceStartDate,
+          residence: formData.residence,
+          dependentsCount: formData.dependentsCount,
         }
       });
     }
@@ -154,7 +162,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
           id: student.id,
           name: formData.name,
           icNo: formData.icNo,
-          gender: formData.gender,
+          gender: formData.gender as any,
           bloodType: formData.bloodType,
           maritalStatus: formData.maritalStatus,
           dob: formData.dob,
@@ -229,7 +237,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-800 tracking-tight">{user.name}</h1>
-              <p className="text-slate-400 font-semibold text-[13px] uppercase tracking-wider">{user.role} • ID: {user.linkedId || user.id}</p>
+              <p className="text-slate-400 font-semibold text-[13px] uppercase tracking-wider">
+                {user.role === 'teacher' ? 'Murabbi' : user.role} • ID: {user.linkedId || user.id}
+              </p>
             </div>
           </div>
           <button
@@ -285,6 +295,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
                  {teacher && (
                    <>
                      {renderField('Jantina', formData.gender, 'gender', 'select')}
+                     {renderField('Berkhidmat Sejak', formData.serviceStartDate, 'serviceStartDate', 'date')}
+                     {renderField('Tempat Tinggal', formData.residence, 'residence')}
+                     {renderField('Bilangan Tanggungan', formData.dependentsCount, 'dependentsCount', 'number')}
                      {renderField('Kelayakan', formData.qualification, 'qualification')}
                      {renderField('Pengalaman Mengajar (Tahun)', formData.experience, 'experience')}
                    </>
@@ -321,8 +334,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
                <div className="space-y-1">
                  {user.role === 'teacher' && (
                    <>
-                     {renderField('Kelayakan', formData.qualification, 'qualification')}
-                     {renderField('Pengalaman Mengajar (Tahun)', formData.experience, 'experience')}
+                      {renderField('Berkhidmat Sejak', formData.serviceStartDate, 'serviceStartDate', 'date', true)}
+                      {renderField('Kelayakan', formData.qualification, 'qualification')}
+                      {renderField('Pengalaman (Tahun)', formData.experience, 'experience')}
                    </>
                  )}
                  {user.role === 'parent' && (
@@ -393,7 +407,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
                <div className="space-y-4">
                  <div className="flex justify-between items-center opacity-90">
                    <span className="text-sm">Taraf</span>
-                   <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">{user.role}</span>
+                   <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                     {user.role === 'teacher' ? 'Murabbi' : user.role}
+                   </span>
                  </div>
                  <div className="flex justify-between items-center opacity-90">
                    <span className="text-sm">Status</span>

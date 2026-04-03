@@ -13,7 +13,8 @@ type Action =
   | { type: 'ADD_STUDENT'; payload: Student }
   | { type: 'EDIT_STUDENT'; payload: Partial<Student> & { id: string | number } }
   | { type: 'DELETE_STUDENT'; payload: { id: string | number } }
-  // Users (for personal profile updates - parents etc)
+  // Users
+  | { type: 'ADD_USER'; payload: User }
   | { type: 'EDIT_USER'; payload: Partial<User> & { id: string } }
   // Teachers
   | { type: 'SET_TEACHERS'; payload: Teacher[] }
@@ -89,6 +90,16 @@ function reducer(state: AppState, action: Action): AppState {
       };
     }
 
+    case 'ADD_USER': {
+      return {
+        ...state,
+        users: [...state.users, action.payload],
+        activityLog: [
+          { id: genId('log'), type: 'student_added' as any, description: 'Pengguna Baharu Mendaftar', subDescription: action.payload.name, timestamp: now },
+          ...state.activityLog,
+        ],
+      };
+    }
     case 'EDIT_USER': {
       return {
         ...state,

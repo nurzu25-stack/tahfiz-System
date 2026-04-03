@@ -99,9 +99,11 @@
         }
 
         .nav-links a {
-            position: relative;
-            padding-bottom: 2px;
-            transition: color 0.18s ease;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-links a:hover {
+            color: var(--blue);
         }
 
         .nav-links a::after {
@@ -1374,6 +1376,107 @@
             tab.addEventListener('click', () => switchAuthTab(tab.dataset.target));
         });
     </script>
+
+    <!-- TESTIMONI -->
+    <section id="testimoni" style="padding: 80px 1rem; background: #f8fafc;">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+            <h2 style="font-size: 2.5rem; font-weight: 800; color: #6FC7CB; margin-bottom: 1rem;">Testimoni Pelajar & Ibu Bapa</h2>
+            <p style="color: #64748b; max-width: 600px; margin: 0 auto 3rem;">Apa kata komuniti kami tentang pengalaman mereka di Akademi Al-Quran Amalillah.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div style="background: white; padding: 2.5rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left; position: relative;">
+                    <span style="font-size: 4rem; position: absolute; top: 10px; right: 20px; color: #f1f5f9; font-family: serif; line-height: 1;">&rdquo;</span>
+                    <p style="color: #4b5563; font-style: italic; line-height: 1.7; margin-bottom: 1.5rem;">"Sistem pengurusan yang sangat sistematik. Saya boleh pantau kemajuan hafazan anak saya setiap hari melalui dashboard parent. AI Ramalan sangat membantu!"</p>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 45px; height: 45px; border-radius: 50%; background: #6FC7CB; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">H</div>
+                        <div>
+                            <h4 style="font-size: 1rem; font-weight: 700; margin: 0;">Hassan bin Ahmad</h4>
+                            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Ibu Bapa</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 2.5rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left; position: relative;">
+                    <span style="font-size: 4rem; position: absolute; top: 10px; right: 20px; color: #f1f5f9; font-family: serif; line-height: 1;">&rdquo;</span>
+                    <p style="color: #4b5563; font-style: italic; line-height: 1.7; margin-bottom: 1.5rem;">"Alhamdulillah, teknik pengajaran Murabbi di sini sangat moden. Anak saya lebih bersemangat untuk menghafaz dengan adanya sistem ranking dan gamifikasi."</p>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 45px; height: 45px; border-radius: 50%; background: #6FC7CB; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">A</div>
+                        <div>
+                            <h4 style="font-size: 1rem; font-weight: 700; margin: 0;">Aminah binti Saleh</h4>
+                            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Ibu Bapa</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LOCATION & CONTACT -->
+    <section id="contact" style="padding: 80px 1rem; background: white;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 4rem; align-items: start;">
+                <div>
+                    <h2 style="font-size: 2.5rem; font-weight: 800; color: #6FC7CB; margin-bottom: 1.5rem;">Hubungi Kami</h2>
+                    <p style="color: #4b5563; margin-bottom: 2.5rem; line-height: 1.7;">Sertai komuniti kami untuk membina generasi Al-Quran yang cemerlang. Kami sedia membantu anda melalui pelbagai saluran komunikasi.</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="width: 40px; height: 40px; background: #E8F6F7; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📍</div>
+                            <div>
+                                <h4 style="margin: 0; font-weight: 700;">Lokasi</h4>
+                                <p style="margin: 0.25rem 0 0; color: #64748b; font-size: 0.9rem;">Lot 1096 Jalan 1D/1, Bandar Baru Sungai Buloh, 47000 Sungai Buloh, Selangor</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="width: 40px; height: 40px; background: #E8F6F7; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📞</div>
+                            <div>
+                                <h4 style="margin: 0; font-weight: 700;">Telefon</h4>
+                                <p style="margin: 0.25rem 0 0; color: #64748b; font-size: 0.9rem;">+60 12-657 0773</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="width: 40px; height: 40px; background: #E8F6F7; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">✉️</div>
+                            <div>
+                                <h4 style="margin: 0; font-weight: 700;">Emel</h4>
+                                <p style="margin: 0.25rem 0 0; color: #64748b; font-size: 0.9rem;">info@akmal.edu.my</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="border-radius: 32px; overflow: hidden; height: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border: 8px solid white;">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3983.823907008332!2d101.5583!3d3.2104!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc47a83d78c339%3A0x6a0c4f80875e5482!2sSungai%20Buloh%2C%20Selangor!5e0!3m2!1sen!2smy!4v1712165000000!5m2!1sen!2smy" 
+                        width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer style="background: #0f172a; color: white; padding: 60px 1rem 20px;">
+        <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem; margin-bottom: 40px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <img src="/images/logo.png" alt="Logo" style="height: 45px;">
+                    <span style="font-weight: 800; font-size: 1.2rem; letter-spacing: -0.02em;">AKMAL</span>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6;">Akademi Al-Quran Amalillah komited dalam membina generasi Al-Quran yang cemerlang dunia dan akhirat.</p>
+            </div>
+            <div>
+                <h4 style="font-weight: 700; margin-bottom: 1.5rem; font-size: 1rem;">Navigasi</h4>
+                <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem; color: #94a3b8;">
+                    <li><a href="#" style="color: inherit; transition: color 0.2s;">Utama</a></li>
+                    <li><a href="#testimoni" style="color: inherit; transition: color 0.2s;">Testimoni</a></li>
+                    <li><a href="#contact" style="color: inherit; transition: color 0.2s;">Hubungi</a></li>
+                    <li><a href="#auth" style="color: inherit; transition: color 0.2s;">Akses Portal</a></li>
+                </ul>
+            </div>
+        </div>
+        <div style="max-width: 1200px; margin: 0 auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; color: #64748b; font-size: 0.75rem;">
+            &copy; 2024 Akademi Al-Quran Amalillah (AKMAL). Hak Cipta Terpelihara.
+        </div>
+    </footer>
 </body>
 </html>
 

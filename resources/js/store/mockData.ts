@@ -29,6 +29,7 @@ export interface User {
   officePhone?: string;
   childCount?: number;
   reference?: string;
+  status: 'active' | 'pending';
 }
 
 export interface Student {
@@ -59,6 +60,8 @@ export interface Student {
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   familyIncome?: string;
+  admissionType?: 'tetap' | 'interview';
+  ranking?: number;
 }
 
 export interface Teacher {
@@ -78,6 +81,9 @@ export interface Teacher {
   medicalHistory?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  dependentsCount?: number;
+  residence?: string;
+  serviceStartDate?: string;
 }
 
 export interface ClassRoom {
@@ -151,13 +157,14 @@ export interface Notification {
 // ─── Seed Data ────────────────────────────────────────────────────────────────
 
 export const SEED_USERS: User[] = [
-  { id: 'u1', name: 'Admin User', email: 'admin@akmal.edu.my', password: 'admin123', role: 'admin' },
-  { id: 'u2', name: 'Ustaz Abdullah', email: 'abdullah@akmal.edu.my', password: 'teacher123', role: 'teacher', linkedId: 't1' },
-  { id: 'u3', name: 'Ustazah Sarah', email: 'sarah@akmal.edu.my', password: 'teacher123', role: 'teacher', linkedId: 't2' },
-  { id: 'u4', name: 'Hassan bin Ahmad', email: 'hassan@gmail.com', password: 'parent123', role: 'parent', linkedId: 's1' },
-  { id: 'u5', name: 'Ali bin Omar', email: 'ali@gmail.com', password: 'parent123', role: 'parent', linkedId: 's2' },
-  { id: 'u6', name: 'Ahmad bin Hassan', email: 'ahmad@student.akmal.edu.my', password: 'student123', role: 'student', linkedId: 's1' },
-  { id: 'u7', name: 'Fatimah binti Ali', email: 'fatimah@student.akmal.edu.my', password: 'student123', role: 'student', linkedId: 's2' },
+  { id: 'u1', name: 'Admin User', email: 'admin@akmal.edu.my', password: 'admin123', role: 'admin', status: 'active' },
+  { id: 'u2', name: 'Ustaz Abdullah', email: 'abdullah@akmal.edu.my', password: 'teacher123', role: 'teacher', linkedId: 't1', status: 'active' },
+  { id: 'u3', name: 'Ustazah Sarah', email: 'sarah@akmal.edu.my', password: 'teacher123', role: 'teacher', linkedId: 't2', status: 'active' },
+  { id: 'u4', name: 'Hassan bin Ahmad', email: 'hassan@gmail.com', password: 'parent123', role: 'parent', linkedId: 's1', status: 'active' },
+  { id: 'u5', name: 'Ali bin Omar', email: 'ali@gmail.com', password: 'parent123', role: 'parent', linkedId: 's2', status: 'active' },
+  { id: 'u6', name: 'Ahmad bin Hassan', email: 'ahmad@student.akmal.edu.my', password: 'student123', role: 'student', linkedId: 's1', status: 'active' },
+  { id: 'u7', name: 'Fatimah binti Ali', email: 'fatimah@student.akmal.edu.my', password: 'student123', role: 'student', linkedId: 's2', status: 'active' },
+  { id: 'u8', name: 'Zul bin Akmal (New)', email: 'zul@gmail.com', password: 'password123', role: 'parent', status: 'pending' },
 ];
 
 export const SEED_TEACHERS: Teacher[] = [
@@ -202,15 +209,15 @@ export const SEED_CLASSES: ClassRoom[] = [
 ];
 
 export const SEED_STUDENTS: Student[] = [
-  { id: 's1', name: 'Ahmad bin Hassan', age: 12, classId: 'c1', teacherId: 't1', parentId: 'u4', juzukCompleted: 5, status: 'Aktif', enrolledDate: '2024-01-10' },
-  { id: 's2', name: 'Fatimah binti Ali', age: 11, classId: 'c2', teacherId: 't2', parentId: 'u5', juzukCompleted: 3, status: 'Aktif', enrolledDate: '2024-02-05' },
-  { id: 's3', name: 'Muhammad bin Ibrahim', age: 13, classId: 'c1', teacherId: 't1', parentId: 'u4', juzukCompleted: 8, status: 'Aktif', enrolledDate: '2023-09-01' },
-  { id: 's4', name: 'Aisha binti Hassan', age: 12, classId: 'c2', teacherId: 't2', parentId: 'u5', juzukCompleted: 4, status: 'Aktif', enrolledDate: '2024-01-20' },
-  { id: 's5', name: 'Yusuf bin Omar', age: 14, classId: 'c1', teacherId: 't1', parentId: 'u4', juzukCompleted: 10, status: 'Aktif', enrolledDate: '2023-07-15' },
-  { id: 's6', name: 'Maryam binti Idris', age: 10, classId: 'c2', teacherId: 't2', parentId: 'u5', juzukCompleted: 2, status: 'Aktif', enrolledDate: '2025-01-05' },
-  { id: 's7', name: 'Ibrahim bin Khalil', age: 13, classId: 'c1', teacherId: 't1', parentId: 'u4', juzukCompleted: 6, status: 'Aktif', enrolledDate: '2023-11-10' },
-  { id: 's8', name: 'Zainab binti Yusuf', age: 11, classId: 'c3', teacherId: 't1', parentId: 'u5', juzukCompleted: 7, status: 'Aktif', enrolledDate: '2024-03-01' },
-  { id: 's9', name: 'Umar bin Rashid', age: 12, classId: 'c3', teacherId: 't1', parentId: 'u4', juzukCompleted: 1, status: 'Aktif', enrolledDate: '2025-02-01' },
+  { id: 's1', name: 'Ahmad bin Hassan', age: 12, classId: 'c1', teacherId: 't1', parentId: 'u4', juzukCompleted: 5, status: 'Aktif', enrolledDate: '2024-01-10', admissionType: 'tetap', ranking: 1 },
+  { id: 's2', name: 'Fatimah binti Ali', age: 11, classId: 'c2', teacherId: 't2', parentId: 'u5', juzukCompleted: 3, status: 'Aktif', enrolledDate: '2024-02-05', admissionType: 'tetap', ranking: 3 },
+  { id: 's3', name: 'Muhammad bin Ibrahim', age: 13, classId: 'c1', teacherId: 't1', parentId: 'u4', juzukCompleted: 8, status: 'Aktif', enrolledDate: '2023-09-01', admissionType: 'tetap', ranking: 2 },
+  { id: 's4', name: 'Aisha binti Hassan', age: 12, classId: 'c2', teacherId: 't2', parentId: 'u5', juzukCompleted: 4, status: 'Aktif', enrolledDate: '2024-01-20', admissionType: 'interview' },
+  { id: 's5', name: 'Yusuf bin Omar', age: 14, classId: 'c1', teacherId: 't1', parentId: 'u4', juzukCompleted: 10, status: 'Aktif', enrolledDate: '2023-07-15', admissionType: 'tetap', ranking: 4 },
+  { id: 's6', name: 'Maryam binti Idris', age: 10, classId: 'c2', teacherId: 't2', parentId: 'u5', juzukCompleted: 2, status: 'Aktif', enrolledDate: '2025-01-05', admissionType: 'interview' },
+  { id: 's7', name: 'Ibrahim bin Khalil', age: 13, classId: 'c1', teacherId: 't1', parentId: 'u4', juzukCompleted: 6, status: 'Aktif', enrolledDate: '2023-11-10', admissionType: 'tetap', ranking: 5 },
+  { id: 's8', name: 'Zainab binti Yusuf', age: 11, classId: 'c3', teacherId: 't1', parentId: 'u5', juzukCompleted: 7, status: 'Aktif', enrolledDate: '2024-03-01', admissionType: 'tetap', ranking: 6 },
+  { id: 's9', name: 'Umar bin Rashid', age: 12, classId: 'c3', teacherId: 't1', parentId: 'u4', juzukCompleted: 1, status: 'Aktif', enrolledDate: '2025-02-01', admissionType: 'interview' },
 ];
 
 const today = new Date();
