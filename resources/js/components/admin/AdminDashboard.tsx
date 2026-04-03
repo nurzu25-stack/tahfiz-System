@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Users, GraduationCap, DollarSign, FileText, Brain, LogOut, LayoutDashboard, X } from 'lucide-react';
+import { Users, GraduationCap, DollarSign, FileText, Brain, LogOut, LayoutDashboard, X, UserPlus } from 'lucide-react';
 import { ManageStudents } from './ManageStudents';
 import { ManageTeachers } from './ManageTeachers';
 import { ManagePayments } from './ManagePayments';
 import { ViewReports } from './ViewReports';
 import { AIPrediction } from './AIPrediction';
+import { EnrollmentHub } from './EnrollmentHub';
 import { useAppStore, getMonthlyRevenue, timeAgo } from '../../store/AppContext';
 
 interface AdminDashboardProps {
@@ -12,15 +13,16 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminView = 'home' | 'students' | 'teachers' | 'payments' | 'reports' | 'ai';
+type AdminView = 'home' | 'students' | 'enrollment' | 'teachers' | 'payments' | 'reports' | 'ai';
 
 const navItems: { id: AdminView; label: string; icon: React.ReactNode }[] = [
-  { id: 'home',     label: 'Papan Pemuka',        icon: <LayoutDashboard size={20} /> },
-  { id: 'students', label: 'Urus Pelajar',         icon: <Users size={20} /> },
-  { id: 'teachers', label: 'Urus Murabbi',         icon: <GraduationCap size={20} /> },
-  { id: 'payments', label: 'Bayaran & Invois',     icon: <DollarSign size={20} /> },
-  { id: 'reports',  label: 'Lihat Laporan',        icon: <FileText size={20} /> },
-  { id: 'ai',       label: 'Ramalan AI',           icon: <Brain size={20} /> },
+  { id: 'home',       label: 'Papan Pemuka',        icon: <LayoutDashboard size={20} /> },
+  { id: 'enrollment', label: 'Kemasukan Pelajar',    icon: <UserPlus size={20} /> },
+  { id: 'students',   label: 'Urus Pelajar',         icon: <Users size={20} /> },
+  { id: 'teachers',   label: 'Urus Murabbi',         icon: <GraduationCap size={20} /> },
+  { id: 'payments',   label: 'Bayaran & Invois',     icon: <DollarSign size={20} /> },
+  { id: 'reports',    label: 'Lihat Laporan',        icon: <FileText size={20} /> },
+  { id: 'ai',         label: 'Ramalan AI',           icon: <Brain size={20} /> },
 ];
 
 export function AdminDashboard({ userName, onLogout }: AdminDashboardProps) {
@@ -44,11 +46,12 @@ export function AdminDashboard({ userName, onLogout }: AdminDashboardProps) {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'students': return <ManageStudents />;
-      case 'teachers': return <ManageTeachers />;
-      case 'payments': return <ManagePayments />;
-      case 'reports':  return <ViewReports />;
-      case 'ai':       return <AIPrediction />;
+      case 'students':   return <ManageStudents />;
+      case 'enrollment': return <EnrollmentHub />;
+      case 'teachers':   return <ManageTeachers />;
+      case 'payments':   return <ManagePayments />;
+      case 'reports':    return <ViewReports />;
+      case 'ai':         return <AIPrediction />;
       default:
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

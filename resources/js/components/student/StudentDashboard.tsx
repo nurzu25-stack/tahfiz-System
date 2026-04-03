@@ -1,9 +1,23 @@
 import { useState } from 'react';
-import { Calendar, Target, Trophy, Brain, LogOut, BookOpen, LayoutDashboard, X } from 'lucide-react';
+import { 
+  Calendar, 
+  Target, 
+  Trophy, 
+  Brain, 
+  LogOut, 
+  BookOpen, 
+  LayoutDashboard, 
+  Mic2, 
+  Users, 
+  Layers, 
+  X 
+} from 'lucide-react';
 import { LearningSchedule } from './LearningSchedule';
 import { HafazanTarget } from './HafazanTarget';
 import { Achievements } from './Achievements';
 import { StudentAIPrediction } from './StudentAIPrediction';
+import { HafazanAI } from '../hafazan/HafazanAI';
+import { StudyRoadmap } from '../shared/StudyRoadmap';
 import { ProfileView } from '../profile/ProfileView';
 import { useAppStore, getStudentStreak, getStudentRank } from '../../store/AppContext';
 
@@ -12,15 +26,17 @@ interface StudentDashboardProps {
   onLogout: () => void;
 }
 
-type StudentView = 'home' | 'schedule' | 'target' | 'achievements' | 'ai' | 'profile';
+type StudentView = 'home' | 'schedule' | 'target' | 'achievements' | 'ai' | 'penilaian-ai' | 'pembelajaran' | 'profile';
 
 const navItems: { id: StudentView; label: string; icon: React.ReactNode }[] = [
   { id: 'home',         label: 'Papan Pemuka',      icon: <LayoutDashboard size={20} /> },
   { id: 'schedule',     label: 'Jadual Pelajaran',  icon: <Calendar size={20} /> },
   { id: 'target',       label: 'Sasaran Hafazan',   icon: <Target size={20} /> },
+  { id: 'pembelajaran', label: 'Pelan Pengajian',   icon: <Layers size={20} /> },
+  { id: 'penilaian-ai', label: 'Penilaian AI (Beta)',  icon: <Mic2 size={20} /> },
   { id: 'achievements', label: 'Pencapaian',         icon: <Trophy size={20} /> },
   { id: 'ai',           label: 'Ramalan AI',         icon: <Brain size={20} /> },
-  { id: 'profile',      label: 'Profil Saya',        icon: <Target size={20} /> },
+  { id: 'profile',      label: 'Profil Saya',        icon: <Users size={20} /> },
 ];
 
 export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) {
@@ -49,6 +65,8 @@ export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) 
       case 'target':       return <HafazanTarget />;
       case 'achievements': return <Achievements />;
       case 'ai':           return <StudentAIPrediction />;
+      case 'penilaian-ai': return <HafazanAI />;
+      case 'pembelajaran': return <StudyRoadmap />;
       case 'profile':      return <ProfileView userId={studentUser?.id || ''} />;
       default:
         return (

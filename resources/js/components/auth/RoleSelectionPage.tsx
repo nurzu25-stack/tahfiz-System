@@ -1,5 +1,15 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { 
+  ShieldCheck, 
+  GraduationCap, 
+  Users, 
+  BookOpen, 
+  ArrowLeft, 
+  ChevronRight,
+  Sparkles,
+  LayoutDashboard
+} from 'lucide-react';
 
 type UserRole = 'admin' | 'teacher' | 'parent' | 'student';
 
@@ -7,7 +17,8 @@ interface RoleOption {
   id: UserRole;
   label: string;
   subtitle: string;
-  emoji: string;
+  icon: React.ReactNode;
+  color: string;
 }
 
 const roles: RoleOption[] = [
@@ -15,42 +26,31 @@ const roles: RoleOption[] = [
     id: 'admin',
     label: 'Pentadbir',
     subtitle: 'Akses penuh ke semua modul sistem',
-    emoji: '👑',
+    icon: <ShieldCheck className="size-6" />,
+    color: 'bg-amber-50 text-amber-600 border-amber-100',
   },
   {
     id: 'teacher',
     label: 'Ustaz / Ustazah',
     subtitle: 'Urus rekod pelajar dan kemajuan hafazan',
-    emoji: '🧑‍🏫',
+    icon: <BookOpen className="size-6" />,
+    color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
   },
   {
     id: 'parent',
     label: 'Ibu Bapa / Penjaga',
     subtitle: 'Pantau kemajuan dan maklumat anak',
-    emoji: '🐻',
+    icon: <Users className="size-6" />,
+    color: 'bg-blue-50 text-blue-600 border-blue-100',
   },
   {
     id: 'student',
     label: 'Pelajar',
     subtitle: 'Lihat jadual dan kemajuan hafazan sendiri',
-    emoji: '🎓',
+    icon: <GraduationCap className="size-6" />,
+    color: 'bg-indigo-50 text-indigo-600 border-indigo-100',
   },
 ];
-
-/** AKMAL Logo SVG — matches the leaf/globe design style */
-function AkmalLogo({ size = 'lg' }: { size?: 'sm' | 'lg' }) {
-  const width = size === 'lg' ? 240 : 120;
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <img 
-        src="/images/logo.png" 
-        alt="AKMAL Logo" 
-        style={{ width: `${width}px`, height: 'auto' }}
-        className="drop-shadow-md"
-      />
-    </div>
-  );
-}
 
 export function RoleSelectionPage() {
   const navigate = useNavigate();
@@ -68,205 +68,143 @@ export function RoleSelectionPage() {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-      {/* ─── LEFT PANEL ─── White with logo */}
-      <div style={{
-        flex: '0 0 44%',
-        background: '#ffffff',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        padding: '2rem',
-      }}>
-        {/* BACK button */}
-        <div>
-          <button
-            onClick={handleBack}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.45rem 1.1rem',
-              borderRadius: '999px',
-              background: '#6FC7CB',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              border: 'none',
-              cursor: 'pointer',
-              letterSpacing: '0.05em',
-              boxShadow: '0 2px 8px rgba(111,199,203,0.3)',
-            }}
-          >
-            ← KEMBALI
-          </button>
+    <div className="min-h-screen flex bg-white font-sans selection:bg-[#6FC7CB] selection:text-white overflow-hidden">
+      
+      {/* ── LEFT PANEL: Brand & Institutional Context ── */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#1A4D50] overflow-hidden items-center justify-center p-12">
+        {/* Abstract Background patterns */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-[-10%] left-[-10%] size-[500px] rounded-full border-[60px] border-white" />
+          <div className="absolute bottom-[-20%] right-[-10%] size-[400px] rounded-full border-[30px] border-white" />
         </div>
-
-        {/* Logo centered */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '1.5rem',
-        }}>
-          <AkmalLogo size="lg" />
-
-          <h2 style={{
-            fontSize: '1.9rem',
-            fontWeight: 800,
-            color: '#5FB3B7',
-            textAlign: 'center',
-            margin: 0,
-            lineHeight: 1.2,
-          }}>
-            Sistem Pengurusan<br />Tahfiz AKMAL
-          </h2>
+        
+        <div className="relative z-10 w-full max-w-lg text-center">
+          
+          <div className="mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+            <img 
+              src="/images/logo.png" 
+              alt="AKMAL Logo" 
+              className="w-48 mx-auto mb-8 drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+            />
+            <h2 className="text-4xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+              Sistem Pengurusan<br/>Tahfiz Pintar AKMAL
+            </h2>
+            <div className="h-1.5 w-24 bg-[#6FC7CB] mx-auto rounded-full mb-8" />
+            <p className="text-white/70 text-lg leading-relaxed max-w-sm mx-auto font-medium">
+              Satu portal untuk semua. Pilih peranan anda untuk memulakan sesi pengurusan akademik yang lebih efisien.
+            </p>
+          </div>
+          
+          {/* Stats/Badges */}
+          <div className="flex items-center justify-center gap-6 animate-in fade-in zoom-in duration-1000 delay-300">
+             <div className="bg-white/5 border border-white/10 backdrop-blur-md px-6 py-4 rounded-2xl">
+               <div className="text-2xl font-black text-white">30</div>
+               <div className="text-[10px] font-bold text-[#6FC7CB] uppercase tracking-widest">Juzuk Al-Quran</div>
+             </div>
+             <div className="bg-white/5 border border-white/10 backdrop-blur-md px-6 py-4 rounded-2xl">
+               <div className="text-2xl font-black text-white">4+</div>
+               <div className="text-[10px] font-bold text-[#6FC7CB] uppercase tracking-widest">Modul Peranan</div>
+             </div>
+          </div>
+        </div>
+        
+        {/* Decorative dots */}
+        <div className="absolute top-1/4 right-20 grid grid-cols-4 gap-4 opacity-20">
+          {[...Array(16)].map((_, i) => <div key={i} className="size-1.5 bg-white rounded-full" />)}
         </div>
       </div>
 
-      {/* ─── RIGHT PANEL ─── Green gradient */}
-      <div style={{
-        flex: 1,
-        background: 'linear-gradient(160deg, #6FC7CB 0%, #5FB3B7 40%, #A8DEE0 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem',
-      }}>
-        {/* White card */}
-        <div style={{
-          background: '#fff',
-          borderRadius: '24px',
-          padding: '2rem 2rem 1.5rem',
-          width: '100%',
-          maxWidth: '420px',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-        }}>
-          {/* Card Header */}
-          <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-            <h1 style={{
-              fontSize: '1.4rem',
-              fontWeight: 800,
-              color: '#1a1a1a',
-              margin: 0,
-              letterSpacing: '0.05em',
-            }}>
-              {action === 'register' ? 'DAFTAR AKAUN' : 'SELAMAT KEMBALI'}
+      {/* ── RIGHT PANEL: Role Selection ── */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-slate-50/30 overflow-y-auto">
+        <div className="w-full max-w-md animate-in fade-in slide-in-from-right-8 duration-700">
+          
+          {/* Mobile Logo */}
+          <div className="lg:hidden flex justify-center mb-8">
+            <img src="/images/logo.png" alt="Logo" className="h-12" />
+          </div>
+
+          <div className="mb-10 text-center lg:text-left">
+            <button 
+              onClick={handleBack}
+              className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-600 font-bold text-xs uppercase tracking-widest transition-colors mb-6 group"
+            >
+              <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" /> Kembali ke Laman Utama
+            </button>
+            <h1 className="text-4xl font-black text-slate-800 mb-2 tracking-tight">
+              {action === 'register' ? 'Daftar Akaun' : 'Selamat Kembali'}
             </h1>
-            <p style={{ color: '#888', fontSize: '0.85rem', margin: '0.3rem 0 0' }}>
+            <p className="text-slate-400 font-medium">
               {action === 'register'
-                ? 'Sila pilih peranan anda untuk mendaftar'
-                : 'Sila log masuk ke akaun anda'}
+                ? 'Pilih identiti anda untuk memulakan pendaftaran permohonan.'
+                : 'Sila pilih peranan anda untuk mengakses dashboard peribadi.'}
             </p>
           </div>
 
-          {/* Role Cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.25rem' }}>
-            {roles.map((role) => {
+          <div className="space-y-4 mb-10">
+            {roles.map((role, idx) => {
               const isSelected = selectedRole === role.id;
               return (
                 <button
                   key={role.id}
-                  type="button"
                   onClick={() => setSelectedRole(role.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 1rem',
-                    borderRadius: '14px',
-                    background: isSelected ? '#D1EEF0' : '#E8F6F7',
-                    border: isSelected ? '2px solid #6FC7CB' : '2px solid transparent',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease',
-                    boxShadow: isSelected ? '0 2px 8px rgba(111,199,203,0.25)' : 'none',
-                  }}
+                  className={`
+                    w-full flex items-center gap-5 p-5 rounded-[24px] border-2 transition-all duration-300 relative group
+                    ${isSelected 
+                      ? 'bg-white border-[#6FC7CB] shadow-2xl shadow-cyan-100/50 -translate-y-1' 
+                      : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50/50'
+                    }
+                  `}
+                  style={{ animationDelay: `${idx * 100}ms` }}
                 >
-                  {/* Radio circle */}
-                  <div style={{
-                    flexShrink: 0,
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '50%',
-                    border: `2px solid ${isSelected ? '#6FC7CB' : '#999'}`,
-                    background: isSelected ? '#6FC7CB' : '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    {isSelected && (
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }} />
-                    )}
+                  <div className={`
+                    size-14 rounded-2xl flex items-center justify-center transition-all duration-500
+                    ${role.color} ${isSelected ? 'scale-110 rotate-3' : 'group-hover:scale-105'}
+                  `}>
+                    {role.icon}
                   </div>
-
-                  {/* Emoji */}
-                  <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>{role.emoji}</span>
-
-                  {/* Text */}
-                  <div>
-                    <div style={{
-                      fontWeight: 700,
-                      fontSize: '0.9rem',
-                      color: '#1a1a1a',
-                    }}>
+                  
+                  <div className="flex-1 text-left">
+                    <h3 className={`font-black text-lg transition-colors ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
                       {role.label}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#555', marginTop: '1px' }}>
+                    </h3>
+                    <p className="text-slate-400 text-sm font-medium leading-tight">
                       {role.subtitle}
-                    </div>
+                    </p>
                   </div>
+
+                  <div className={`
+                    size-6 rounded-full border-2 transition-all duration-300 flex items-center justify-center
+                    ${isSelected ? 'bg-[#6FC7CB] border-[#6FC7CB]' : 'border-slate-200 group-hover:border-slate-300'}
+                  `}>
+                    {isSelected && <div className="size-2 bg-white rounded-full shadow-sm" />}
+                  </div>
+
+                  {isSelected && (
+                    <div className="absolute -top-2 -right-2 bg-[#1A4D50] text-[#6FC7CB] p-1.5 rounded-full shadow-lg border-2 border-white animate-in zoom-in duration-300">
+                      <Sparkles className="size-3" />
+                    </div>
+                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* Divider */}
-          <div style={{ borderTop: '1px solid #e8e8e8', margin: '0 -2rem 1rem' }} />
-
-          {/* LOGIN Button */}
           <button
             onClick={handleProceed}
             disabled={!selectedRole}
-            style={{
-              width: '100%',
-              padding: '0.9rem',
-              borderRadius: '12px',
-              background: selectedRole ? '#1a1a1a' : '#ccc',
-              color: '#fff',
-              fontWeight: 800,
-              fontSize: '1rem',
-              letterSpacing: '0.12em',
-              border: 'none',
-              cursor: selectedRole ? 'pointer' : 'not-allowed',
-              transition: 'background 0.15s ease',
-            }}
-            onMouseEnter={(e) => { if (selectedRole) (e.currentTarget as HTMLButtonElement).style.background = '#333'; }}
-            onMouseLeave={(e) => { if (selectedRole) (e.currentTarget as HTMLButtonElement).style.background = '#1a1a1a'; }}
+            className="w-full py-5 bg-slate-900 text-white rounded-[24px] font-bold text-lg hover:bg-slate-800 shadow-2xl shadow-slate-200 transition-all flex items-center justify-center gap-3 active:scale-95 group disabled:opacity-50 disabled:bg-slate-200 disabled:shadow-none disabled:active:scale-100"
           >
-            {action === 'register' ? 'DAFTAR' : 'LOG MASUK'}
+            <span className="tracking-widest uppercase">
+              {action === 'register' ? 'MULAKAN PENDAFTARAN' : 'LOG MASUK SEKARANG'}
+            </span>
+            <ChevronRight className="size-5 group-hover:translate-x-1 transition-transform" />
           </button>
 
-          {/* Forgot Password */}
-          <div style={{ textAlign: 'center', marginTop: '0.9rem' }}>
-            <span style={{ fontSize: '0.8rem', color: '#777' }}>Lupa Kata Laluan? </span>
-            <button
-              onClick={() => navigate('/auth?action=forgot')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#6FC7CB',
-                fontWeight: 700,
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
-              Klik di sini
-            </button>
-          </div>
+          <footer className="mt-12 pt-8 border-t border-slate-100 text-center">
+            <span className="text-xs font-bold text-slate-300 uppercase tracking-[0.3em]">
+              Akademi Al-Quran Amalillah (AKMAL) • 2026
+            </span>
+          </footer>
         </div>
       </div>
     </div>

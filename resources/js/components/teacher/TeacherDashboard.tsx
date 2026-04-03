@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { BookOpen, Users, Calendar, FileText, Brain, LogOut, LayoutDashboard, Upload, X } from 'lucide-react';
+import { BookOpen, Users, Calendar, FileText, Brain, LogOut, LayoutDashboard, Upload, X, Mic2, Layers } from 'lucide-react';
 import { RecordHafazan } from './RecordHafazan';
 import { ManageAttendance } from './ManageAttendance';
 import { UploadReport } from './UploadReport';
 import { StudentList } from './StudentList';
 import { TeacherAIPrediction } from './TeacherAIPrediction';
+import { TeacherAIAssessment } from './TeacherAIAssessment';
+import { StudyRoadmap } from '../shared/StudyRoadmap';
 import { ProfileView } from '../profile/ProfileView';
 import { useAppStore } from '../../store/AppContext';
 
@@ -13,13 +15,15 @@ interface TeacherDashboardProps {
   onLogout: () => void;
 }
 
-type TeacherView = 'home' | 'hafazan' | 'attendance' | 'report' | 'students' | 'ai' | 'profile';
+type TeacherView = 'home' | 'hafazan' | 'attendance' | 'report' | 'students' | 'ai' | 'semak-ai' | 'sukatan' | 'profile';
 
 const navItems: { id: TeacherView; label: string; icon: React.ReactNode }[] = [
   { id: 'home',       label: 'Papan Pemuka',         icon: <LayoutDashboard size={20} /> },
   { id: 'hafazan',    label: 'Rekod Hafazan',        icon: <BookOpen size={20} /> },
   { id: 'attendance', label: 'Urus Kehadiran',       icon: <Calendar size={20} /> },
   { id: 'report',     label: 'Muat Naik Laporan',     icon: <Upload size={20} /> },
+  { id: 'sukatan',    label: 'Sukatan Pelajaran',    icon: <Layers size={20} /> },
+  { id: 'semak-ai',   label: 'Semak Ujian AI',       icon: <Mic2 size={20} /> },
   { id: 'students',   label: 'Lihat Pelajar',        icon: <Users size={20} /> },
   { id: 'ai',         label: 'Ramalan AI',            icon: <Brain size={20} /> },
   { id: 'profile',    label: 'Profil Saya',           icon: <Users size={20} /> },
@@ -62,6 +66,8 @@ export function TeacherDashboard({ userName, onLogout }: TeacherDashboardProps) 
       case 'report':     return <UploadReport />;
       case 'students':   return <StudentList />;
       case 'ai':         return <TeacherAIPrediction />;
+      case 'semak-ai':   return <TeacherAIAssessment />;
+      case 'sukatan':    return <StudyRoadmap />;
       case 'profile':    return <ProfileView userId={authUser?.id || ''} />;
       default:
         return (
