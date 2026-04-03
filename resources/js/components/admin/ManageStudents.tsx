@@ -13,6 +13,7 @@ export function ManageStudents() {
   const [classFilter, setClassFilter] = useState('');
   const [addForm, setAddForm] = useState({ name: '', age: '', classId: '', teacherId: '', parentId: '1' });
   const [editForm, setEditForm] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'tetap' | 'interview'>('tetap');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,10 +48,13 @@ export function ManageStudents() {
     return `${Math.round((present / recs.length) * 100)}%`;
   };
 
-  const filtered = state.students.filter(s =>
-    (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || getClassName(s.classId).toString().toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (!classFilter || String(s.classId) === String(classFilter))
-  );
+  const filtered = state.students.filter(s => {
+    const matchesSearch = (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || getClassName(s.classId).toString().toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesClass = (!classFilter || String(s.classId) === String(classFilter));
+    const type = s.admissionType || 'tetap';
+    const matchesTab = type === activeTab;
+    return matchesSearch && matchesClass && matchesTab;
+  });
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,11 +106,31 @@ export function ManageStudents() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900">Urus Pelajar</h2>
-          <p className="text-gray-600 mt-1">Lihat dan urus semua rekod pelajar ({state.students.length} jumlah)</p>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Akademi Al-Quran Amalillah — <span className="text-gray-500 font-medium lowercase">urus pelajar</span></h2>
+          <p className="text-gray-500 mt-1 text-sm">Lihat, kategorikan, dan kemaskini maklumat pelajar mengikut status pendaftaran.</p>
         </div>
-        <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-          <Plus className="w-5 h-5" /> Tambah Pelajar
+        <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-6 py-2.5 bg-[#6FC7CB] text-white rounded-xl hover:bg-[#5FB3B7] shadow-lg shadow-cyan-100 transition-all font-bold">
+          <Plus className="w-5 h-5" /> DAFTAR PELAJAR
+        </button>
+      </div>
+
+      {/* TABS */}
+      <div className="flex border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('tetap')}
+          className={`px-6 py-3 text-sm font-bold tracking-wider uppercase transition-all border-b-2 ${
+            activeTab === 'tetap' ? 'border-[#6FC7CB] text-[#6FC7CB]' : 'border-transparent text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          Pelajar Tetap
+        </button>
+        <button
+          onClick={() => setActiveTab('interview')}
+          className={`px-6 py-3 text-sm font-bold tracking-wider uppercase transition-all border-b-2 ${
+            activeTab === 'interview' ? 'border-[#6FC7CB] text-[#6FC7CB]' : 'border-transparent text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          Pelajar Interview
         </button>
       </div>
 
@@ -128,15 +152,18 @@ export function ManageStudents() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {['Nama','Umur','Kelas','Ustaz/Ustazah','Hafazan','Kehadiran','Status','Tindakan'].map(h => (
-                  <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{h}</th>
+                {['Ranking','Nama','Umur','Kelas','Murabbi/ah','Hafazan','Kehadiran','Status','Tindakan'].map(h => (
+                  <th key={h} className="px-6 py-4 text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filtered.map(student => (
-                <tr key={student.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
+                <tr key={student.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="font-bold text-[#6FC7CB]">#{student.ranking || '—'}</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-800">{student.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{student.age}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{getClassName(student.classId)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{getTeacherName(student.teacherId)}</td>
@@ -178,7 +205,7 @@ export function ManageStudents() {
                     {state.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
-                <div><label className="block text-sm font-medium text-gray-700 mb-2">Ustaz / Ustazah</label>
+                <div><label className="block text-sm font-medium text-gray-700 mb-2">Murabbi / Murabbiah</label>
                   <select required className={inputCls} value={addForm.teacherId} onChange={e => setAddForm({ ...addForm, teacherId: e.target.value })}>
                     {state.teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
@@ -228,7 +255,9 @@ export function ManageStudents() {
                 ['Nama Penuh', selectedStudent.name],
                 ['Umur', selectedStudent.age],
                 ['Kelas', getClassName(selectedStudent.classId)],
-                ['Ustaz / Ustazah', getTeacherName(selectedStudent.teacherId)],
+                ['Murabbi / Murabbiah', getTeacherName(selectedStudent.teacherId)],
+                ['Ranking Semasa', selectedStudent.ranking ? `#${selectedStudent.ranking}` : 'Tiada Ranking'],
+                ['Jenis Pendaftaran', selectedStudent.admissionType === 'interview' ? 'Murid Interview' : 'Murid Tetap'],
                 ['Kemajuan Hafazan', `${selectedStudent.juzukCompleted} / 30 Juzuk`],
                 ['Kehadiran', getAttendance(selectedStudent.id)],
                 ['Status', selectedStudent.status],
