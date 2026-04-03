@@ -12,6 +12,23 @@ export interface User {
   password: string; // plain mock
   role: UserRole;
   linkedId?: string; // studentId for parent/student, teacherId for teacher
+  wage?: number; // for parents
+  phone?: string;
+  address?: string;
+  
+  // Detailed Parent Profile
+  relation?: string;
+  postcode?: string;
+  city?: string;
+  district?: string;
+  stateName?: string;
+  country?: string;
+  parliament?: string;
+  job?: string;
+  sector?: string;
+  officePhone?: string;
+  childCount?: number;
+  reference?: string;
 }
 
 export interface Student {
@@ -24,6 +41,24 @@ export interface Student {
   juzukCompleted: number;
   status: 'Aktif' | 'Tidak Aktif';
   enrolledDate: string;
+  phone?: string; 
+  
+  // New profile fields
+  icNo?: string;
+  gender?: 'F' | 'M';
+  maritalStatus?: string;
+  bloodType?: string;
+  dob?: string;
+  pob?: string;
+  citizenship?: string;
+  race?: string;
+  religion?: string;
+  educationBackground?: string; // UPSR, SPM, etc.
+  intakeDate?: string;
+  medicalHistory?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  familyIncome?: string;
 }
 
 export interface Teacher {
@@ -35,6 +70,14 @@ export interface Teacher {
   specialization: string;
   status: 'Aktif' | 'Tidak Aktif';
   joinedDate: string;
+  
+  // New profile fields
+  icNo?: string;
+  qualification?: string;
+  experience?: string;
+  medicalHistory?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
 }
 
 export interface ClassRoom {

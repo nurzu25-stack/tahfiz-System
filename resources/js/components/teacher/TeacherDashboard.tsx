@@ -5,6 +5,7 @@ import { ManageAttendance } from './ManageAttendance';
 import { UploadReport } from './UploadReport';
 import { StudentList } from './StudentList';
 import { TeacherAIPrediction } from './TeacherAIPrediction';
+import { ProfileView } from '../profile/ProfileView';
 import { useAppStore } from '../../store/AppContext';
 
 interface TeacherDashboardProps {
@@ -12,7 +13,7 @@ interface TeacherDashboardProps {
   onLogout: () => void;
 }
 
-type TeacherView = 'home' | 'hafazan' | 'attendance' | 'report' | 'students' | 'ai';
+type TeacherView = 'home' | 'hafazan' | 'attendance' | 'report' | 'students' | 'ai' | 'profile';
 
 const navItems: { id: TeacherView; label: string; icon: React.ReactNode }[] = [
   { id: 'home',       label: 'Papan Pemuka',         icon: <LayoutDashboard size={20} /> },
@@ -21,6 +22,7 @@ const navItems: { id: TeacherView; label: string; icon: React.ReactNode }[] = [
   { id: 'report',     label: 'Muat Naik Laporan',     icon: <Upload size={20} /> },
   { id: 'students',   label: 'Lihat Pelajar',        icon: <Users size={20} /> },
   { id: 'ai',         label: 'Ramalan AI',            icon: <Brain size={20} /> },
+  { id: 'profile',    label: 'Profil Saya',           icon: <Users size={20} /> },
 ];
 
 export function TeacherDashboard({ userName, onLogout }: TeacherDashboardProps) {
@@ -60,6 +62,7 @@ export function TeacherDashboard({ userName, onLogout }: TeacherDashboardProps) 
       case 'report':     return <UploadReport />;
       case 'students':   return <StudentList />;
       case 'ai':         return <TeacherAIPrediction />;
+      case 'profile':    return <ProfileView userId={authUser?.id || ''} />;
       default:
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -133,7 +136,7 @@ export function TeacherDashboard({ userName, onLogout }: TeacherDashboardProps) 
           boxShadow: '4px 0 15px rgba(0,0,0,0.05)',
         }}>
           <div style={{ padding: '1.5rem 1rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <img src="/images/logo.png" alt="Logo" style={{ height: '55px', marginBottom: '0.75rem', filter: 'brightness(0) invert(1)' }} />
+            <img src="/images/logo.png" alt="Logo" style={{ height: '55px', marginBottom: '0.75rem' }} />
             <p style={{ color: '#fff', fontWeight: 800, fontSize: '0.9rem', margin: 0, letterSpacing: '0.05em' }}>USTAZ / USTAZAH</p>
             <p style={{ color: '#E8F6F7', fontSize: '0.75rem', margin: '0.2rem 0 0', opacity: 0.9 }}>{userName}</p>
           </div>

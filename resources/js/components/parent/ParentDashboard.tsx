@@ -5,6 +5,7 @@ import { ViewAttendance } from './ViewAttendance';
 import { ViewPayments } from './ViewPayments';
 import { Notifications } from './Notifications';
 import { ParentAIPrediction } from './ParentAIPrediction';
+import { ProfileView } from '../profile/ProfileView';
 import { useAppStore, getStudentAttendanceRate } from '../../store/AppContext';
 
 interface ParentDashboardProps {
@@ -12,7 +13,7 @@ interface ParentDashboardProps {
   onLogout: () => void;
 }
 
-type ParentView = 'home' | 'progress' | 'attendance' | 'payment' | 'notifications' | 'ai';
+type ParentView = 'home' | 'progress' | 'attendance' | 'payment' | 'notifications' | 'ai' | 'profile';
 
 const navItems: { id: ParentView; label: string; icon: React.ReactNode; badge?: string }[] = [
   { id: 'home',          label: 'Profil Anak',          icon: <LayoutDashboard size={20} /> },
@@ -21,6 +22,7 @@ const navItems: { id: ParentView; label: string; icon: React.ReactNode; badge?: 
   { id: 'payment',       label: 'Status Yuran',          icon: <DollarSign size={20} /> },
   { id: 'notifications', label: 'Pemberitahuan',         icon: <Bell size={20} />, badge: '3' },
   { id: 'ai',            label: 'Ramalan AI',            icon: <Brain size={20} /> },
+  { id: 'profile',       label: 'Profil Saya',           icon: <User size={20} /> },
 ];
 
 export function ParentDashboard({ userName, onLogout }: ParentDashboardProps) {
@@ -63,6 +65,7 @@ export function ParentDashboard({ userName, onLogout }: ParentDashboardProps) {
       case 'payment':       return <ViewPayments />;
       case 'notifications': return <Notifications />;
       case 'ai':            return <ParentAIPrediction />;
+      case 'profile':       return <ProfileView userId={parentUser?.id || ''} />;
       default:
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -134,7 +137,7 @@ export function ParentDashboard({ userName, onLogout }: ParentDashboardProps) {
           boxShadow: '4px 0 15px rgba(0,0,0,0.05)',
         }}>
           <div style={{ padding: '1.5rem 1rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <img src="/images/logo.png" alt="Logo" style={{ height: '55px', marginBottom: '0.75rem', filter: 'brightness(0) invert(1)' }} />
+            <img src="/images/logo.png" alt="Logo" style={{ height: '55px', marginBottom: '0.75rem' }} />
             <p style={{ color: '#fff', fontWeight: 800, fontSize: '0.9rem', margin: 0, letterSpacing: '0.05em' }}>IBU BAPA / PENJAGA</p>
             <p style={{ color: '#E8F6F7', fontSize: '0.75rem', margin: '0.2rem 0 0', opacity: 0.9 }}>{userName}</p>
           </div>

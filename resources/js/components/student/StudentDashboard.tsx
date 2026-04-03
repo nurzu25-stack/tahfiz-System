@@ -4,6 +4,7 @@ import { LearningSchedule } from './LearningSchedule';
 import { HafazanTarget } from './HafazanTarget';
 import { Achievements } from './Achievements';
 import { StudentAIPrediction } from './StudentAIPrediction';
+import { ProfileView } from '../profile/ProfileView';
 import { useAppStore, getStudentStreak, getStudentRank } from '../../store/AppContext';
 
 interface StudentDashboardProps {
@@ -11,7 +12,7 @@ interface StudentDashboardProps {
   onLogout: () => void;
 }
 
-type StudentView = 'home' | 'schedule' | 'target' | 'achievements' | 'ai';
+type StudentView = 'home' | 'schedule' | 'target' | 'achievements' | 'ai' | 'profile';
 
 const navItems: { id: StudentView; label: string; icon: React.ReactNode }[] = [
   { id: 'home',         label: 'Papan Pemuka',      icon: <LayoutDashboard size={20} /> },
@@ -19,6 +20,7 @@ const navItems: { id: StudentView; label: string; icon: React.ReactNode }[] = [
   { id: 'target',       label: 'Sasaran Hafazan',   icon: <Target size={20} /> },
   { id: 'achievements', label: 'Pencapaian',         icon: <Trophy size={20} /> },
   { id: 'ai',           label: 'Ramalan AI',         icon: <Brain size={20} /> },
+  { id: 'profile',      label: 'Profil Saya',        icon: <Target size={20} /> },
 ];
 
 export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) {
@@ -47,6 +49,7 @@ export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) 
       case 'target':       return <HafazanTarget />;
       case 'achievements': return <Achievements />;
       case 'ai':           return <StudentAIPrediction />;
+      case 'profile':      return <ProfileView userId={studentUser?.id || ''} />;
       default:
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -127,7 +130,7 @@ export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) 
           boxShadow: '4px 0 15px rgba(0,0,0,0.05)',
         }}>
           <div style={{ padding: '1.5rem 1rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <img src="/images/logo.png" alt="Logo" style={{ height: '55px', marginBottom: '0.75rem', filter: 'brightness(0) invert(1)' }} />
+            <img src="/images/logo.png" alt="Logo" style={{ height: '55px', marginBottom: '0.75rem' }} />
             <p style={{ color: '#fff', fontWeight: 800, fontSize: '0.9rem', margin: 0, letterSpacing: '0.05em' }}>PORTAL PELAJAR</p>
             <p style={{ color: '#E8F6F7', fontSize: '0.75rem', margin: '0.2rem 0 0', opacity: 0.9 }}>{userName}</p>
           </div>

@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer, useEffect, ReactNode } from 'rea
 import {
   AppState, buildInitialState, genId,
   Student, Teacher, ClassRoom, HafazanRecord, AttendanceRecord, Payment, Report,
-  ActivityLog, Notification, AttendanceStatus, Grade,
+  ActivityLog, Notification, AttendanceStatus, Grade, User
 } from './mockData';
 
 // ─── Action Types ─────────────────────────────────────────────────────────────
@@ -13,6 +13,8 @@ type Action =
   | { type: 'ADD_STUDENT'; payload: Student }
   | { type: 'EDIT_STUDENT'; payload: Partial<Student> & { id: string | number } }
   | { type: 'DELETE_STUDENT'; payload: { id: string | number } }
+  // Users (for personal profile updates - parents etc)
+  | { type: 'EDIT_USER'; payload: Partial<User> & { id: string } }
   // Teachers
   | { type: 'SET_TEACHERS'; payload: Teacher[] }
   | { type: 'ADD_TEACHER'; payload: Teacher }
@@ -84,6 +86,13 @@ function reducer(state: AppState, action: Action): AppState {
           { id: genId('log'), type: 'student_deleted', description: 'Pelajar Dipadam', subDescription: name, timestamp: now },
           ...state.activityLog,
         ],
+      };
+    }
+
+    case 'EDIT_USER': {
+      return {
+        ...state,
+        users: state.users.map(u => String(u.id) === String(action.payload.id) ? { ...u, ...action.payload } : u),
       };
     }
 
