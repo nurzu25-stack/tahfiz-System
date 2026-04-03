@@ -863,6 +863,84 @@
                 transform: scale(0.9);
             }
         }
+        /* Carousel Styles */
+        .media-carousel {
+            position: relative;
+            max-width: 1000px;
+            margin: 0 auto;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+            background: #fff;
+            border: 8px solid #fff;
+        }
+        .carousel-track-container {
+            position: relative;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            overflow: hidden;
+        }
+        .carousel-track {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300%; /* 3 items */
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+        }
+        .carousel-slide {
+            width: 33.333%;
+            height: 100%;
+            flex-shrink: 0;
+        }
+        .carousel-slide img, .carousel-slide iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: none;
+        }
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.9);
+            color: #6FC7CB;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .carousel-btn:hover { background: #fff; transform: translateY(-50%) scale(1.1); color: #5FB3B7; }
+        .carousel-btn-prev { left: 20px; }
+        .carousel-btn-next { right: 20px; }
+        
+        .carousel-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            border: none;
+        }
+        .carousel-dot.active { background: #fff; width: 25px; border-radius: 999px; }
     </style>
 </head>
 <body>
@@ -877,6 +955,7 @@
             <nav class="nav-links">
                 <a href="#home">Home</a>
                 <a href="#features">Features</a>
+                <a href="#testimonials">Testimonials</a>
                 <a href="#locations">Locations</a>
                 <a href="#about">About</a>
                 <a href="#contact">Contact</a>
@@ -1007,6 +1086,76 @@
         </div>
     </section>
 
+    <!-- MEDIA VIDEO SECTION -->
+    <section id="media" style="padding: 6rem 1rem; background: linear-gradient(135deg, #f8fafc 0%, #e8f4f5 100%);">
+        <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+            <p style="text-transform: uppercase; letter-spacing: 0.1em; color: #6FC7CB; font-weight: 700; margin-bottom: 0.5rem;">Visi & Misi Kami</p>
+            <h2 style="font-size: 2.2rem; font-weight: 800; color: #5FB3B7; margin-bottom: 3rem;">Tujuan & Matlamat Utama AKMAL</h2>
+            
+            <div style="margin-bottom: 5rem; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 45px rgba(0,0,0,0.08); border: 2px solid #fff;">
+                <img src="/images/visi_misi.png" alt="AKMAL Visi & Misi" style="width: 100%; height: auto; display: block;">
+            </div>
+
+            <p style="text-transform: uppercase; letter-spacing: 0.1em; color: #6FC7CB; font-weight: 700; margin-bottom: 0.5rem;">Informasi Media</p>
+            <h2 style="font-size: 2.2rem; font-weight: 800; color: #5FB3B7; margin-bottom: 3rem;">Terokai Program & Aktiviti Kami</h2>
+            
+            <div class="media-carousel">
+                <div class="carousel-track-container">
+                    <div class="carousel-track" id="carouselTrack">
+                        <!-- Slide 1: Image -->
+                        <div class="carousel-slide">
+                            <img src="/images/info1.png" alt="Info 1">
+                        </div>
+                        <!-- Slide 2: Video 1 -->
+                        <div class="carousel-slide">
+                            <iframe src="https://www.youtube.com/embed/lCRIwE8jg0s?enablejsapi=1" title="AKMAL Clip 1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        <!-- Slide 3: Video 2 -->
+                        <div class="carousel-slide">
+                            <iframe src="https://www.youtube.com/embed/Vmf2GWXglZc?enablejsapi=1" title="AKMAL Clip 2" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="carousel-btn carousel-btn-prev" onclick="moveSlide(-1)">❮</button>
+                <button class="carousel-btn carousel-btn-next" onclick="moveSlide(1)">❯</button>
+                
+                <div class="carousel-dots">
+                    <button class="carousel-dot active" onclick="currentSlide(0)"></button>
+                    <button class="carousel-dot" onclick="currentSlide(1)"></button>
+                    <button class="carousel-dot" onclick="currentSlide(2)"></button>
+                </div>
+            </div>
+            
+            <script>
+                let currentIdx = 0;
+                const track = document.getElementById('carouselTrack');
+                const dots = document.querySelectorAll('.carousel-dot');
+                
+                function updateCarousel() {
+                    track.style.transform = `translateX(-${currentIdx * 33.333}%)`;
+                    dots.forEach((dot, i) => {
+                        dot.classList.toggle('active', i === currentIdx);
+                    });
+                }
+                
+                function moveSlide(dir) {
+                    currentIdx = (currentIdx + dir + 3) % 3;
+                    updateCarousel();
+                }
+                
+                function currentSlide(idx) {
+                    currentIdx = idx;
+                    updateCarousel();
+                }
+            </script>
+            
+            <p style="margin-top: 2rem; color: #64748b; font-style: italic; font-size: 0.95rem;">
+                "Setahun Menempa Sejarah — Bersama kami membangunkan ummah melalui kalam Allah."
+            </p>
+        </div>
+    </section>
+
     <!-- 6 STRATEGIES SECTION -->
     <section id="features" style="padding: 6rem 1rem; background: #fff;">
         <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
@@ -1055,6 +1204,24 @@
                     <h3 style="font-size: 1.25rem; font-weight: 800; color: #5FB3B7; margin-bottom: 1rem;">REHAT MENCUKUPI</h3>
                     <p style="color: #64748b; line-height: 1.6; font-size: 0.95rem;">Penginapan selesa disediakan bagi memastikan pelajar mendapat rehat cukup untuk kekuatan minda menghafal Kalamullah.</p>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS SECTION -->
+    <section id="testimonials" style="padding: 6rem 1rem; background: #fff;">
+        <div style="max-width: 1100px; margin: 0 auto; text-align: center;">
+            <p style="text-transform: uppercase; letter-spacing: 0.1em; color: #6FC7CB; font-weight: 700; margin-bottom: 0.5rem;">Apa Kata Mereka?</p>
+            <h2 style="font-size: 2.2rem; font-weight: 800; color: #5FB3B7; margin-bottom: 3rem;">Testimoni Pelajar & Ibu Bapa</h2>
+            
+            <div style="border-radius: 32px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.06); border: 2px solid #f1f5f9;">
+                <img src="/images/testimoni.png" alt="AKMAL Testimonials" style="width: 100%; height: auto; display: block;">
+            </div>
+            
+            <div style="margin-top: 3rem; display: flex; justify-content: center; gap: 1rem;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #6FC7CB; display: block;"></span>
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #D1EEF0; display: block;"></span>
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #D1EEF0; display: block;"></span>
             </div>
         </div>
     </section>
