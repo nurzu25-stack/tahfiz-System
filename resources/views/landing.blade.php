@@ -899,33 +899,26 @@
                     <span class="hero-badge-text">Powered by Modern Tech</span>
                 </div>
 
-                <h1 class="hero-title">Tahfiz Management System</h1>
+                <h1 class="hero-title" style="color: #5FB3B7;">Setahun Menempa Sejarah: Misi Hafiz 30 Juzuk Al-Quran</h1>
 
                 <p class="hero-subtitle">
-                    A comprehensive digital platform for managing students, tracking memorization progress,
-                    and administering tahfiz institutions more efficiently.
+                    Fokus mencapai misi hafiz 30 juzuk Al-Quran dalam tempoh setahun insyaAllah. Jom jadi sebahagian sejarah hafiz/ah khatam Al-Quran bersama kami.
                 </p>
 
-                <div class="hero-features" id="features">
+                <div class="hero-features" id="hero-features">
                     <div class="feature-item">
-                        <div class="feature-icon">
-                            <div class="icon-line"></div>
-                        </div>
-                        <div class="feature-text">Complete Student Management</div>
+                        <div class="feature-icon" style="background: #D1EEF0; border-radius: 50%; padding: 5px;">✅</div>
+                        <div class="feature-text">Modul Menarik & Mudah</div>
                     </div>
 
                     <div class="feature-item">
-                        <div class="feature-icon">
-                            <div class="icon-line"></div>
-                        </div>
-                        <div class="feature-text">Track Hafazan Progress</div>
+                        <div class="feature-icon" style="background: #D1EEF0; border-radius: 50%; padding: 5px;">✅</div>
+                        <div class="feature-text">Pengurusan Masa Sistematik</div>
                     </div>
 
                     <div class="feature-item">
-                        <div class="feature-icon">
-                            <div class="icon-line"></div>
-                        </div>
-                        <div class="feature-text">Systematic Fee Collection</div>
+                        <div class="feature-icon" style="background: #D1EEF0; border-radius: 50%; padding: 5px;">✅</div>
+                        <div class="feature-text">Pemantapan 6 Rukun Hafiz</div>
                     </div>
                 </div>
 
@@ -1009,6 +1002,58 @@
                         <div class="widget3-amount">RM 150.00</div>
                         <div class="widget3-meta">February • 2026 • Monthly Fee</div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6 STRATEGIES SECTION -->
+    <section id="features" style="padding: 6rem 1rem; background: #fff;">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+            <p style="text-transform: uppercase; letter-spacing: 0.1em; color: #6FC7CB; font-weight: 700; margin-bottom: 0.5rem;">Strategi Kami</p>
+            <h2 style="font-size: 2.2rem; font-weight: 800; color: #5FB3B7; margin-bottom: 4rem;">6 Strategi Melahirkan Penghafaz Al-Quran Setahun</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+                <!-- 1. MODUL MUDAH -->
+                <div style="padding: 2rem; border-radius: 24px; background: #E8F6F7; text-align: left; transition: transform 0.3s; border: 1px solid #D1EEF0;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">📖</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 800; color: #5FB3B7; margin-bottom: 1rem;">MODUL MUDAH</h3>
+                    <p style="color: #64748b; line-height: 1.6; font-size: 0.95rem;">Kaedah serta modul yang menarik dan atraktif dan mudah, terbukti berjaya membawa pelajar ke mercu kejayaan insya-Allah.</p>
+                </div>
+
+                <!-- 2. PENGURUSAN MASA -->
+                <div style="padding: 2rem; border-radius: 24px; background: #fff; text-align: left; transition: transform 0.3s; border: 1px solid #f1f5f9; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">⏰</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 800; color: #5FB3B7; margin-bottom: 1rem;">PENGURUSAN MASA</h3>
+                    <p style="color: #64748b; line-height: 1.6; font-size: 0.95rem;">Penggunaan kajian dan pengurusan pelajar yang sistematik untuk disiplin harian yang membantu mencapai Misi Hafiz Setahun.</p>
+                </div>
+
+                <!-- 3. PEMANTAPAN HAFALAN -->
+                <div style="padding: 2rem; border-radius: 24px; background: #E8F6F7; text-align: left; transition: transform 0.3s; border: 1px solid #D1EEF0;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🕋</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 800; color: #5FB3B7; margin-bottom: 1rem;">PEMANTAPAN HAFALAN</h3>
+                    <p style="color: #64748b; line-height: 1.6; font-size: 0.95rem;">Melaksanakan “6 rukun hafiz” bagi menjaga kualiti bacaan dan hafalan dari hari pertama lagi.</p>
+                </div>
+
+                <!-- 4. PENGURUSAN PSIKOLOGI -->
+                <div style="padding: 2rem; border-radius: 24px; background: #fff; text-align: left; transition: transform 0.3s; border: 1px solid #f1f5f9; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🧠</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 800; color: #5FB3B7; margin-bottom: 1rem;">PSIKOLOGI MURABBIAH</h3>
+                    <p style="color: #64748b; line-height: 1.6; font-size: 0.95rem;">Guru Huffaz terlatih mengamalkan psikologi pendidikan terkini & motivasi berpanjangan, tanpa hukuman fizikal.</p>
+                </div>
+
+                <!-- 5. PEMAKANAN SIHAT -->
+                <div style="padding: 2rem; border-radius: 24px; background: #E8F6F7; text-align: left; transition: transform 0.3s; border: 1px solid #D1EEF0;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🥗</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 800; color: #5FB3B7; margin-bottom: 1rem;">PEMAKANAN SIHAT</h3>
+                    <p style="color: #64748b; line-height: 1.6; font-size: 0.95rem;">Pelajar memanfaatkan pemakanan Sunnah berkala untuk membantu kekuatan minda genius dan tubuh yang cergas.</p>
+                </div>
+
+                <!-- 6. REHAT MENCUKUPI -->
+                <div style="padding: 2rem; border-radius: 24px; background: #fff; text-align: left; transition: transform 0.3s; border: 1px solid #f1f5f9; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🌙</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 800; color: #5FB3B7; margin-bottom: 1rem;">REHAT MENCUKUPI</h3>
+                    <p style="color: #64748b; line-height: 1.6; font-size: 0.95rem;">Penginapan selesa disediakan bagi memastikan pelajar mendapat rehat cukup untuk kekuatan minda menghafal Kalamullah.</p>
                 </div>
             </div>
         </div>
