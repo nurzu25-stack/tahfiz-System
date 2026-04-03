@@ -61,7 +61,7 @@ export function StudentList() {
 
       {/* View student modal */}
       {selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-lg w-full p-6">
             <div className="flex justify-between items-center mb-4"><h3 className="text-xl font-semibold">Student Profile</h3><button onClick={() => setSelectedStudent(null)} className="text-gray-400 hover:text-gray-600">✕</button></div>
             <div className="space-y-3">

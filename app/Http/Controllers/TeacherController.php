@@ -23,6 +23,12 @@ class TeacherController extends Controller
             ->latest()
             ->paginate(8);
 
+        // Map classIds from class_rooms table
+        $teachers->getCollection()->transform(function($t) {
+            $t->classIds = \App\Models\ClassRoom::where('teacher_id', $t->id)->pluck('id');
+            return $t;
+        });
+
         return response()->json($teachers);
     }
 

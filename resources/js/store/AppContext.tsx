@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import {
   AppState, buildInitialState, genId,
-  Student, Teacher, HafazanRecord, AttendanceRecord, Payment, Report,
+  Student, Teacher, ClassRoom, HafazanRecord, AttendanceRecord, Payment, Report,
   ActivityLog, Notification, AttendanceStatus, Grade,
 } from './mockData';
 
@@ -9,21 +9,26 @@ import {
 
 type Action =
   // Students
-  | { type: 'ADD_STUDENT'; payload: Omit<Student, 'id' | 'enrolledDate' | 'juzukCompleted' | 'status'> }
-  | { type: 'EDIT_STUDENT'; payload: Partial<Student> & { id: string } }
-  | { type: 'DELETE_STUDENT'; payload: { id: string } }
+  | { type: 'SET_STUDENTS'; payload: Student[] }
+  | { type: 'ADD_STUDENT'; payload: Student }
+  | { type: 'EDIT_STUDENT'; payload: Partial<Student> & { id: string | number } }
+  | { type: 'DELETE_STUDENT'; payload: { id: string | number } }
   // Teachers
   | { type: 'SET_TEACHERS'; payload: Teacher[] }
   | { type: 'ADD_TEACHER'; payload: Teacher }
   | { type: 'EDIT_TEACHER'; payload: Partial<Teacher> & { id: string | number } }
   | { type: 'DELETE_TEACHER'; payload: { id: string | number } }
+  // Classes
+  | { type: 'SET_CLASSES'; payload: ClassRoom[] }
+  | { type: 'ADD_CLASS'; payload: ClassRoom }
   // Hafazan
   | { type: 'RECORD_HAFAZAN'; payload: Omit<HafazanRecord, 'id'> }
   // Attendance
   | { type: 'MARK_ATTENDANCE'; payload: Omit<AttendanceRecord, 'id'>[] }
   // Payments
-  | { type: 'ADD_PAYMENT'; payload: Omit<Payment, 'id'> }
-  | { type: 'TOGGLE_PAYMENT'; payload: { id: string; status: 'Dibayar' | 'Belum Bayar' } }
+  | { type: 'SET_PAYMENTS'; payload: Payment[] }
+  | { type: 'ADD_PAYMENT'; payload: Payment }
+  | { type: 'TOGGLE_PAYMENT'; payload: { id: string | number; status: 'Dibayar' | 'Belum Bayar' } }
   // Reports
   | { type: 'SUBMIT_REPORT'; payload: Omit<Report, 'id'> }
   // Activity Log
@@ -40,14 +45,11 @@ function reducer(state: AppState, action: Action): AppState {
 
   switch (action.type) {
     // ── Students ──
+    case 'SET_STUDENTS': {
+      return { ...state, students: action.payload };
+    }
     case 'ADD_STUDENT': {
-      const student: Student = {
-        ...action.payload,
-        id: genId('s'),
-        juzukCompleted: 0,
-        status: 'Aktif',
-        enrolledDate: now.split('T')[0],
-      };
+      const student = action.payload;
       return {
         ...state,
         students: [...state.students, student],
@@ -57,7 +59,7 @@ function reducer(state: AppState, action: Action): AppState {
         ],
         notifications: [
           ...state.notifications,
-          { id: genId('n'), studentId: student.id, type: 'announcement', title: 'Selamat Datang!', message: `Selamat datang ke AKMAL, ${student.name}! Perjalanan hafazan anda bermula hari ini.`, timestamp: now, read: false },
+          { id: genId('n'), studentId: String(student.id), type: 'announcement', title: 'Selamat Datang!', message: `Selamat datang ke AKMAL, ${student.name}! Perjalanan hafazan anda bermula hari ini.`, timestamp: now, read: false },
         ],
       };
     }
@@ -65,19 +67,19 @@ function reducer(state: AppState, action: Action): AppState {
     case 'EDIT_STUDENT': {
       return {
         ...state,
-        students: state.students.map(s => s.id === action.payload.id ? { ...s, ...action.payload } : s),
+        students: state.students.map(s => String(s.id) === String(action.payload.id) ? { ...s, ...action.payload } : s),
         activityLog: [
-          { id: genId('log'), type: 'student_edited', description: 'Profil Pelajar Dikemas Kini', subDescription: state.students.find(s => s.id === action.payload.id)?.name ?? '', timestamp: now },
+          { id: genId('log'), type: 'student_edited', description: 'Profil Pelajar Dikemas Kini', subDescription: state.students.find(s => String(s.id) === String(action.payload.id))?.name ?? '', timestamp: now },
           ...state.activityLog,
         ],
       };
     }
 
     case 'DELETE_STUDENT': {
-      const name = state.students.find(s => s.id === action.payload.id)?.name ?? '';
+      const name = state.students.find(s => String(s.id) === String(action.payload.id))?.name ?? '';
       return {
         ...state,
-        students: state.students.filter(s => s.id !== action.payload.id),
+        students: state.students.filter(s => String(s.id) !== String(action.payload.id)),
         activityLog: [
           { id: genId('log'), type: 'student_deleted', description: 'Pelajar Dipadam', subDescription: name, timestamp: now },
           ...state.activityLog,
@@ -120,6 +122,23 @@ function reducer(state: AppState, action: Action): AppState {
         teachers: state.teachers.filter(t => String(t.id) !== teacherIdString),
         activityLog: [
           { id: genId('log'), type: 'teacher_deleted', description: 'Guru Dipadam', subDescription: name, timestamp: now },
+          ...state.activityLog,
+        ],
+      };
+    }
+
+    // ── Classes ──
+    case 'SET_CLASSES': {
+      return { ...state, classes: action.payload };
+    }
+
+    case 'ADD_CLASS': {
+      const cls = action.payload;
+      return {
+        ...state,
+        classes: [...state.classes, cls],
+        activityLog: [
+          { id: genId('log'), type: 'report_submitted', description: 'Kelas Baharu Dicipta', subDescription: cls.name, timestamp: now },
           ...state.activityLog,
         ],
       };
@@ -176,8 +195,11 @@ function reducer(state: AppState, action: Action): AppState {
     }
 
     // ── Payments ──
+    case 'SET_PAYMENTS': {
+      return { ...state, payments: action.payload };
+    }
     case 'ADD_PAYMENT': {
-      const payment: Payment = { ...action.payload, id: genId('p') };
+      const payment: Payment = action.payload;
       return { ...state, payments: [...state.payments, payment] };
     }
 

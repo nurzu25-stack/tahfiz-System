@@ -17,7 +17,8 @@ class Teacher extends Model
         'joined_date',
     ];
 
-    protected $casts = [
-        'joined_date' => 'date',
-    ];
+    public function classes()
+    {
+        return $this->hasMany(ClassRoom::class, 'teacher_id');
+    }
 }

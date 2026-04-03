@@ -29,6 +29,9 @@ Route::prefix('api')->group(function () {
     Route::get('/me',        [AuthController::class, 'me']);
 
     Route::apiResource('teachers', TeacherController::class);
+    Route::apiResource('classes', \App\Http\Controllers\ClassRoomController::class);
+    Route::apiResource('students', \App\Http\Controllers\StudentController::class);
+    Route::apiResource('payments', \App\Http\Controllers\PaymentController::class);
 });
 
 // ─── Authenticated dashboard (blade fallback redirect) ────────────────────────
