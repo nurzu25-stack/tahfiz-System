@@ -17,7 +17,7 @@ type AdminView = 'home' | 'students' | 'teachers' | 'payments' | 'reports' | 'ai
 const navItems: { id: AdminView; label: string; icon: React.ReactNode }[] = [
   { id: 'home',     label: 'Papan Pemuka',        icon: <LayoutDashboard size={20} /> },
   { id: 'students', label: 'Urus Pelajar',         icon: <Users size={20} /> },
-  { id: 'teachers', label: 'Urus Pengajar',        icon: <GraduationCap size={20} /> },
+  { id: 'teachers', label: 'Urus Murabbi',         icon: <GraduationCap size={20} /> },
   { id: 'payments', label: 'Bayaran & Invois',     icon: <DollarSign size={20} /> },
   { id: 'reports',  label: 'Lihat Laporan',        icon: <FileText size={20} /> },
   { id: 'ai',       label: 'Ramalan AI',           icon: <Brain size={20} /> },
@@ -31,7 +31,7 @@ export function AdminDashboard({ userName, onLogout }: AdminDashboardProps) {
   const monthlyRev = getMonthlyRevenue(state);
   const stats = [
     { label: 'Jumlah Pelajar',   value: String(state.students.length),              icon: <Users size={28} />,        color: '#3b82f6', bg: '#eff6ff' },
-    { label: 'Jumlah Pengajar',  value: String(state.teachers.length),              icon: <GraduationCap size={28} />, color: '#10b981', bg: '#f0fdf4' },
+    { label: 'Jumlah Murabbi',   value: String(state.teachers.length),              icon: <GraduationCap size={28} />, color: '#10b981', bg: '#f0fdf4' },
     { label: 'Pendapatan Bulanan', value: `RM ${monthlyRev.toLocaleString()}`,      icon: <DollarSign size={28} />,   color: '#8b5cf6', bg: '#faf5ff' },
     { label: 'Kelas Aktif',      value: String(state.classes.length),               icon: <FileText size={28} />,     color: '#f59e0b', bg: '#fffbeb' },
   ];
@@ -146,7 +146,7 @@ export function AdminDashboard({ userName, onLogout }: AdminDashboardProps) {
           {/* Header */}
           <div style={{ padding: '1.5rem 1rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
             <img src="/images/logo.png" alt="Logo" style={{ height: '60px', marginBottom: '0.75rem' }} />
-            <p style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0, letterSpacing: '0.05em' }}>PENTADBIR</p>
+            <p style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0, letterSpacing: '0.05em' }}>ADMIN / MUDIR</p>
             <p style={{ color: '#E8F6F7', fontSize: '0.75rem', margin: '0.2rem 0 0', opacity: 0.9 }}>{userName}</p>
           </div>
 
