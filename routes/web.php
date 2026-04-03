@@ -28,6 +28,9 @@ Route::prefix('api')->group(function () {
     Route::post('/logout',   [AuthController::class, 'apiLogout']);
     Route::get('/me',        [AuthController::class, 'me']);
 
+    // Public Enrollment Flow
+    Route::post('/public/register-enrollment', [\App\Http\Controllers\EnrollmentController::class, 'publicRegister']);
+
     Route::apiResource('teachers', TeacherController::class);
     Route::apiResource('classes', \App\Http\Controllers\ClassRoomController::class);
     Route::apiResource('students', \App\Http\Controllers\StudentController::class);

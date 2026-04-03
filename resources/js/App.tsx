@@ -5,6 +5,7 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { TeacherDashboard } from './components/teacher/TeacherDashboard';
 import { ParentDashboard } from './components/parent/ParentDashboard';
 import { StudentDashboard } from './components/student/StudentDashboard';
+import { PublicRegistration } from './components/auth/PublicRegistration';
 
 type UserRole = 'admin' | 'teacher' | 'parent' | 'student';
 
@@ -52,6 +53,9 @@ export default function App() {
         {/* Auth flow */}
         <Route path="/role-selection" element={<RoleSelectionPage />} />
         <Route path="/auth" element={<AuthPage />} />
+        
+        {/* Guest Registration Flow */}
+        <Route path="/register/students" element={<PublicRegistration />} />
 
         {/* Role-based dashboards */}
         <Route

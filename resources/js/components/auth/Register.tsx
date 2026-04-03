@@ -64,7 +64,8 @@ export function Register({ onRegister, onSwitchToLogin }: RegisterProps) {
           name: response.data.user.name,
           email: response.data.user.email,
           role: response.data.user.role as any,
-          status: 'pending'
+          status: 'pending',
+          password: '••••••••'
         }
       });
 

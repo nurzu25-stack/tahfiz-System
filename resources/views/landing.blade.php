@@ -951,8 +951,7 @@
     <header class="navbar">
         <div class="navbar-inner">
             <div class="nav-logo">
-                <img src="/images/logo.png" alt="AKMAL Logo" style="height: 48px;">
-                <span class="nav-logo-text" style="color: #6FC7CB; font-size: 1.25rem;">AKMAL Tahfiz</span>
+                <img src="/images/logo.png" alt="AKMAL Logo" style="height: 52px; filter: drop-shadow(0 4px 8px rgba(111,199,203,0.3));">
             </div>
 
             <nav class="nav-links">
@@ -966,7 +965,7 @@
 
             <div class="nav-actions">
                 <a href="/app/role-selection" class="btn-login">Login</a>
-                <a href="/app/role-selection?action=register" class="btn-signup">Sign Up</a>
+                <a href="/app/register/students" class="btn-signup">Daftar Sekarang</a>
             </div>
         </div>
     </header>
@@ -1005,8 +1004,8 @@
                 </div>
 
                 <div class="hero-cta">
-                    <a href="#learn-more"><button class="btn-primary">Learn More</button></a>
-                    <a href="#contact"><button class="btn-secondary">Contact Us</button></a>
+                    <a href="/app/register/students" class="btn-primary" style="text-decoration:none; display:inline-block;">DAFTAR SEKARANG</a>
+                    <a href="#testimonials" class="btn-secondary" style="text-decoration:none; display:inline-block;">TESTIMONI</a>
                 </div>
             </div>
 
