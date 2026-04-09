@@ -24,29 +24,52 @@ export function RecordHafazan() {
 
   const reset = () => setFormData({ sabaq: '', sabaqFrom: '', sabaqTo: '', sabaqGrade: '', sabaqi: '', sabaqiFrom: '', sabaqiTo: '', sabaqiGrade: '', manzil: '', manzilFrom: '', manzilTo: '', manzilGrade: '', remarks: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStudent) return;
+    
     const ayahCount =
       (formData.sabaqTo ? parseInt(formData.sabaqTo) - parseInt(formData.sabaqFrom || '0') : 0) +
       (formData.sabaqiTo ? parseInt(formData.sabaqiTo) - parseInt(formData.sabaqiFrom || '0') : 0) +
       (formData.manzilTo ? parseInt(formData.manzilTo) - parseInt(formData.manzilFrom || '0') : 0);
 
-    dispatch({
-      type: 'RECORD_HAFAZAN',
-      payload: {
-        studentId: selectedStudent,
-        teacherId: teacher?.id ?? 't1',
-        date: new Date().toISOString().split('T')[0],
-        sabaq: { surah: formData.sabaq, from: parseInt(formData.sabaqFrom || '0'), to: parseInt(formData.sabaqTo || '0'), grade: formData.sabaqGrade },
-        sabaqi: { surah: formData.sabaqi, from: parseInt(formData.sabaqiFrom || '0'), to: parseInt(formData.sabaqiTo || '0'), grade: formData.sabaqiGrade },
-        manzil: { surah: formData.manzil, from: parseInt(formData.manzilFrom || '0'), to: parseInt(formData.manzilTo || '0'), grade: formData.manzilGrade },
-        remarks: formData.remarks,
-        ayahCount: Math.max(0, ayahCount),
-      },
-    });
-    setShowSuccess(true);
-    setTimeout(() => { setShowSuccess(false); setSelectedStudent(''); reset(); }, 2000);
+    const payload = {
+      studentId: selectedStudent,
+      teacherId: teacher?.id ?? 1,
+      date: new Date().toISOString().split('T')[0],
+      sabaq: { surah: formData.sabaq, from: parseInt(formData.sabaqFrom || '0'), to: parseInt(formData.sabaqTo || '0'), grade: formData.sabaqGrade },
+      sabaqi: { surah: formData.sabaqi, from: parseInt(formData.sabaqiFrom || '0'), to: parseInt(formData.sabaqiTo || '0'), grade: formData.sabaqiGrade },
+      manzil: { surah: formData.manzil, from: parseInt(formData.manzilFrom || '0'), to: parseInt(formData.manzilTo || '0'), grade: formData.manzilGrade },
+      remarks: formData.remarks,
+      ayahCount: Math.max(0, ayahCount),
+    };
+
+    try {
+      const resp = await fetch('/api/hafazan-records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (resp.ok) {
+        dispatch({ type: 'RECORD_HAFAZAN', payload });
+        setShowSuccess(true);
+        setTimeout(() => { 
+          setShowSuccess(false); 
+          setSelectedStudent(''); 
+          reset(); 
+        }, 2000);
+      } else {
+        const err = await resp.json();
+        alert('Gagal menyimpan rekod: ' + (err.message || 'Ralat tidak diketahui'));
+      }
+    } catch (err) {
+      console.error('API Error:', err);
+      // Fallback to local dispatch if API is down
+      dispatch({ type: 'RECORD_HAFAZAN', payload });
+      setShowSuccess(true);
+      setTimeout(() => { setShowSuccess(false); setSelectedStudent(''); reset(); }, 2000);
+    }
   };
 
   const gradeOptions: Grade[] = ['Mumtaz', 'Jayyid', 'Maqbul', 'Perlu Penambahbaikan'];
@@ -71,6 +94,35 @@ export function RecordHafazan() {
           <div>
             <p className="font-semibold text-green-900">Rekod Hafazan Disimpan!</p>
             <p className="text-sm text-green-700">Ibu bapa telah dimaklumkan serta merta.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Automated Progress Insights */}
+      {selectedStudent && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in slide-in-from-top duration-500">
+          <div className="bg-white p-4 rounded-xl border-2 border-green-100 shadow-sm">
+            <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">Jumlah Hafazan Baru</p>
+            <p className="text-2xl font-black text-slate-800">
+              {state.hafazanRecords.filter(h => h.studentId === selectedStudent).reduce((acc, curr) => acc + curr.ayahCount, 0)} <span className="text-xs font-bold text-slate-400">Ayah</span>
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-xl border-2 border-blue-100 shadow-sm">
+            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Purata Sabaq Harian</p>
+            <p className="text-2xl font-black text-slate-800">
+              {Math.round(state.hafazanRecords.filter(h => h.studentId === selectedStudent).length > 0 
+                ? state.hafazanRecords.filter(h => h.studentId === selectedStudent).reduce((acc, curr) => acc + curr.ayahCount, 0) / state.hafazanRecords.filter(h => h.studentId === selectedStudent).length 
+                : 0)} <span className="text-xs font-bold text-slate-400">Ayah/Sesi</span>
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-xl border-2 border-purple-100 shadow-sm">
+            <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest">Sasaran Seterusnya</p>
+            <p className="text-sm font-bold text-slate-600 mt-1 italic">
+              {(() => {
+                const last = state.hafazanRecords.filter(h => h.studentId === selectedStudent)[0];
+                return last ? `Sambung ${last.sabaq.surah} ayat ${last.sabaq.to + 1}` : 'Mula Sabaq Baru';
+              })()}
+            </p>
           </div>
         </div>
       )}

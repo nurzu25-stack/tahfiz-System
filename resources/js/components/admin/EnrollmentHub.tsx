@@ -23,12 +23,15 @@ type EnrollmentStatus = 'PROSPECT' | 'INTERVIEW' | 'ACCEPTED' | 'REJECTED' | 'OF
 interface Applicant {
   id: string;
   name: string;
+  gender: 'Lelaki' | 'Perempuan';
   parentName: string;
   phone: string;
   icNo: string;
   dateApplied: string;
   status: EnrollmentStatus;
   interviewDate?: string;
+  interviewType?: 'Online' | 'Fizikal';
+  marks?: { hafazan: number; tajwid: number; akhlaq: number };
   notes?: string;
 }
 
@@ -37,14 +40,24 @@ export function EnrollmentHub() {
   const [activeTab, setActiveTab] = useState<EnrollmentStatus | 'ALL'>('ALL');
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
+  const [interviewMarks, setInterviewMarks] = useState({ hafazan: 0, tajwid: 0, akhlaq: 0 });
 
-  // Mock data for initial implementation
+  // Mock data with gender and marks
   const [applicants, setApplicants] = useState<Applicant[]>([
-    { id: 'APP-1021', name: 'Zaid bin Razali', parentName: 'Razali Ahmad', phone: '0123456789', icNo: '120501101231', dateApplied: '2026-04-01', status: 'PROSPECT' },
-    { id: 'APP-1022', name: 'Nurul Huda', parentName: 'Huda Kassim', phone: '0198765432', icNo: '130201104322', dateApplied: '2026-04-02', status: 'INTERVIEW', interviewDate: '2026-04-10' },
-    { id: 'APP-1023', name: 'Ahmad Rafiq', parentName: 'Rafiq Bakar', phone: '0112233445', icNo: '110801105543', dateApplied: '2026-03-28', status: 'ACCEPTED' },
-    { id: 'APP-1024', name: 'Sofea Arissa', parentName: 'Arissa Omar', phone: '0133344556', icNo: '141011109988', dateApplied: '2026-04-03', status: 'REJECTED' },
+    { id: 'APP-1021', name: 'Zaid bin Razali', gender: 'Lelaki', parentName: 'Razali Ahmad', phone: '0123456789', icNo: '120501101231', dateApplied: '2026-04-01', status: 'PROSPECT' },
+    { id: 'APP-1022', name: 'Nurul Huda', gender: 'Perempuan', parentName: 'Huda Kassim', phone: '0198765432', icNo: '130201104322', dateApplied: '2026-04-02', status: 'INTERVIEW', interviewDate: '2026-04-10' },
+    { id: 'APP-1023', name: 'Ahmad Rafiq', gender: 'Lelaki', parentName: 'Rafiq Bakar', phone: '0112233445', icNo: '110801105543', dateApplied: '2026-03-28', status: 'ACCEPTED', marks: { hafazan: 85, tajwid: 90, akhlaq: 95 } },
+    { id: 'APP-1024', name: 'Sofea Arissa', gender: 'Perempuan', parentName: 'Arissa Omar', phone: '0133344556', icNo: '141011109988', dateApplied: '2026-04-03', status: 'REJECTED' },
   ]);
+
+  const calculateFees = (applicant: Applicant) => {
+    const base = 850;
+    const uniform = applicant.gender === 'Lelaki' ? 150 : 250;
+    const registration = 100;
+    const date = new Date(applicant.dateApplied);
+    const earlyBird = date.getDate() <= 5 ? 50 : 0;
+    return { base, uniform, registration, earlyBird, total: base + uniform + registration - earlyBird };
+  };
 
   const stats = [
     { label: 'Prospek Baharu', count: applicants.filter(a => a.status === 'PROSPECT').length, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -57,8 +70,14 @@ export function EnrollmentHub() {
     if (selectedApplicant?.id === id) setSelectedApplicant(prev => prev ? { ...prev, status: newStatus } : null);
   };
 
+  const saveInterview = (id: string) => {
+    setApplicants(prev => prev.map(a => a.id === id ? { ...a, marks: interviewMarks, status: 'ACCEPTED' } : a));
+    if (selectedApplicant?.id === id) setSelectedApplicant(prev => prev ? { ...prev, marks: interviewMarks, status: 'ACCEPTED' } : null);
+  };
+
   const sendWhatsAppOffer = (applicant: Applicant) => {
-    const message = `Assalamualaikum Tn/Puan ${applicant.parentName}, Tahniah! Anak anda ${applicant.name} telah DITERIMA masuk ke AKMAL Tahfiz. Sila muat turun surat tawaran digital di portal kami: https://akmal-tahfiz.edu.my/off/digital-letter`;
+    const fees = calculateFees(applicant);
+    const message = `Assalamualaikum Tn/Puan ${applicant.parentName}, Tahniah! Anak anda ${applicant.name} telah DITERIMA masuk ke AKMAL Tahfiz. Jumlah yuran: RM${fees.total}. Sila muat turun surat tawaran: https://akmal-tahfiz.edu.my/off/${applicant.id}`;
     window.open(`https://wa.me/${applicant.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -79,7 +98,7 @@ export function EnrollmentHub() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-slate-800 tracking-tight underline decoration-[#6FC7CB] decoration-4 underline-offset-8">Hub Pendaftaran Digital</h2>
-          <p className="text-slate-500 font-medium mt-3">Urus kitaran hayat kemasukan pelajar daripada Prospek ke Aktif.</p>
+          <p className="text-slate-500 font-medium mt-3">Proses pendaftaran & temuduga sistematik (Automasi AWFATECH).</p>
         </div>
         <div className="flex gap-2">
            <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition-all">
@@ -91,7 +110,6 @@ export function EnrollmentHub() {
         </div>
       </div>
 
-      {/* Stats Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((s, i) => (
           <div key={i} className={`p-6 rounded-[32px] border border-slate-100 shadow-sm ${s.bg}`}>
@@ -101,7 +119,6 @@ export function EnrollmentHub() {
         ))}
       </div>
 
-      {/* Workflow Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
          {['ALL', 'PROSPECT', 'INTERVIEW', 'ACCEPTED', 'OFFERED'].map((t) => (
            <button 
@@ -116,13 +133,16 @@ export function EnrollmentHub() {
          ))}
       </div>
 
-      {/* Applicants List */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           {applicants.filter(a => activeTab === 'ALL' || a.status === activeTab).map((a) => (
             <div 
               key={a.id} 
-              onClick={() => setSelectedApplicant(a)}
+              onClick={() => {
+                setSelectedApplicant(a);
+                if (a.marks) setInterviewMarks(a.marks);
+                else setInterviewMarks({ hafazan: 0, tajwid: 0, akhlaq: 0 });
+              }}
               className={`p-6 rounded-[32px] bg-white border-2 transition-all cursor-pointer group ${
                 selectedApplicant?.id === a.id ? 'border-[#6FC7CB] shadow-2xl shadow-cyan-50' : 'border-slate-100 hover:border-slate-200'
               }`}
@@ -133,7 +153,10 @@ export function EnrollmentHub() {
                     <Users className="size-7" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-800 text-lg leading-tight">{a.name}</h4>
+                    <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-slate-800 text-lg leading-tight">{a.name}</h4>
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${a.gender === 'Lelaki' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{a.gender}</span>
+                    </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Penjaga: {a.parentName}</p>
                   </div>
                 </div>
@@ -148,7 +171,6 @@ export function EnrollmentHub() {
           ))}
         </div>
 
-        {/* Action Panel */}
         <div className="lg:col-span-1">
           {selectedApplicant ? (
             <div className="bg-white rounded-[40px] border border-slate-100 p-8 shadow-xl sticky top-8 animate-in slide-in-from-right-8 duration-500">
@@ -181,9 +203,36 @@ export function EnrollmentHub() {
                       </button>
                     )}
                     {selectedApplicant.status === 'INTERVIEW' && (
-                      <div className="flex gap-2">
-                        <button onClick={() => updateStatus(selectedApplicant.id, 'ACCEPTED')} className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 shadow-lg shadow-emerald-100 transition-all">LULUS</button>
-                        <button onClick={() => updateStatus(selectedApplicant.id, 'REJECTED')} className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-all">GAGAL</button>
+                      <div className="space-y-4 p-6 bg-amber-50 rounded-[32px] border border-amber-100">
+                        <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">BORANG PENILAIAN</p>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Platform Temuduga</label>
+                                <select 
+                                    value={selectedApplicant.interviewType || 'Fizikal'} 
+                                    onChange={e => setSelectedApplicant({...selectedApplicant, interviewType: e.target.value as any})}
+                                    className="w-full bg-white border-2 border-amber-100 rounded-xl px-4 py-2 mt-1 font-bold text-slate-700"
+                                >
+                                    <option value="Fizikal">Fizikal</option>
+                                    <option value="Online">Online</option>
+                                </select>
+                            </div>
+                            {['hafazan', 'tajwid', 'akhlaq'].map(field => (
+                                <div key={field}>
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{field} (0-100)</label>
+                                    <input 
+                                        type="number" 
+                                        value={(interviewMarks as any)[field]} 
+                                        onChange={e => setInterviewMarks({...interviewMarks, [field]: parseInt(e.target.value)})} 
+                                        className="w-full bg-white border-2 border-amber-100 rounded-xl px-4 py-2 mt-1 font-bold text-slate-700 focus:border-[#6FC7CB] outline-none" 
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                            <button onClick={() => saveInterview(selectedApplicant.id)} className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-emerald-600 shadow-lg shadow-emerald-50 transition-all">LULUS</button>
+                            <button onClick={() => updateStatus(selectedApplicant.id, 'REJECTED')} className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-red-600 transition-all">GAGAL</button>
+                        </div>
                       </div>
                     )}
                     {selectedApplicant.status === 'ACCEPTED' && (
@@ -201,7 +250,7 @@ export function EnrollmentHub() {
 
                <div className="pt-6 border-t border-slate-100">
                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-4">Nota Pegawai Admin</p>
-                 <textarea className="w-full p-4 bg-slate-50 border-none rounded-2xl text-sm italic text-slate-500 min-h-[80px]" placeholder="Masukkan catatan temuduga di sini..." />
+                 <textarea value={selectedApplicant.notes || ''} onChange={e => setSelectedApplicant({...selectedApplicant, notes: e.target.value})} className="w-full p-4 bg-slate-50 border-none rounded-2xl text-sm italic text-slate-500 min-h-[80px]" placeholder="Masukkan catatan temuduga di sini..." />
                </div>
             </div>
           ) : (
@@ -213,7 +262,6 @@ export function EnrollmentHub() {
         </div>
       </div>
 
-      {/* Offer Letter Modal Overlay */}
       {showOfferModal && selectedApplicant && (
         <div className="fixed inset-0 bg-[#1A4D50]/80 backdrop-blur-xl flex items-center justify-center p-6 z-[60]">
            <div className="bg-white w-full max-w-2xl rounded-[48px] overflow-hidden shadow-2xl animate-in zoom-in duration-500">
@@ -227,19 +275,48 @@ export function EnrollmentHub() {
                  </div>
 
                  <div className="space-y-6 text-slate-800">
-                    <p className="font-bold">Kepada Tn/Puan {selectedApplicant.parentName},</p>
+                    <p className="font-bold text-slate-600">Teruntuk Tn/Puan {selectedApplicant.parentName},</p>
                     <p className="text-4xl font-black tracking-tight leading-none text-slate-900 uppercase">TAWARAN KEMASUKAN PELAJAR BAHARU</p>
-                    <p className="leading-relaxed font-medium text-slate-600">
-                      Dengan segala hormatnya, kami di **AKMAL Tahfiz** amat sukacita memaklumkan bahawa anak anda, **{selectedApplicant.name}**, telah berjaya dalam sesi temuduga dan ditawarkan tempat untuk mengikuti program pengajian di akademi kami.
+                    <p className="leading-relaxed font-medium text-slate-500">
+                       Memaklumkan bahawa anakanda **{selectedApplicant.name}**, telah berjaya dalam sesi temuduga dengan markah purata **{selectedApplicant.marks ? Math.round((selectedApplicant.marks.hafazan + selectedApplicant.marks.tajwid + selectedApplicant.marks.akhlaq)/3) : 0}%** dan ditawarkan tempat di AKMAL Tahfiz.
                     </p>
-                    <div className="grid grid-cols-2 gap-8 py-8 border-y border-slate-100">
+
+                    <div className="bg-slate-50 rounded-[32px] p-8 border border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 text-center">STRUKTUR YURAN AUTOMATIK</p>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-slate-500">Yuran Asas Pengajian</span>
+                            <span className="font-bold text-slate-700">RM{calculateFees(selectedApplicant).base}.00</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-slate-500">Pakaian Seragam ({selectedApplicant.gender})</span>
+                            <span className="font-bold text-slate-700">RM{calculateFees(selectedApplicant).uniform}.00</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-slate-500">Pendaftaran & Pentadbiran</span>
+                            <span className="font-bold text-slate-700">RM{calculateFees(selectedApplicant).registration}.00</span>
+                        </div>
+                        {calculateFees(selectedApplicant).earlyBird > 0 && (
+                            <div className="flex justify-between text-sm text-emerald-600 font-bold bg-emerald-50 p-2 rounded-lg">
+                                <span>Diskaun Pendaftaran Awal</span>
+                                <span>-RM{calculateFees(selectedApplicant).earlyBird}.00</span>
+                            </div>
+                        )}
+                        <div className="pt-4 mt-4 border-t-2 border-dashed border-slate-200 flex justify-between items-center">
+                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">JUMLAH PERLU DIBAYAR</span>
+                            <span className="text-3xl font-black text-[#1A4D50]">RM{calculateFees(selectedApplicant).total}.00</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-8 py-6 border-y border-slate-100">
                        <div>
                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tarikh Pendaftaran</p>
-                         <p className="font-black text-lg">15 JUN 2026</p>
+                         <p className="font-black text-lg text-slate-800">15 JUN 2026</p>
                        </div>
                        <div>
-                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Lokasi</p>
-                         <p className="font-black text-lg">KAMPUS AKMAL</p>
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Temuduga</p>
+                         <p className="font-black text-lg text-emerald-600 uppercase tracking-tight">CEMERLANG</p>
                        </div>
                     </div>
                  </div>

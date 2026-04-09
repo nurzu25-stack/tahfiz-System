@@ -1,63 +1,140 @@
 import { useAppStore, getStudentAttendanceRate, getStudentLastRecords } from '../../store/AppContext';
 import { Eye } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function StudentList() {
   const { state } = useAppStore();
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
+  
+  // Try to find teacher in state, but fallback to authUser name if not found
   const teacher = state.teachers.find(t => t.name.includes(authUser.name?.split(' ').slice(-1)[0] ?? '')) ?? state.teachers[0];
+  
   const teacherClasses = state.classes.filter(c => teacher?.classIds.includes(c.id));
   const [selectedClassId, setSelectedClassId] = useState(teacherClasses[0]?.id ?? '');
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [studentRecords, setStudentRecords] = useState<Record<string, any>>({});
 
-  const students = state.students.filter(s => s.classId === selectedClassId);
+  useEffect(() => {
+    if (selectedClassId) {
+      fetchStudents();
+    }
+  }, [selectedClassId]);
 
-  const getLastRecord = (sid: string) => getStudentLastRecords(state, sid, 1)[0];
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const resp = await fetch(`/api/students?classId=${selectedClassId}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        setStudents(data);
+        
+        // Fetch last records for each student
+        data.forEach((student: any) => fetchLastRecord(student.id));
+      }
+    } catch (err) {
+      console.error('Failed to fetch students', err);
+      // Fallback to state if API fails
+      setStudents(state.students.filter(s => s.classId === selectedClassId));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLastRecord = async (studentId: string) => {
+    try {
+      const resp = await fetch(`/api/hafazan-records?student_id=${studentId}&limit=1`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.length > 0) {
+          setStudentRecords(prev => ({ ...prev, [studentId]: data[0] }));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch record', err);
+    }
+  };
+
+  const attendanceRate = (sid: string) => getStudentAttendanceRate(state, sid);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h2 className="text-2xl font-semibold text-gray-900">My Students</h2><p className="text-gray-600 mt-1">View all students in your classes</p></div>
-        <select value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900">My Students</h2>
+          <p className="text-gray-600 mt-1">View all students in your classes</p>
+        </div>
+        <select 
+          value={selectedClassId} 
+          onChange={e => setSelectedClassId(e.target.value)} 
+          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
           {teacherClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {students.map(student => {
-          const attendance = getStudentAttendanceRate(state, student.id);
-          const lastRec = getLastRecord(student.id);
-          return (
-            <div key={student.id} className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg">{student.name.charAt(0)}</div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{student.name}</h3>
-                    <p className="text-sm text-gray-500">Age {student.age} · Since {student.enrolledDate}</p>
+      {loading ? (
+        <div className="flex justify-center p-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {students.map(student => {
+            const lastRec = studentRecords[student.id];
+            const attRate = attendanceRate(student.id);
+            return (
+              <div key={student.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg">
+                      {student.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{student.name}</h3>
+                      <p className="text-sm text-gray-500">Age {student.age} · Since {student.enrolledDate}</p>
+                    </div>
+                  </div>
+                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${student.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                    {student.status}
+                  </span>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Hafazan Progress:</span>
+                    <span className="font-semibold text-green-600">{student.juzukCompleted ?? 0} / 30 Juzuk</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Attendance Rate:</span>
+                    <span className="font-semibold text-gray-900">{attRate}%</span>
+                  </div>
+                  {lastRec && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Last Sabaq:</span>
+                      <span className="text-gray-900">{lastRec.sabaq.surah} · {lastRec.sabaq.grade}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-3">
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-500 rounded-full transition-all duration-500" 
+                      style={{ width: `${Math.round(((student.juzukCompleted ?? 0) / 30) * 100)}%` }} 
+                    />
                   </div>
                 </div>
-                <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">{student.status}</span>
+                <button 
+                  onClick={() => setSelectedStudent(student)} 
+                  className="w-full mt-4 flex items-center justify-center gap-2 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <Eye className="w-4 h-4" /> View Profile
+                </button>
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-600">Hafazan Progress:</span><span className="font-semibold text-green-600">{student.juzukCompleted} / 30 Juzuk</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Attendance Rate:</span><span className="font-semibold text-gray-900">{attendance}%</span></div>
-                {lastRec && <div className="flex justify-between"><span className="text-gray-600">Last Sabaq:</span><span className="text-gray-900">{lastRec.sabaq.surah} · {lastRec.sabaq.grade}</span></div>}
-              </div>
-              {/* Progress bar */}
-              <div className="mt-3">
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.round((student.juzukCompleted / 30) * 100)}%` }} />
-                </div>
-              </div>
-              <button onClick={() => setSelectedStudent(student)} className="w-full mt-4 flex items-center justify-center gap-2 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                <Eye className="w-4 h-4" /> View Profile
-              </button>
-            </div>
-          );
-        })}
-        {students.length === 0 && <div className="col-span-2 p-10 text-center text-gray-400">No students in this class.</div>}
-      </div>
+            );
+          })}
+          {students.length === 0 && <div className="col-span-2 p-10 text-center text-gray-400">No students in this class.</div>}
+        </div>
+      )}
 
       {/* View student modal */}
       {selectedStudent && (

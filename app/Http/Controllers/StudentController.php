@@ -10,9 +10,12 @@ class StudentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $students = Student::all();
+        $classId = $request->query('classId');
+        $students = $classId 
+            ? Student::where('class_id', $classId)->get() 
+            : Student::all();
         // Map snake_case to camelCase for frontend
         return $students->map(function($s) {
             return [
@@ -161,5 +164,34 @@ class StudentController extends Controller
         $student = Student::findOrFail($id);
         $student->delete();
         return response()->json(['success' => true]);
+    }
+
+    public function getTeacherStudents(Request $request)
+    {
+        $teacherId = $request->query('teacherId');
+        if (!$teacherId) {
+            return response()->json(['error' => 'Teacher ID required'], 400);
+        }
+
+        $students = Student::where('teacher_id', $teacherId)
+            ->orWhereHas('classRoom', function($query) use ($teacherId) {
+                $query->where('teacher_id', $teacherId);
+            })
+            ->get();
+
+        return $students->map(function($s) {
+            return [
+                'id' => $s->id,
+                'name' => $s->name,
+                'classId' => $s->class_id,
+                'teacherId' => $s->teacher_id,
+                'age' => $s->age,
+                'enrolledDate' => $s->enrolled_date,
+                'juzukCompleted' => $s->juzuk_completed,
+                'status' => $s->status,
+                'parentName' => $s->parent_name,
+                'parentPhone' => $s->parent_phone,
+            ];
+        });
     }
 }
