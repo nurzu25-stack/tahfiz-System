@@ -9,18 +9,40 @@ export function StudentList() {
   // Try to find teacher in state, but fallback to authUser name if not found
   const teacher = state.teachers.find(t => t.name.includes(authUser.name?.split(' ').slice(-1)[0] ?? '')) ?? state.teachers[0];
   
-  const teacherClasses = state.classes.filter(c => teacher?.classIds.includes(c.id));
-  const [selectedClassId, setSelectedClassId] = useState(teacherClasses[0]?.id ?? '');
+  const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [studentRecords, setStudentRecords] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    fetchClasses();
+  }, []);
 
   useEffect(() => {
     if (selectedClassId) {
       fetchStudents();
     }
   }, [selectedClassId]);
+
+  const fetchClasses = async () => {
+    try {
+      const resp = await fetch('/api/classes');
+      if (resp.ok) {
+        const data = await resp.json();
+        // Filter classes for this teacher
+        const teacherClasses = data.filter((c: any) => c.teacherId === teacher?.id);
+        setClasses(teacherClasses);
+        if (teacherClasses.length > 0 && !selectedClassId) {
+          setSelectedClassId(teacherClasses[0].id);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch classes', err);
+      setClasses(state.classes.filter(c => teacher?.classIds.includes(c.id)));
+    }
+  };
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -70,7 +92,7 @@ export function StudentList() {
           onChange={e => setSelectedClassId(e.target.value)} 
           className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         >
-          {teacherClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
 
