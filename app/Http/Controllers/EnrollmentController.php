@@ -14,28 +14,86 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class EnrollmentController extends Controller
 {
     /**
+     * List all applicants for the Enrollment Hub.
+     */
+    public function index()
+    {
+        $applicants = Student::whereIn('status', [
+            'PROSPECT', 'INTERVIEW', 'ACCEPTED', 'REJECTED', 'OFFERED', 'ENROLLED', 'Pending'
+        ])
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        return response()->json($applicants);
+    }
+
+    /**
+     * Update applicant status.
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string'
+        ]);
+
+        $student = Student::findOrFail($id);
+        $student->update(['status' => $request->status]);
+
+        return response()->json(['success' => true, 'student' => $student]);
+    }
+
+    /**
+     * Save interview marks and update status to ACCEPTED or REJECTED.
+     */
+    public function updateInterview(Request $request, $id)
+    {
+        $request->validate([
+            'hafazan_mark' => 'required|integer|min:0|max:100',
+            'tajwid_mark' => 'required|integer|min:0|max:100',
+            'akhlaq_mark' => 'required|integer|min:0|max:100',
+            'interview_type' => 'nullable|string',
+            'status' => 'required|string',
+            'notes' => 'nullable|string'
+        ]);
+
+        $student = Student::findOrFail($id);
+        $student->update([
+            'hafazan_mark' => $request->hafazan_mark,
+            'tajwid_mark' => $request->tajwid_mark,
+            'akhlaq_mark' => $request->akhlaq_mark,
+            'interview_type' => $request->interview_type,
+            'status' => $request->status,
+            'notes' => $request->notes
+        ]);
+
+        return response()->json(['success' => true, 'student' => $student]);
+    }
+
+    /**
      * Generate a professional PDF offer letter for the applicant.
      */
     public function generateOfferLetter($id)
     {
-        // For now, since we're using mock data in frontend, we'll simulate the data 
-        // Or if it's in DB, we fetch it. Looking at the context, it seems they are using 
-        // real Student records linked to parent users.
-        
-        $applicant = Student::find($id);
-        
-        // If not found in DB (e.g. mock data from frontend), we'll use a fallback or handle error
-        // But let's assume it exists in DB if ID is passed.
+        $applicant = Student::findOrFail($id);
         
         $data = [
-            'applicantId' => $id,
-            'applicantName' => $applicant ? $applicant->name : 'Calon Terpilih',
-            'parentName' => $applicant ? $applicant->parent_name : 'Penjaga Calon',
+            'applicantId' => $applicant->id,
+            'applicantName' => $applicant->name,
+            'parentName' => $applicant->parent_name,
+            'gender' => $applicant->gender,
+            'icNo' => $applicant->ic_no,
+            'dateApplied' => $applicant->created_at->format('d/m/Y'),
+            'marks' => [
+                'hafazan' => $applicant->hafazan_mark,
+                'tajwid' => $applicant->tajwid_mark,
+                'akhlaq' => $applicant->akhlaq_mark,
+                'average' => round(($applicant->hafazan_mark + $applicant->tajwid_mark + $applicant->akhlaq_mark) / 3)
+            ]
         ];
 
         $pdf = Pdf::loadView('pdf.offer_letter', $data);
         
-        return $pdf->download('Surat_Tawaran_' . ($applicant ? str_replace(' ', '_', $applicant->name) : 'Calon') . '.pdf');
+        return $pdf->download('Surat_Tawaran_' . str_replace(' ', '_', $applicant->name) . '.pdf');
     }
 
     /**
@@ -78,14 +136,14 @@ class EnrollmentController extends Controller
                 // 2. Create Student Record (Interview Phase)
                 $student = Student::create([
                     'name' => $validated['studentName'],
-                    'gender' => $validated['studentGender'],
+                    'gender' => $validated['studentGender'] == 'M' ? 'Lelaki' : 'Perempuan',
                     'dob' => $validated['studentDob'],
                     'age' => $validated['studentAge'],
                     'parent_id' => $parent->id, // Link to User.id
                     'parent_name' => $validated['parentName'],
                     'parent_phone' => $validated['parentPhone'],
                     'admission_type' => 'interview',
-                    'status' => 'Pending', // As per user requirements
+                    'status' => 'PROSPECT', // Start as Prospect
                     'enrolled_date' => now()->format('Y-m-d'),
                     'intake_juzuk' => 0, // Guest students usually start at 0
                 ]);

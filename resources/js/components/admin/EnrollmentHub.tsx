@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
 import {
   Users,
   Calendar,
@@ -22,6 +24,7 @@ type EnrollmentStatus = 'PROSPECT' | 'INTERVIEW' | 'ACCEPTED' | 'REJECTED' | 'OF
 
 interface Applicant {
   id: string;
+  dbId?: number;
   name: string;
   gender: 'Lelaki' | 'Perempuan';
   parentName: string;
@@ -41,19 +44,51 @@ export function EnrollmentHub() {
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [interviewMarks, setInterviewMarks] = useState({ hafazan: 0, tajwid: 0, akhlaq: 0 });
-  const handleDownloadPDF = () => {
-    if (!selectedApplicant) return;
-    // Download directly from backend to avoid frontend canvas color issues (oklch)
-    window.open(`/api/enrollment/offer-letter/${selectedApplicant.id}`, '_blank');
+
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchApplicants = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/enrollment/applicants');
+      const mapped = response.data.map((s: any) => ({
+        id: `APP-${s.id}`,
+        dbId: s.id,
+        name: s.name,
+        gender: s.gender,
+        parentName: s.parent_name,
+        phone: s.parent_phone,
+        icNo: s.ic_no,
+        dateApplied: s.created_at.split('T')[0],
+        status: s.status,
+        interviewDate: s.interview_date,
+        interviewType: s.interview_type,
+        marks: (s.hafazan_mark || s.tajwid_mark || s.akhlaq_mark) ? {
+          hafazan: s.hafazan_mark,
+          tajwid: s.tajwid_mark,
+          akhlaq: s.akhlaq_mark
+        } : undefined,
+        notes: s.notes
+      }));
+      setApplicants(mapped);
+    } catch (err) {
+      console.error('Failed to fetch applicants:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Mock data with gender and marks
-  const [applicants, setApplicants] = useState<Applicant[]>([
-    { id: 'APP-1021', name: 'Zaid bin Razali', gender: 'Lelaki', parentName: 'Razali Ahmad', phone: '0123456789', icNo: '120501101231', dateApplied: '2026-04-01', status: 'PROSPECT' },
-    { id: 'APP-1022', name: 'Nurul Huda', gender: 'Perempuan', parentName: 'Huda Kassim', phone: '0198765432', icNo: '130201104322', dateApplied: '2026-04-02', status: 'INTERVIEW', interviewDate: '2026-04-10' },
-    { id: 'APP-1023', name: 'Ahmad Rafiq', gender: 'Lelaki', parentName: 'Rafiq Bakar', phone: '0112233445', icNo: '110801105543', dateApplied: '2026-03-28', status: 'ACCEPTED', marks: { hafazan: 85, tajwid: 90, akhlaq: 95 } },
-    { id: 'APP-1024', name: 'Sofea Arissa', gender: 'Perempuan', parentName: 'Arissa Omar', phone: '0133344556', icNo: '141011109988', dateApplied: '2026-04-03', status: 'REJECTED' },
-  ]);
+  useEffect(() => {
+    fetchApplicants();
+  }, []);
+
+  const handleDownloadPDF = () => {
+    if (!selectedApplicant) return;
+    const dbId = selectedApplicant.dbId;
+    // Download directly from backend to avoid frontend canvas color issues (oklch)
+    window.open(`/api/enrollment/offer-letter/${dbId}`, '_blank');
+  };
 
   const calculateFees = (applicant: Applicant) => {
     const base = 850;
@@ -70,14 +105,37 @@ export function EnrollmentHub() {
     { label: 'Menunggu Tawaran', count: applicants.filter(a => a.status === 'ACCEPTED').length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
-  const updateStatus = (id: string, newStatus: EnrollmentStatus) => {
-    setApplicants(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a));
-    if (selectedApplicant?.id === id) setSelectedApplicant(prev => prev ? { ...prev, status: newStatus } : null);
+  const updateStatus = async (id: string, newStatus: EnrollmentStatus) => {
+    const dbId = applicants.find(a => a.id === id)?.dbId;
+    if (!dbId) return;
+
+    try {
+      await axios.patch(`/api/enrollment/status/${dbId}`, { status: newStatus });
+      setApplicants(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a));
+      if (selectedApplicant?.id === id) setSelectedApplicant(prev => prev ? { ...prev, status: newStatus } : null);
+    } catch (err) {
+      alert('Failed to update status');
+    }
   };
 
-  const saveInterview = (id: string) => {
-    setApplicants(prev => prev.map(a => a.id === id ? { ...a, marks: interviewMarks, status: 'ACCEPTED' } : a));
-    if (selectedApplicant?.id === id) setSelectedApplicant(prev => prev ? { ...prev, marks: interviewMarks, status: 'ACCEPTED' } : null);
+  const saveInterview = async (id: string) => {
+    const dbId = applicants.find(a => a.id === id)?.dbId;
+    if (!dbId) return;
+
+    try {
+      await axios.patch(`/api/enrollment/interview/${dbId}`, {
+        hafazan_mark: interviewMarks.hafazan,
+        tajwid_mark: interviewMarks.tajwid,
+        akhlaq_mark: interviewMarks.akhlaq,
+        interview_type: selectedApplicant?.interviewType || 'Fizikal',
+        status: 'ACCEPTED',
+        notes: selectedApplicant?.notes
+      });
+      setApplicants(prev => prev.map(a => a.id === id ? { ...a, marks: interviewMarks, status: 'ACCEPTED' } : a));
+      if (selectedApplicant?.id === id) setSelectedApplicant(prev => prev ? { ...prev, marks: interviewMarks, status: 'ACCEPTED' } : null);
+    } catch (err) {
+      alert('Failed to save interview marks');
+    }
   };
 
   const sendWhatsAppOffer = (applicant: Applicant) => {
@@ -270,7 +328,8 @@ export function EnrollmentHub() {
           <div className="bg-white w-full max-w-2xl rounded-[48px] overflow-hidden shadow-2xl animate-in zoom-in duration-500">
             <div className="p-12 bg-white">
               <div className="flex justify-between items-start mb-12">
-                <div className="size-14 bg-[#1A4D50] rounded-2xl flex items-center justify-center text-[#6FC7CB] font-black text-xl italic">AKM</div>
+                <img src="/images/logo.png" alt="Logo Akmal" className="h-16 object-contain" />
+
                 <div className="text-right">
                   <p className="text-[10px] font-black text-[#6FC7CB] uppercase tracking-[0.4em]">Surat Tawaran Rasmi</p>
                   <p className="text-slate-400 font-mono text-xs mt-1">REF: AKM/OFF/{new Date().getFullYear()}/{selectedApplicant.id.split('-')[1]}</p>

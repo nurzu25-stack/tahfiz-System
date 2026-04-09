@@ -12,7 +12,8 @@ class Student extends Model
         'education_background', 'emergency_contact_name', 'emergency_contact_phone',
         'family_income', 'class_id', 'teacher_id', 'parent_id', 'parent_name', 
         'parent_phone', 'enrolled_date', 'juzuk_completed', 'intake_juzuk', 
-        'status', 'medical_history', 'admission_type', 'ranking'
+        'status', 'medical_history', 'admission_type', 'ranking',
+        'interview_date', 'interview_type', 'hafazan_mark', 'tajwid_mark', 'akhlaq_mark', 'notes'
     ];
 
     /**
