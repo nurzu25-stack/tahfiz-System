@@ -13,6 +13,7 @@ import {
   Filter,
   Search,
   Download,
+  Mail,
   ExternalLink,
   ChevronRight,
   ShieldCheck,
@@ -393,6 +394,22 @@ export function EnrollmentHub() {
                   <Download className="size-6" /> MUAT TURUN PDF (TAWARAN)
                 </button>
                 <div className="flex gap-3">
+                  <button
+                    onClick={async () => {
+                      if (!selectedApplicant) return;
+                      try {
+                        await axios.post(`/api/enrollment/send-offer-email/${selectedApplicant.dbId}`);
+                        alert(`Surat tawaran telah dihantar ke e-mel penjaga.`);
+                        setShowOfferModal(false);
+                        fetchApplicants(); // Refresh status
+                      } catch (err) {
+                        alert('Gagal menghantar e-mel. Sila pastikan e-mel penjaga adalah sah.');
+                      }
+                    }}
+                    className="flex-1 py-5 bg-blue-600 text-white rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-3"
+                  >
+                    <Mail className="size-6 text-white" /> EMAIL
+                  </button>
                   <button
                     onClick={() => {
                       sendWhatsAppOffer(selectedApplicant);

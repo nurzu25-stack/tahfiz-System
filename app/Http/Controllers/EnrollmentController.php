@@ -97,6 +97,50 @@ class EnrollmentController extends Controller
     }
 
     /**
+     * Send official offer letter to parent email with PDF attachment.
+     */
+    public function sendOfferEmail($id)
+    {
+        $applicant = Student::findOrFail($id);
+        
+        // 1. Fetch parent email (user)
+        $parent = User::find($applicant->parent_id);
+        if (!$parent || !$parent->email) {
+            return response()->json(['success' => false, 'message' => 'E-mel penjaga tidak dijumpai.'], 404);
+        }
+
+        // 2. Generate PDF data
+        $data = [
+            'applicantId' => $applicant->id,
+            'applicantName' => $applicant->name,
+            'parentName' => $applicant->parent_name,
+            'gender' => $applicant->gender,
+            'icNo' => $applicant->ic_no,
+            'dateApplied' => $applicant->created_at->format('d/m/Y'),
+            'marks' => [
+                'hafazan' => $applicant->hafazan_mark,
+                'tajwid' => $applicant->tajwid_mark,
+                'akhlaq' => $applicant->akhlaq_mark,
+                'average' => round(($applicant->hafazan_mark + $applicant->tajwid_mark + $applicant->akhlaq_mark) / 3)
+            ]
+        ];
+
+        $pdf = Pdf::loadView('pdf.offer_letter', $data);
+        $pdfData = $pdf->output();
+
+        // 3. Send Email
+        Mail::to($parent->email)->queue(new \App\Mail\OfferLetterMail($applicant, $pdfData));
+
+        // 4. Update status to OFFERED
+        $applicant->update(['status' => 'OFFERED']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Surat tawaran telah dihantar ke e-mel: ' . $parent->email
+        ]);
+    }
+
+    /**
      * Handle the guest student enrollment process.
      * Creates both a Parent User and a Student record.
      */

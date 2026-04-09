@@ -34,6 +34,7 @@ Route::prefix('api')->group(function () {
     Route::patch('/enrollment/status/{id}', [\App\Http\Controllers\EnrollmentController::class, 'updateStatus']);
     Route::patch('/enrollment/interview/{id}', [\App\Http\Controllers\EnrollmentController::class, 'updateInterview']);
     Route::get('/enrollment/offer-letter/{id}', [\App\Http\Controllers\EnrollmentController::class, 'generateOfferLetter']);
+    Route::post('/enrollment/send-offer-email/{id}', [\App\Http\Controllers\EnrollmentController::class, 'sendOfferEmail']);
 
     Route::apiResource('teachers', TeacherController::class);
     Route::apiResource('classes', \App\Http\Controllers\ClassRoomController::class);
