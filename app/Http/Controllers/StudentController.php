@@ -14,7 +14,7 @@ class StudentController extends Controller
     {
         $students = Student::all();
         // Map snake_case to camelCase for frontend
-        return $students->map(function($s) {
+        return $students->map(function ($s) {
             return [
                 'id' => $s->id,
                 'name' => $s->name,
@@ -111,7 +111,7 @@ class StudentController extends Controller
     {
         $student = Student::findOrFail($id);
         $data = $request->all();
-        
+
         $student->update([
             'name' => $data['name'] ?? $student->name,
             'ic_no' => $data['icNo'] ?? $student->ic_no,

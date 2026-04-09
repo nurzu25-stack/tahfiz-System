@@ -454,10 +454,24 @@ export function ManageStudents() {
                 <div><label className={labelCls}>No. IC / MyKid</label><input className={inputCls} value={editForm.icNo} onChange={e => setEditForm({ ...editForm, icNo: e.target.value })} /></div>
                 <div><label className={labelCls}>Umur</label><input type="number" required className={inputCls} value={editForm.age} onChange={e => setEditForm({ ...editForm, age: e.target.value })} /></div>
               </div>
-              <div><label className={labelCls}>Kelas</label>
-                <select className={inputCls} value={editForm.classId} onChange={e => setEditForm({ ...editForm, classId: e.target.value })}>
-                  {state.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className={labelCls}>Kelas</label>
+                  <select className={inputCls} value={editForm.classId} onChange={e => {
+                    const selectedClass = state.classes.find(c => String(c.id) === String(e.target.value));
+                    setEditForm({ 
+                      ...editForm, 
+                      classId: e.target.value,
+                      teacherId: selectedClass?.teacherId || editForm.teacherId
+                    });
+                  }}>
+                    {state.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div><label className={labelCls}>Murabbi / Murabbiah</label>
+                  <select className={inputCls} value={editForm.teacherId} onChange={e => setEditForm({ ...editForm, teacherId: e.target.value })}>
+                    {state.teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
               </div>
               <div className="flex gap-3 pt-6">
                 <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 transition-all">SIMPAN</button>
