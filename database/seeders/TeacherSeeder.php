@@ -12,6 +12,6 @@ class TeacherSeeder extends Seeder
      */
     public function run(): void
     {
-        Teacher::factory()->count(1200)->create();
+        Teacher::factory()->count(20)->create();
     }
 }

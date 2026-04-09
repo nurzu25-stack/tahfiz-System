@@ -48,9 +48,9 @@ class EnrollmentController extends Controller
     public function updateInterview(Request $request, $id)
     {
         $request->validate([
-            'hafazan_mark' => 'required|integer|min:0|max:100',
-            'tajwid_mark' => 'required|integer|min:0|max:100',
-            'akhlaq_mark' => 'required|integer|min:0|max:100',
+            'hafazan_mark' => 'required|integer|min:0|max:500',
+            'tajwid_mark' => 'required|integer|min:0|max:500',
+            'akhlaq_mark' => 'required|integer|min:0|max:500',
             'interview_type' => 'nullable|string',
             'status' => 'required|string',
             'notes' => 'nullable|string'

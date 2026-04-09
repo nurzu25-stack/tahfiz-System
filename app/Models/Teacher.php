@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Teacher extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'name', 'email', 'phone', 'ic_no', 'specialization', 
         'status', 'joined_date', 'qualification', 'experience',
