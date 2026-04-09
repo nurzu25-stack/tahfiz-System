@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../../store/AppContext';
 
-type EnrollmentStatus = 'PROSPECT' | 'INTERVIEW' | 'ACCEPTED' | 'REJECTED' | 'OFFERED' | 'ENROLLED';
+type EnrollmentStatus = 'PROSPECT' | 'SCHEDULED' | 'INTERVIEW' | 'ACCEPTED' | 'REJECTED' | 'OFFERED' | 'WAITING_PAYMENT' | 'ENROLLED';
 
 interface Applicant {
   id: string;
@@ -34,6 +34,8 @@ interface Applicant {
   dateApplied: string;
   status: EnrollmentStatus;
   interviewDate?: string;
+  interviewTime?: string;
+  interviewLocation?: string;
   interviewType?: 'Online' | 'Fizikal';
   marks?: { hafazan: number; tajwid: number; akhlaq: number };
   notes?: string;
@@ -44,7 +46,14 @@ export function EnrollmentHub() {
   const [activeTab, setActiveTab] = useState<EnrollmentStatus | 'ALL'>('ALL');
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [interviewMarks, setInterviewMarks] = useState({ hafazan: 0, tajwid: 0, akhlaq: 0 });
+  const [scheduleForm, setScheduleForm] = useState({
+    date: '',
+    time: '',
+    type: 'Fizikal' as 'Online' | 'Fizikal',
+    location: ''
+  });
 
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +73,8 @@ export function EnrollmentHub() {
         dateApplied: s.created_at.split('T')[0],
         status: s.status,
         interviewDate: s.interview_date,
+        interviewTime: s.interview_time,
+        interviewLocation: s.interview_location,
         interviewType: s.interview_type,
         marks: (s.hafazan_mark || s.tajwid_mark || s.akhlaq_mark) ? {
           hafazan: s.hafazan_mark,
@@ -114,8 +125,33 @@ export function EnrollmentHub() {
       await axios.patch(`/api/enrollment/status/${dbId}`, { status: newStatus });
       setApplicants(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a));
       if (selectedApplicant?.id === id) setSelectedApplicant(prev => prev ? { ...prev, status: newStatus } : null);
+      
+      if (newStatus === 'ENROLLED') {
+        alert('Tahniah! Pelajar telah disahkan dan dipindahkan ke senarai Pelajar Tetap.');
+      }
     } catch (err) {
-      alert('Failed to update status');
+      alert('Gagal mengemaskini status');
+    }
+  };
+
+  const handleSchedule = async () => {
+    if (!selectedApplicant) return;
+    const dbId = selectedApplicant.dbId;
+    if (!dbId) return;
+
+    try {
+      const response = await axios.post(`/api/enrollment/schedule-interview/${dbId}`, {
+        interview_date: scheduleForm.date,
+        interview_time: scheduleForm.time,
+        interview_type: scheduleForm.type,
+        interview_location: scheduleForm.location
+      });
+
+      alert('Berjaya! Jadual telah ditetapkan dan emel jemputan telah dihantar.');
+      setShowScheduleModal(false);
+      fetchApplicants(); // Refresh list
+    } catch (err) {
+      alert('Gagal menetapkan jadual temuduga.');
     }
   };
 
@@ -124,11 +160,10 @@ export function EnrollmentHub() {
     if (!dbId) return;
 
     try {
-      await axios.patch(`/api/enrollment/interview/${dbId}`, {
+      await axios.post(`/api/enrollment/update-interview/${dbId}`, {
         hafazan_mark: interviewMarks.hafazan,
         tajwid_mark: interviewMarks.tajwid,
         akhlaq_mark: interviewMarks.akhlaq,
-        interview_type: selectedApplicant?.interviewType || 'Fizikal',
         status: 'ACCEPTED',
         notes: selectedApplicant?.notes
       });
@@ -148,10 +183,12 @@ export function EnrollmentHub() {
   const getStatusBadge = (status: EnrollmentStatus) => {
     const config = {
       PROSPECT: { label: 'Prospek', cls: 'bg-blue-100 text-blue-700' },
+      SCHEDULED: { label: 'Dijadualkan', cls: 'bg-indigo-100 text-indigo-700' },
       INTERVIEW: { label: 'Temuduga', cls: 'bg-amber-100 text-amber-700' },
       ACCEPTED: { label: 'Diterima', cls: 'bg-emerald-100 text-emerald-700' },
       REJECTED: { label: 'Ditolak', cls: 'bg-red-100 text-red-700' },
       OFFERED: { label: 'Tawaran Dihantar', cls: 'bg-purple-100 text-purple-700' },
+      WAITING_PAYMENT: { label: 'Menunggu Bayaran', cls: 'bg-orange-100 text-orange-700' },
       ENROLLED: { label: 'Aktif', cls: 'bg-slate-900 text-white' },
     };
     return <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${config[status].cls}`}>{config[status].label}</span>;
@@ -184,7 +221,7 @@ export function EnrollmentHub() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-        {['ALL', 'PROSPECT', 'INTERVIEW', 'ACCEPTED', 'OFFERED'].map((t) => (
+        {['ALL', 'PROSPECT', 'SCHEDULED', 'INTERVIEW', 'ACCEPTED', 'OFFERED', 'WAITING_PAYMENT'].map((t) => (
           <button
             key={t}
             onClick={() => setActiveTab(t as any)}
@@ -260,10 +297,25 @@ export function EnrollmentHub() {
 
                 <div className="grid grid-cols-1 gap-3">
                   {selectedApplicant.status === 'PROSPECT' && (
-                    <button onClick={() => updateStatus(selectedApplicant.id, 'INTERVIEW')} className="w-full py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all flex items-center justify-center gap-2">
-                      <Calendar className="size-4" /> PANGGIL TEMUDUGA
+                    <button onClick={() => {
+                        setScheduleForm({
+                          date: '',
+                          time: '',
+                          type: 'Fizikal',
+                          location: ''
+                        });
+                        setShowScheduleModal(true);
+                    }} className="w-full py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all flex items-center justify-center gap-2">
+                      <Calendar className="size-4" /> JADUALKAN TEMUDUGA
                     </button>
                   )}
+
+                  {selectedApplicant.status === 'SCHEDULED' && (
+                    <button onClick={() => updateStatus(selectedApplicant.id, 'INTERVIEW')} className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all flex items-center justify-center gap-2">
+                       <Zap className="size-4" /> ISI MARKAH TEMUDUGA
+                    </button>
+                  )}
+
                   {selectedApplicant.status === 'INTERVIEW' && (
                     <div className="space-y-4 p-6 bg-amber-50 rounded-[32px] border border-amber-100">
                       <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">BORANG PENILAIAN</p>
@@ -303,8 +355,13 @@ export function EnrollmentHub() {
                     </button>
                   )}
                   {selectedApplicant.status === 'OFFERED' && (
-                    <button onClick={() => updateStatus(selectedApplicant.id, 'ENROLLED')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black shadow-2xl transition-all flex items-center justify-center gap-2">
+                    <button onClick={() => updateStatus(selectedApplicant.id, 'ENROLLED')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black shadow-2xl transition-all flex items-center justify-center gap-3">
                       <ShieldCheck className="size-4" /> SAHKAN PENDAFTARAN
+                    </button>
+                  )}
+                  {selectedApplicant.status === 'ENROLLED' && (
+                    <button onClick={() => window.location.href = '/app/admin/dashboard?tab=students'} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 shadow-2xl transition-all flex items-center justify-center gap-3">
+                      <Users className="size-4" /> BUKA PROFIL PELAJAR
                     </button>
                   )}
                 </div>
@@ -402,8 +459,9 @@ export function EnrollmentHub() {
                         alert(`Surat tawaran telah dihantar ke e-mel penjaga.`);
                         setShowOfferModal(false);
                         fetchApplicants(); // Refresh status
-                      } catch (err) {
-                        alert('Gagal menghantar e-mel. Sila pastikan e-mel penjaga adalah sah.');
+                      } catch (err: any) {
+                        const msg = err.response?.data?.message || 'Gagal menghantar e-mel. Sila pastikan e-mel penjaga adalah sah.';
+                        alert(msg);
                       }
                     }}
                     className="flex-1 py-5 bg-blue-600 text-white rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 shadow-2xl shadow-blue-200 transition-all flex items-center justify-center gap-3"
@@ -423,6 +481,48 @@ export function EnrollmentHub() {
                   <button onClick={() => setShowOfferModal(false)} className="px-10 py-5 bg-slate-100 text-slate-400 rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition-all">BATAL</button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Schedule Interview Modal */}
+      {showScheduleModal && selectedApplicant && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-6 z-[70]">
+          <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl animate-in zoom-in duration-300 p-10">
+            <div className="mb-8">
+              <h3 className="text-2xl font-black text-slate-800 tracking-tight">Tetapkan Jadual Temuduga</h3>
+              <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Calon: {selectedApplicant.name}</p>
+            </div>
+
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Tarikh</label>
+                  <input type="date" value={scheduleForm.date} onChange={e => setScheduleForm({...scheduleForm, date: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3 font-bold text-slate-700 outline-none focus:border-[#6FC7CB] transition-all" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Masa</label>
+                  <input type="time" value={scheduleForm.time} onChange={e => setScheduleForm({...scheduleForm, time: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3 font-bold text-slate-700 outline-none focus:border-[#6FC7CB] transition-all" />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Jenis Temuduga</label>
+                <div className="grid grid-cols-2 gap-3">
+                   <button onClick={() => setScheduleForm({...scheduleForm, type: 'Fizikal'})} className={`py-4 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all ${scheduleForm.type === 'Fizikal' ? 'bg-[#1A4D50] text-[#6FC7CB] border-[#1A4D50]' : 'border-slate-100 text-slate-400'}`}>Bersemuka</button>
+                   <button onClick={() => setScheduleForm({...scheduleForm, type: 'Online'})} className={`py-4 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all ${scheduleForm.type === 'Online' ? 'bg-[#1A4D50] text-[#6FC7CB] border-[#1A4D50]' : 'border-slate-100 text-slate-400'}`}>Atas Talian</button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">{scheduleForm.type === 'Online' ? 'Pautan (Meet/Zoom)' : 'Lokasi (Bilik/Kampus)'}</label>
+                <input type="text" placeholder={scheduleForm.type === 'Online' ? 'https://google.meet/...' : 'Bilik Gerakan AKMAL'} value={scheduleForm.location} onChange={e => setScheduleForm({...scheduleForm, location: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3 font-bold text-slate-700 outline-none focus:border-[#6FC7CB] transition-all" />
+              </div>
+            </div>
+
+            <div className="mt-10 flex gap-3">
+              <button onClick={handleSchedule} className="flex-1 py-4 bg-[#6FC7CB] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#5FB3B7] shadow-xl shadow-cyan-100 transition-all">SIMPAN & HANTAR EMEL</button>
+              <button onClick={() => setShowScheduleModal(false)} className="px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">BATAL</button>
             </div>
           </div>
         </div>

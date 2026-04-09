@@ -7,16 +7,18 @@ import { Notifications } from './Notifications';
 import { ParentAIPrediction } from './ParentAIPrediction';
 import { ProfileView } from '../profile/ProfileView';
 import { useAppStore, getStudentAttendanceRate } from '../../store/AppContext';
+import { EnrollmentView } from './EnrollmentView';
 
 interface ParentDashboardProps {
   userName: string;
   onLogout: () => void;
 }
 
-type ParentView = 'home' | 'progress' | 'attendance' | 'payment' | 'notifications' | 'ai' | 'profile';
+type ParentView = 'home' | 'enrollment' | 'progress' | 'attendance' | 'payment' | 'notifications' | 'ai' | 'profile';
 
 const navItems: { id: ParentView; label: string; icon: React.ReactNode; badge?: string }[] = [
   { id: 'home',          label: 'Profil Anak',          icon: <LayoutDashboard size={20} /> },
+  { id: 'enrollment',    label: 'Status Pendaftaran',    icon: <Calendar size={20} /> }, // New Tab
   { id: 'progress',      label: 'Kemajuan Hafazan',      icon: <BookOpen size={20} /> },
   { id: 'attendance',    label: 'Lihat Kehadiran',       icon: <Calendar size={20} /> },
   { id: 'payment',       label: 'Status Yuran',          icon: <DollarSign size={20} /> },
@@ -60,6 +62,7 @@ export function ParentDashboard({ userName, onLogout }: ParentDashboardProps) {
 
   const renderContent = () => {
     switch (currentView) {
+      case 'enrollment':    return <EnrollmentView />;
       case 'progress':      return <ViewProgress />;
       case 'attendance':    return <ViewAttendance />;
       case 'payment':       return <ViewPayments />;

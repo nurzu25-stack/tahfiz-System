@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EnrollmentSuccessMail;
-use Barryvdh\DomPDF\Facade\Pdf;
+// use Barryvdh\DomPDF\Facade\Pdf;
 
 class EnrollmentController extends Controller
 {
@@ -37,34 +37,99 @@ class EnrollmentController extends Controller
         ]);
 
         $student = Student::findOrFail($id);
-        $student->update(['status' => $request->status]);
+        
+        $updateData = ['status' => $request->status];
+        if ($request->status === 'ENROLLED') {
+            $updateData['admission_type'] = 'tetap';
+            $updateData['status'] = 'Aktif'; // Match default status in StudentController
+            $updateData['enrolled_date'] = now();
+            
+            // Simple Matric Generation: AKM-YEAR-ID
+            $matricNo = 'AKM-' . date('Y') . '-' . str_pad($student->id, 4, '0', STR_PAD_LEFT);
+            // Assuming we use 'phone' as a fallback for some unique ID or just rely on DB ID
+            // For now, let's just update the status and admission_type
+        }
+
+        $student->update($updateData);
 
         return response()->json(['success' => true, 'student' => $student]);
     }
 
-    /**
-     * Save interview marks and update status to ACCEPTED or REJECTED.
-     */
-    public function updateInterview(Request $request, $id)
+    public function scheduleInterview(Request $request, $id)
     {
-        $request->validate([
-            'hafazan_mark' => 'required|integer|min:0|max:500',
-            'tajwid_mark' => 'required|integer|min:0|max:500',
-            'akhlaq_mark' => 'required|integer|min:0|max:500',
-            'interview_type' => 'nullable|string',
-            'status' => 'required|string',
+        $validated = $request->validate([
+            'interview_date' => 'required|date',
+            'interview_time' => 'required',
+            'interview_type' => 'required|string', // Online / Bersemuka
+            'interview_location' => 'required|string',
+        ]);
+
+        $student = Student::findOrFail($id);
+        
+        $student->update([
+            'interview_date' => $validated['interview_date'],
+            'interview_time' => $validated['interview_time'],
+            'interview_type' => $validated['interview_type'],
+            'interview_location' => $validated['interview_location'],
+            'status' => 'SCHEDULED'
+        ]);
+
+        // Fetch parent email
+        $parent = \App\Models\User::find($student->parent_id);
+        if ($parent && $parent->email) {
+            Mail::to($parent->email)->queue(new \App\Mail\InterviewInvitationMail($student));
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Temuduga telah dijadualkan dan emel jemputan telah dihantar.',
+            'student' => $student
+        ]);
+    }
+
+    public function parentDecide(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'decision' => 'required|in:ACCEPT,REJECT',
             'notes' => 'nullable|string'
         ]);
 
         $student = Student::findOrFail($id);
-        $student->update([
-            'hafazan_mark' => $request->hafazan_mark,
-            'tajwid_mark' => $request->tajwid_mark,
-            'akhlaq_mark' => $request->akhlaq_mark,
-            'interview_type' => $request->interview_type,
-            'status' => $request->status,
-            'notes' => $request->notes
+        
+        if ($validated['decision'] === 'ACCEPT') {
+            $student->update([
+                'status' => 'WAITING_PAYMENT',
+                'notes' => $student->notes . "\n[Penjaga]: Setuju dengan tawaran. " . ($validated['notes'] ?? '')
+            ]);
+        } else {
+            $student->update([
+                'status' => 'REJECTED',
+                'notes' => $student->notes . "\n[Penjaga]: Menolak tawaran. Sebab: " . ($validated['notes'] ?? '')
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $validated['decision'] === 'ACCEPT' ? 'Tawaran diterima. Sila teruskan dengan pembayaran.' : 'Tawaran ditolak.',
+            'student' => $student
         ]);
+    }
+
+    /**
+     * Update interview marks and final decision.
+     */
+    public function updateInterview(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'hafazan_mark' => 'required|integer|min:0|max:500',
+            'tajwid_mark' => 'required|integer|min:0|max:500',
+            'akhlaq_mark' => 'required|integer|min:0|max:500',
+            'notes' => 'nullable|string',
+            'status' => 'required|in:ACCEPTED,REJECTED'
+        ]);
+
+        $student = Student::findOrFail($id);
+        $student->update($validated);
 
         return response()->json(['success' => true, 'student' => $student]);
     }
@@ -76,7 +141,15 @@ class EnrollmentController extends Controller
     {
         $applicant = Student::findOrFail($id);
         
+        $logoPath = public_path('images/logo.png');
+        $logoBase64 = '';
+        if (file_exists($logoPath)) {
+            $logoData = base64_encode(file_get_contents($logoPath));
+            $logoBase64 = 'data:image/png;base64,' . $logoData;
+        }
+
         $data = [
+            'logo' => $logoBase64,
             'applicantId' => $applicant->id,
             'applicantName' => $applicant->name,
             'parentName' => $applicant->parent_name,
@@ -91,7 +164,7 @@ class EnrollmentController extends Controller
             ]
         ];
 
-        $pdf = Pdf::loadView('pdf.offer_letter', $data);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.offer_letter', $data);
         
         return $pdf->download('Surat_Tawaran_' . str_replace(' ', '_', $applicant->name) . '.pdf');
     }
@@ -110,7 +183,15 @@ class EnrollmentController extends Controller
         }
 
         // 2. Generate PDF data
+        $logoPath = public_path('images/logo.png');
+        $logoBase64 = '';
+        if (file_exists($logoPath)) {
+            $logoData = base64_encode(file_get_contents($logoPath));
+            $logoBase64 = 'data:image/png;base64,' . $logoData;
+        }
+
         $data = [
+            'logo' => $logoBase64,
             'applicantId' => $applicant->id,
             'applicantName' => $applicant->name,
             'parentName' => $applicant->parent_name,
@@ -125,19 +206,26 @@ class EnrollmentController extends Controller
             ]
         ];
 
-        $pdf = Pdf::loadView('pdf.offer_letter', $data);
-        $pdfData = $pdf->output();
+        try {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.offer_letter', $data);
+            $pdfData = $pdf->output();
 
-        // 3. Send Email
-        Mail::to($parent->email)->queue(new \App\Mail\OfferLetterMail($applicant, $pdfData));
+            // 3. Send Email
+            Mail::to($parent->email)->queue(new \App\Mail\OfferLetterMail($applicant, $pdfData));
 
-        // 4. Update status to OFFERED
-        $applicant->update(['status' => 'OFFERED']);
+            // 4. Update status to OFFERED
+            $applicant->update(['status' => 'OFFERED']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Surat tawaran telah dihantar ke e-mel: ' . $parent->email
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Surat tawaran telah dihantar ke e-mel: ' . $parent->email
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ralat sistem: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

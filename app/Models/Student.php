@@ -13,7 +13,7 @@ class Student extends Model
         'family_income', 'class_id', 'teacher_id', 'parent_id', 'parent_name', 
         'parent_phone', 'enrolled_date', 'juzuk_completed', 'intake_juzuk', 
         'status', 'medical_history', 'admission_type', 'ranking',
-        'interview_date', 'interview_type', 'hafazan_mark', 'tajwid_mark', 'akhlaq_mark', 'notes'
+        'interview_date', 'interview_type', 'interview_time', 'interview_location', 'hafazan_mark', 'tajwid_mark', 'akhlaq_mark', 'notes'
     ];
 
     /**

@@ -45,7 +45,7 @@ export function ManageStudents() {
         const [studentsRes, classesRes, teachersRes] = await Promise.all([
           axios.get('/api/students'),
           axios.get('/api/classes'),
-          axios.get('/api/teachers')
+          axios.get('/api/teachers?all=true')
         ]);
         dispatch({ type: 'SET_STUDENTS', payload: studentsRes.data });
         dispatch({ type: 'SET_CLASSES', payload: classesRes.data });

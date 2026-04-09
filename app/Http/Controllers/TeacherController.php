@@ -14,6 +14,40 @@ class TeacherController extends Controller
     {
         $search = $request->query('search');
 
+        if ($request->query('all')) {
+            $teachers = Teacher::query()
+                ->when($search, function ($query, $search) {
+                    $query->where('name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->latest()
+                ->get();
+
+            return response()->json($teachers->map(function($t) {
+                // Same transformation logic
+                $t->classIds = \App\Models\ClassRoom::where('teacher_id', $t->id)->pluck('id');
+                return [
+                    'id' => $t->id,
+                    'name' => $t->name,
+                    'email' => $t->email,
+                    'phone' => $t->phone,
+                    'icNo' => $t->ic_no,
+                    'specialization' => $t->specialization,
+                    'status' => $t->status,
+                    'joinedDate' => $t->joined_date,
+                    'qualification' => $t->qualification,
+                    'experience' => $t->experience,
+                    'medicalHistory' => $t->medical_history,
+                    'emergencyContactName' => $t->emergency_contact_name,
+                    'emergencyContactPhone' => $t->emergency_contact_phone,
+                    'dependentsCount' => $t->dependents_count,
+                    'residence' => $t->residence,
+                    'serviceStartDate' => $t->service_start_date,
+                    'classIds' => $t->classIds
+                ];
+            }));
+        }
+
         $teachers = Teacher::query()
             ->when($search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")

@@ -32,7 +32,9 @@ Route::prefix('api')->group(function () {
     Route::post('/public/register-enrollment', [\App\Http\Controllers\EnrollmentController::class, 'publicRegister']);
     Route::get('/enrollment/applicants', [\App\Http\Controllers\EnrollmentController::class, 'index']);
     Route::patch('/enrollment/status/{id}', [\App\Http\Controllers\EnrollmentController::class, 'updateStatus']);
-    Route::patch('/enrollment/interview/{id}', [\App\Http\Controllers\EnrollmentController::class, 'updateInterview']);
+    Route::post('/enrollment/schedule-interview/{id}', [\App\Http\Controllers\EnrollmentController::class, 'scheduleInterview']);
+    Route::post('/enrollment/update-interview/{id}', [\App\Http\Controllers\EnrollmentController::class, 'updateInterview']);
+    Route::post('/enrollment/parent-decide/{id}', [\App\Http\Controllers\EnrollmentController::class, 'parentDecide']);
     Route::get('/enrollment/offer-letter/{id}', [\App\Http\Controllers\EnrollmentController::class, 'generateOfferLetter']);
     Route::post('/enrollment/send-offer-email/{id}', [\App\Http\Controllers\EnrollmentController::class, 'sendOfferEmail']);
 

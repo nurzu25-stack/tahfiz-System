@@ -96,7 +96,11 @@
 </head>
 <body>
     <div class="header">
-        <div class="logo-box">AKM</div>
+        @if($logo)
+            <img src="{{ $logo }}" style="height: 60px; float: left;">
+        @else
+            <div class="logo-box">AKM</div>
+        @endif
         <div class="header-content">
             <div class="label">Surat Tawaran Rasmi</div>
             <div class="ref-no">REF: AKM/OFF/{{ date('Y') }}/{{ $applicantId }}</div>
