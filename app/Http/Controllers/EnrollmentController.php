@@ -149,7 +149,7 @@ class EnrollmentController extends Controller
                 ]);
 
                 // 3. Send Email berjaya didaftar, menunggu kelulusan mudir
-                Mail::to($parent->email)->send(new EnrollmentSuccessMail($parent, $student));
+                Mail::to($parent->email)->queue(new EnrollmentSuccessMail($parent, $student));
 
                 return response()->json([
                     'success' => true,
