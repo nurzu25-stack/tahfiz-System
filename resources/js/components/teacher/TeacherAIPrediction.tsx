@@ -1,22 +1,65 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Brain, TrendingUp, Calendar, RefreshCw, Users } from 'lucide-react';
-import { useAppStore, computeAIPrediction } from '../../store/AppContext';
+import { useAppStore } from '../../store/AppContext';
 
 export function TeacherAIPrediction() {
   const { state } = useAppStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [predictions, setPredictions] = useState<any[]>([]);
 
   // Resolve teacher
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
   const teacher = state.teachers.find(t => t.name.includes(authUser.name?.split(' ').slice(-1)[0] ?? '')) ?? state.teachers[0];
 
-  // Get students belonging to this teacher
-  const myStudents = state.students.filter(s => s.teacherId === teacher?.id);
-  const predictions = myStudents
-    .map(s => computeAIPrediction(state, s.id))
-    .filter(Boolean) as NonNullable<ReturnType<typeof computeAIPrediction>>[];
+  useEffect(() => {
+    if (teacher?.id) {
+      fetchPredictions();
+    }
+  }, [teacher]);
 
+  const fetchPredictions = async () => {
+    setIsGenerating(true);
+    try {
+      const allPreds: any[] = [];
+      const classIds = teacher.classIds || [];
+      
+      for (const cid of classIds) {
+        const resp = await fetch(`/api/ai-predictions/class/${cid}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          allPreds.push(...data);
+        }
+      }
+
+      const mapped = allPreds.map(p => ({
+        id: p.id,
+        studentId: p.student_id,
+        studentName: state.students.find(s => s.id === p.student_id)?.name || 'Pelajar',
+        currentProgress: p.current_progress,
+        estimatedCompletion: p.estimated_completion,
+        performanceTrend: p.performance_trend,
+        confidence: p.confidence,
+        recommendation: p.recommendation,
+        attendanceRate: p.attendance_rate,
+        avgAyahPerDay: p.avg_ayah_per_day
+      }));
+
+      setPredictions(mapped);
+      setGenerated(true);
+    } catch (err) {
+      console.error('Failed to fetch AI predictions', err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleGenerate = () => {
+    fetchPredictions();
+  };
+
+  // UI Derived state
+  const myStudents = state.students.filter(s => s.teacherId === teacher?.id);
   const avgConfidence = predictions.length
     ? Math.round(predictions.reduce((sum, p) => sum + parseInt(p.confidence), 0) / predictions.length)
     : 0;
@@ -25,14 +68,9 @@ export function TeacherAIPrediction() {
     ? Math.round(myStudents.reduce((sum, s) => sum + (s.juzukCompleted ?? 0), 0) / myStudents.length)
     : 0;
 
-  const handleGenerate = () => {
-    setIsGenerating(true);
-    setTimeout(() => { setIsGenerating(false); setGenerated(true); }, 1500);
-  };
-
   const trendColor = (t: string) =>
-    t === 'Mumtaz' ? 'bg-green-100 text-green-700' :
-    t === 'Jayyid' ? 'bg-blue-100 text-blue-700' :
+    t === 'Cemerlang' ? 'bg-green-100 text-green-700' :
+    t === 'Baik' ? 'bg-blue-100 text-blue-700' :
     'bg-orange-100 text-orange-700';
 
   return (
