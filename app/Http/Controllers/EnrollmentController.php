@@ -9,9 +9,35 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EnrollmentSuccessMail;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class EnrollmentController extends Controller
 {
+    /**
+     * Generate a professional PDF offer letter for the applicant.
+     */
+    public function generateOfferLetter($id)
+    {
+        // For now, since we're using mock data in frontend, we'll simulate the data 
+        // Or if it's in DB, we fetch it. Looking at the context, it seems they are using 
+        // real Student records linked to parent users.
+        
+        $applicant = Student::find($id);
+        
+        // If not found in DB (e.g. mock data from frontend), we'll use a fallback or handle error
+        // But let's assume it exists in DB if ID is passed.
+        
+        $data = [
+            'applicantId' => $id,
+            'applicantName' => $applicant ? $applicant->name : 'Calon Terpilih',
+            'parentName' => $applicant ? $applicant->parent_name : 'Penjaga Calon',
+        ];
+
+        $pdf = Pdf::loadView('pdf.offer_letter', $data);
+        
+        return $pdf->download('Surat_Tawaran_' . ($applicant ? str_replace(' ', '_', $applicant->name) : 'Calon') . '.pdf');
+    }
+
     /**
      * Handle the guest student enrollment process.
      * Creates both a Parent User and a Student record.

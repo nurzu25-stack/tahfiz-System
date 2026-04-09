@@ -30,6 +30,7 @@ Route::prefix('api')->group(function () {
 
     // Public Enrollment Flow
     Route::post('/public/register-enrollment', [\App\Http\Controllers\EnrollmentController::class, 'publicRegister']);
+    Route::get('/enrollment/offer-letter/{id}', [\App\Http\Controllers\EnrollmentController::class, 'generateOfferLetter']);
 
     Route::apiResource('teachers', TeacherController::class);
     Route::apiResource('classes', \App\Http\Controllers\ClassRoomController::class);

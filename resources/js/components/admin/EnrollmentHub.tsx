@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { 
-  Users, 
-  Calendar, 
-  CheckCircle2, 
-  XCircle, 
-  FileText, 
-  MessageCircle, 
-  ArrowRight, 
-  Clock, 
-  Filter, 
+import {
+  Users,
+  Calendar,
+  CheckCircle2,
+  XCircle,
+  FileText,
+  MessageCircle,
+  ArrowRight,
+  Clock,
+  Filter,
   Search,
   Download,
   ExternalLink,
@@ -41,6 +41,11 @@ export function EnrollmentHub() {
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [interviewMarks, setInterviewMarks] = useState({ hafazan: 0, tajwid: 0, akhlaq: 0 });
+  const handleDownloadPDF = () => {
+    if (!selectedApplicant) return;
+    // Download directly from backend to avoid frontend canvas color issues (oklch)
+    window.open(`/api/enrollment/offer-letter/${selectedApplicant.id}`, '_blank');
+  };
 
   // Mock data with gender and marks
   const [applicants, setApplicants] = useState<Applicant[]>([
@@ -101,12 +106,12 @@ export function EnrollmentHub() {
           <p className="text-slate-500 font-medium mt-3">Proses pendaftaran & temuduga sistematik (Automasi AWFATECH).</p>
         </div>
         <div className="flex gap-2">
-           <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition-all">
-             <Download className="size-4" /> EKSPORT DATA
-           </button>
-           <button className="flex items-center gap-2 px-5 py-2.5 bg-[#6FC7CB] text-white rounded-xl font-bold text-xs hover:bg-[#5FB3B7] shadow-xl shadow-cyan-100 transition-all">
-             <Calendar className="size-4" /> JADUAL TEMUDUGA
-           </button>
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition-all">
+            <Download className="size-4" /> EKSPORT DATA
+          </button>
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-[#6FC7CB] text-white rounded-xl font-bold text-xs hover:bg-[#5FB3B7] shadow-xl shadow-cyan-100 transition-all">
+            <Calendar className="size-4" /> JADUAL TEMUDUGA
+          </button>
         </div>
       </div>
 
@@ -120,32 +125,30 @@ export function EnrollmentHub() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-         {['ALL', 'PROSPECT', 'INTERVIEW', 'ACCEPTED', 'OFFERED'].map((t) => (
-           <button 
+        {['ALL', 'PROSPECT', 'INTERVIEW', 'ACCEPTED', 'OFFERED'].map((t) => (
+          <button
             key={t}
             onClick={() => setActiveTab(t as any)}
-            className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${
-              activeTab === t ? 'bg-[#1A4D50] text-[#6FC7CB] border-[#1A4D50] shadow-lg' : 'bg-white text-slate-400 border-slate-200 hover:border-[#6FC7CB]'
-            }`}
-           >
-             {t === 'ALL' ? 'Semua Calon' : t}
-           </button>
-         ))}
+            className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${activeTab === t ? 'bg-[#1A4D50] text-[#6FC7CB] border-[#1A4D50] shadow-lg' : 'bg-white text-slate-400 border-slate-200 hover:border-[#6FC7CB]'
+              }`}
+          >
+            {t === 'ALL' ? 'Semua Calon' : t}
+          </button>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           {applicants.filter(a => activeTab === 'ALL' || a.status === activeTab).map((a) => (
-            <div 
-              key={a.id} 
+            <div
+              key={a.id}
               onClick={() => {
                 setSelectedApplicant(a);
                 if (a.marks) setInterviewMarks(a.marks);
                 else setInterviewMarks({ hafazan: 0, tajwid: 0, akhlaq: 0 });
               }}
-              className={`p-6 rounded-[32px] bg-white border-2 transition-all cursor-pointer group ${
-                selectedApplicant?.id === a.id ? 'border-[#6FC7CB] shadow-2xl shadow-cyan-50' : 'border-slate-100 hover:border-slate-200'
-              }`}
+              className={`p-6 rounded-[32px] bg-white border-2 transition-all cursor-pointer group ${selectedApplicant?.id === a.id ? 'border-[#6FC7CB] shadow-2xl shadow-cyan-50' : 'border-slate-100 hover:border-slate-200'
+                }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -154,8 +157,8 @@ export function EnrollmentHub() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-slate-800 text-lg leading-tight">{a.name}</h4>
-                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${a.gender === 'Lelaki' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{a.gender}</span>
+                      <h4 className="font-bold text-slate-800 text-lg leading-tight">{a.name}</h4>
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${a.gender === 'Lelaki' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{a.gender}</span>
                     </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Penjaga: {a.parentName}</p>
                   </div>
@@ -174,89 +177,89 @@ export function EnrollmentHub() {
         <div className="lg:col-span-1">
           {selectedApplicant ? (
             <div className="bg-white rounded-[40px] border border-slate-100 p-8 shadow-xl sticky top-8 animate-in slide-in-from-right-8 duration-500">
-               <div className="text-center mb-10">
-                 <div className="size-24 bg-gradient-to-br from-[#1A4D50] to-[#6FC7CB] rounded-[38px] flex items-center justify-center text-white text-4xl font-bold mx-auto mb-6 shadow-2xl shadow-cyan-100">
-                   {selectedApplicant.name.charAt(0)}
-                 </div>
-                 <h3 className="text-2xl font-black text-slate-800 tracking-tight">{selectedApplicant.name}</h3>
-                 <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.2em] mt-1">{selectedApplicant.id}</p>
-               </div>
+              <div className="text-center mb-10">
+                <div className="size-24 bg-gradient-to-br from-[#1A4D50] to-[#6FC7CB] rounded-[38px] flex items-center justify-center text-white text-4xl font-bold mx-auto mb-6 shadow-2xl shadow-cyan-100">
+                  {selectedApplicant.name.charAt(0)}
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">{selectedApplicant.name}</h3>
+                <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.2em] mt-1">{selectedApplicant.id}</p>
+              </div>
 
-               <div className="space-y-6 mb-10">
-                 <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                   <div className="flex items-center gap-3">
-                     <MessageCircle className="size-5 text-emerald-500" />
-                     <div>
-                       <p className="text-[10px] font-black text-slate-400 uppercase">Telefon</p>
-                       <p className="text-sm font-bold text-slate-700">{selectedApplicant.phone}</p>
-                     </div>
-                   </div>
-                   <button onClick={() => window.open(`https://wa.me/${selectedApplicant.phone}`, '_blank')} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100">
-                     <ExternalLink className="size-4" />
-                   </button>
-                 </div>
+              <div className="space-y-6 mb-10">
+                <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <MessageCircle className="size-5 text-emerald-500" />
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase">Telefon</p>
+                      <p className="text-sm font-bold text-slate-700">{selectedApplicant.phone}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => window.open(`https://wa.me/${selectedApplicant.phone}`, '_blank')} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100">
+                    <ExternalLink className="size-4" />
+                  </button>
+                </div>
 
-                 <div className="grid grid-cols-1 gap-3">
-                    {selectedApplicant.status === 'PROSPECT' && (
-                      <button onClick={() => updateStatus(selectedApplicant.id, 'INTERVIEW')} className="w-full py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all flex items-center justify-center gap-2">
-                        <Calendar className="size-4" /> PANGGIL TEMUDUGA
-                      </button>
-                    )}
-                    {selectedApplicant.status === 'INTERVIEW' && (
-                      <div className="space-y-4 p-6 bg-amber-50 rounded-[32px] border border-amber-100">
-                        <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">BORANG PENILAIAN</p>
-                        <div className="space-y-3">
-                            <div>
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Platform Temuduga</label>
-                                <select 
-                                    value={selectedApplicant.interviewType || 'Fizikal'} 
-                                    onChange={e => setSelectedApplicant({...selectedApplicant, interviewType: e.target.value as any})}
-                                    className="w-full bg-white border-2 border-amber-100 rounded-xl px-4 py-2 mt-1 font-bold text-slate-700"
-                                >
-                                    <option value="Fizikal">Fizikal</option>
-                                    <option value="Online">Online</option>
-                                </select>
-                            </div>
-                            {['hafazan', 'tajwid', 'akhlaq'].map(field => (
-                                <div key={field}>
-                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{field} (0-100)</label>
-                                    <input 
-                                        type="number" 
-                                        value={(interviewMarks as any)[field]} 
-                                        onChange={e => setInterviewMarks({...interviewMarks, [field]: parseInt(e.target.value)})} 
-                                        className="w-full bg-white border-2 border-amber-100 rounded-xl px-4 py-2 mt-1 font-bold text-slate-700 focus:border-[#6FC7CB] outline-none" 
-                                    />
-                                </div>
-                            ))}
+                <div className="grid grid-cols-1 gap-3">
+                  {selectedApplicant.status === 'PROSPECT' && (
+                    <button onClick={() => updateStatus(selectedApplicant.id, 'INTERVIEW')} className="w-full py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-amber-600 shadow-lg shadow-amber-100 transition-all flex items-center justify-center gap-2">
+                      <Calendar className="size-4" /> PANGGIL TEMUDUGA
+                    </button>
+                  )}
+                  {selectedApplicant.status === 'INTERVIEW' && (
+                    <div className="space-y-4 p-6 bg-amber-50 rounded-[32px] border border-amber-100">
+                      <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">BORANG PENILAIAN</p>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Platform Temuduga</label>
+                          <select
+                            value={selectedApplicant.interviewType || 'Fizikal'}
+                            onChange={e => setSelectedApplicant({ ...selectedApplicant, interviewType: e.target.value as any })}
+                            className="w-full bg-white border-2 border-amber-100 rounded-xl px-4 py-2 mt-1 font-bold text-slate-700"
+                          >
+                            <option value="Fizikal">Fizikal</option>
+                            <option value="Online">Online</option>
+                          </select>
                         </div>
-                        <div className="flex gap-2 mt-4">
-                            <button onClick={() => saveInterview(selectedApplicant.id)} className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-emerald-600 shadow-lg shadow-emerald-50 transition-all">LULUS</button>
-                            <button onClick={() => updateStatus(selectedApplicant.id, 'REJECTED')} className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-red-600 transition-all">GAGAL</button>
-                        </div>
+                        {['hafazan', 'tajwid', 'akhlaq'].map(field => (
+                          <div key={field}>
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{field} (0-100)</label>
+                            <input
+                              type="number"
+                              value={(interviewMarks as any)[field]}
+                              onChange={e => setInterviewMarks({ ...interviewMarks, [field]: parseInt(e.target.value) })}
+                              className="w-full bg-white border-2 border-amber-100 rounded-xl px-4 py-2 mt-1 font-bold text-slate-700 focus:border-[#6FC7CB] outline-none"
+                            />
+                          </div>
+                        ))}
                       </div>
-                    )}
-                    {selectedApplicant.status === 'ACCEPTED' && (
-                      <button onClick={() => setShowOfferModal(true)} className="w-full py-4 bg-[#1A4D50] text-[#6FC7CB] rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-900 shadow-xl transition-all flex items-center justify-center gap-2">
-                        <FileText className="size-4" /> JANA SURAT TAWARAN
-                      </button>
-                    )}
-                    {selectedApplicant.status === 'OFFERED' && (
-                      <button onClick={() => updateStatus(selectedApplicant.id, 'ENROLLED')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black shadow-2xl transition-all flex items-center justify-center gap-2">
-                        <ShieldCheck className="size-4" /> SAHKAN PENDAFTARAN
-                      </button>
-                    )}
-                 </div>
-               </div>
+                      <div className="flex gap-2 mt-4">
+                        <button onClick={() => saveInterview(selectedApplicant.id)} className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-emerald-600 shadow-lg shadow-emerald-50 transition-all">LULUS</button>
+                        <button onClick={() => updateStatus(selectedApplicant.id, 'REJECTED')} className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-red-600 transition-all">GAGAL</button>
+                      </div>
+                    </div>
+                  )}
+                  {selectedApplicant.status === 'ACCEPTED' && (
+                    <button onClick={() => setShowOfferModal(true)} className="w-full py-4 bg-[#1A4D50] text-[#6FC7CB] rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-900 shadow-xl transition-all flex items-center justify-center gap-2">
+                      <FileText className="size-4" /> JANA SURAT TAWARAN
+                    </button>
+                  )}
+                  {selectedApplicant.status === 'OFFERED' && (
+                    <button onClick={() => updateStatus(selectedApplicant.id, 'ENROLLED')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black shadow-2xl transition-all flex items-center justify-center gap-2">
+                      <ShieldCheck className="size-4" /> SAHKAN PENDAFTARAN
+                    </button>
+                  )}
+                </div>
+              </div>
 
-               <div className="pt-6 border-t border-slate-100">
-                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-4">Nota Pegawai Admin</p>
-                 <textarea value={selectedApplicant.notes || ''} onChange={e => setSelectedApplicant({...selectedApplicant, notes: e.target.value})} className="w-full p-4 bg-slate-50 border-none rounded-2xl text-sm italic text-slate-500 min-h-[80px]" placeholder="Masukkan catatan temuduga di sini..." />
-               </div>
+              <div className="pt-6 border-t border-slate-100">
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-4">Nota Pegawai Admin</p>
+                <textarea value={selectedApplicant.notes || ''} onChange={e => setSelectedApplicant({ ...selectedApplicant, notes: e.target.value })} className="w-full p-4 bg-slate-50 border-none rounded-2xl text-sm italic text-slate-500 min-h-[80px]" placeholder="Masukkan catatan temuduga di sini..." />
+              </div>
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center p-12 bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-[40px] text-center">
-               <Zap className="size-12 text-slate-200 mb-4" />
-               <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Pilih calon untuk melihat butiran & tindakan</p>
+              <Zap className="size-12 text-slate-200 mb-4" />
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Pilih calon untuk melihat butiran & tindakan</p>
             </div>
           )}
         </div>
@@ -264,78 +267,88 @@ export function EnrollmentHub() {
 
       {showOfferModal && selectedApplicant && (
         <div className="fixed inset-0 bg-[#1A4D50]/80 backdrop-blur-xl flex items-center justify-center p-6 z-[60]">
-           <div className="bg-white w-full max-w-2xl rounded-[48px] overflow-hidden shadow-2xl animate-in zoom-in duration-500">
-              <div className="p-12">
-                 <div className="flex justify-between items-start mb-12">
-                    <img src="/images/logo.png" alt="Logo" className="h-14" />
-                    <div className="text-right">
-                       <p className="text-[10px] font-black text-[#6FC7CB] uppercase tracking-[0.4em]">Surat Tawaran Rasmi</p>
-                       <p className="text-slate-400 font-mono text-xs mt-1">REF: AKM/OFF/{new Date().getFullYear()}/{selectedApplicant.id.split('-')[1]}</p>
-                    </div>
-                 </div>
-
-                 <div className="space-y-6 text-slate-800">
-                    <p className="font-bold text-slate-600">Teruntuk Tn/Puan {selectedApplicant.parentName},</p>
-                    <p className="text-4xl font-black tracking-tight leading-none text-slate-900 uppercase">TAWARAN KEMASUKAN PELAJAR BAHARU</p>
-                    <p className="leading-relaxed font-medium text-slate-500">
-                       Memaklumkan bahawa anakanda **{selectedApplicant.name}**, telah berjaya dalam sesi temuduga dengan markah purata **{selectedApplicant.marks ? Math.round((selectedApplicant.marks.hafazan + selectedApplicant.marks.tajwid + selectedApplicant.marks.akhlaq)/3) : 0}%** dan ditawarkan tempat di AKMAL Tahfiz.
-                    </p>
-
-                    <div className="bg-slate-50 rounded-[32px] p-8 border border-slate-100">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 text-center">STRUKTUR YURAN AUTOMATIK</p>
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">Yuran Asas Pengajian</span>
-                            <span className="font-bold text-slate-700">RM{calculateFees(selectedApplicant).base}.00</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">Pakaian Seragam ({selectedApplicant.gender})</span>
-                            <span className="font-bold text-slate-700">RM{calculateFees(selectedApplicant).uniform}.00</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">Pendaftaran & Pentadbiran</span>
-                            <span className="font-bold text-slate-700">RM{calculateFees(selectedApplicant).registration}.00</span>
-                        </div>
-                        {calculateFees(selectedApplicant).earlyBird > 0 && (
-                            <div className="flex justify-between text-sm text-emerald-600 font-bold bg-emerald-50 p-2 rounded-lg">
-                                <span>Diskaun Pendaftaran Awal</span>
-                                <span>-RM{calculateFees(selectedApplicant).earlyBird}.00</span>
-                            </div>
-                        )}
-                        <div className="pt-4 mt-4 border-t-2 border-dashed border-slate-200 flex justify-between items-center">
-                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">JUMLAH PERLU DIBAYAR</span>
-                            <span className="text-3xl font-black text-[#1A4D50]">RM{calculateFees(selectedApplicant).total}.00</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-8 py-6 border-y border-slate-100">
-                       <div>
-                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tarikh Pendaftaran</p>
-                         <p className="font-black text-lg text-slate-800">15 JUN 2026</p>
-                       </div>
-                       <div>
-                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Temuduga</p>
-                         <p className="font-black text-lg text-emerald-600 uppercase tracking-tight">CEMERLANG</p>
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="flex gap-4 mt-12">
-                    <button 
-                      onClick={() => {
-                        sendWhatsAppOffer(selectedApplicant);
-                        updateStatus(selectedApplicant.id, 'OFFERED');
-                        setShowOfferModal(false);
-                      }}
-                      className="flex-1 py-5 bg-emerald-500 text-white rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-emerald-600 shadow-2xl shadow-emerald-200 transition-all flex items-center justify-center gap-3"
-                    >
-                       <MessageCircle className="size-6 fill-white" /> HANTAR WHATSAPP
-                    </button>
-                    <button onClick={() => setShowOfferModal(false)} className="px-10 py-5 bg-slate-100 text-slate-400 rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition-all">BATAL</button>
-                 </div>
+          <div className="bg-white w-full max-w-2xl rounded-[48px] overflow-hidden shadow-2xl animate-in zoom-in duration-500">
+            <div className="p-12 bg-white">
+              <div className="flex justify-between items-start mb-12">
+                <div className="size-14 bg-[#1A4D50] rounded-2xl flex items-center justify-center text-[#6FC7CB] font-black text-xl italic">AKM</div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-[#6FC7CB] uppercase tracking-[0.4em]">Surat Tawaran Rasmi</p>
+                  <p className="text-slate-400 font-mono text-xs mt-1">REF: AKM/OFF/{new Date().getFullYear()}/{selectedApplicant.id.split('-')[1]}</p>
+                </div>
               </div>
-           </div>
+
+              <div className="space-y-6 text-slate-800">
+                <p className="font-bold text-slate-600">Teruntuk Tn/Puan {selectedApplicant.parentName},</p>
+                <p className="text-4xl font-black tracking-tight leading-none text-slate-900 uppercase">TAWARAN KEMASUKAN PELAJAR BAHARU</p>
+                <p className="leading-relaxed font-medium text-slate-500">
+                  Memaklumkan bahawa anakanda **{selectedApplicant.name}**, telah berjaya dalam sesi temuduga dengan markah purata **{selectedApplicant.marks ? Math.round((selectedApplicant.marks.hafazan + selectedApplicant.marks.tajwid + selectedApplicant.marks.akhlaq) / 3) : 0}%** dan ditawarkan tempat di AKMAL Tahfiz.
+                </p>
+
+                <div className="bg-slate-50 rounded-[32px] p-8 border border-slate-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 text-center">STRUKTUR YURAN AUTOMATIK</p>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Yuran Asas Pengajian</span>
+                      <span className="font-bold text-slate-700">RM{calculateFees(selectedApplicant).base}.00</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Pakaian Seragam ({selectedApplicant.gender})</span>
+                      <span className="font-bold text-slate-700">RM{calculateFees(selectedApplicant).uniform}.00</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Pendaftaran & Pentadbiran</span>
+                      <span className="font-bold text-slate-700">RM{calculateFees(selectedApplicant).registration}.00</span>
+                    </div>
+                    {calculateFees(selectedApplicant).earlyBird > 0 && (
+                      <div className="flex justify-between text-sm text-emerald-600 font-bold bg-emerald-50 p-2 rounded-lg">
+                        <span>Diskaun Pendaftaran Awal</span>
+                        <span>-RM{calculateFees(selectedApplicant).earlyBird}.00</span>
+                      </div>
+                    )}
+                    <div className="pt-4 mt-4 border-t-2 border-dashed border-slate-200 flex justify-between items-center">
+                      <span className="text-xs font-black text-slate-400 uppercase tracking-widest">JUMLAH PERLU DIBAYAR</span>
+                      <span className="text-3xl font-black text-[#1A4D50]">RM{calculateFees(selectedApplicant).total}.00</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 py-6 border-y border-slate-100">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tarikh Pendaftaran</p>
+                    <p className="font-black text-lg text-slate-800">15 JUN 2026</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Temuduga</p>
+                    <p className="font-black text-lg text-emerald-600 uppercase tracking-tight">CEMERLANG</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-12 pt-0">
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleDownloadPDF}
+                  className="w-full py-5 bg-[#1A4D50] text-[#6FC7CB] rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-slate-900 transition-all flex items-center justify-center gap-3"
+                >
+                  <Download className="size-6" /> MUAT TURUN PDF (TAWARAN)
+                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      sendWhatsAppOffer(selectedApplicant);
+                      updateStatus(selectedApplicant.id, 'OFFERED');
+                      setShowOfferModal(false);
+                    }}
+                    className="flex-1 py-5 bg-emerald-500 text-white rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-emerald-600 shadow-2xl shadow-emerald-200 transition-all flex items-center justify-center gap-3"
+                  >
+                    <MessageCircle className="size-6 fill-white" /> WHATSAPP
+                  </button>
+                  <button onClick={() => setShowOfferModal(false)} className="px-10 py-5 bg-slate-100 text-slate-400 rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition-all">BATAL</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
