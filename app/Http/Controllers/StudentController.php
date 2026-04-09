@@ -17,7 +17,7 @@ class StudentController extends Controller
             ? Student::where('class_id', $classId)->get() 
             : Student::all();
         // Map snake_case to camelCase for frontend
-        return $students->map(function($s) {
+        return $students->map(function ($s) {
             return [
                 'id' => $s->id,
                 'name' => $s->name,
@@ -147,7 +147,7 @@ class StudentController extends Controller
     {
         $student = Student::findOrFail($id);
         $data = $request->all();
-        
+
         $student->update([
             'name' => $data['name'] ?? $student->name,
             'phone' => $data['phone'] ?? $student->phone,
