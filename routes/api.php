@@ -6,6 +6,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\HafazanRecordController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ClassRoomController;
+use App\Http\Controllers\AIAssessmentController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -24,3 +25,6 @@ Route::post('/hafazan-records', [HafazanRecordController::class, 'store']);
 
 // Teachers
 Route::apiResource('teachers', TeacherController::class);
+
+// AI Assessments
+Route::apiResource('ai-assessments', AIAssessmentController::class);
