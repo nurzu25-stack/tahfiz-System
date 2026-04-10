@@ -62,9 +62,12 @@ Route::prefix('api')->group(function () {
     Route::post('/users/{id}/reject', [\App\Http\Controllers\UserController::class, 'rejectUser']);
     Route::get('/users/students-no-account', [\App\Http\Controllers\UserController::class, 'studentsWithoutAccounts']);
     Route::post('/users/student-account', [\App\Http\Controllers\UserController::class, 'createStudentAccount']);
+    Route::get('/students/leaderboard/{classId}', [\App\Http\Controllers\StudentController::class, 'leaderboard']);
+    Route::apiResource('achievements', \App\Http\Controllers\AchievementController::class);
     Route::get('/achievements/student/{studentId}', [\App\Http\Controllers\AchievementController::class, 'index']);
     Route::get('/students/dashboard/{id}', [\App\Http\Controllers\StudentController::class, 'dashboard']);
     Route::get('/students/targets/{studentId}', [\App\Http\Controllers\StudentReportController::class, 'getHafazanTargets']);
+    Route::apiResource('ai-assessments', \App\Http\Controllers\AIAssessmentController::class);
 });
 
 // ─── Authenticated dashboard (blade fallback redirect) ────────────────────────

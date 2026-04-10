@@ -298,4 +298,21 @@ class StudentController extends Controller
             ]
         ]);
     }
+    public function leaderboard($classId)
+    {
+        $students = Student::where('class_id', $classId)
+            ->orderBy('juzuk_completed', 'desc')
+            ->orderBy('ranking', 'asc')
+            ->get();
+
+        return $students->map(function ($s, $index) {
+            return [
+                'rank' => $index + 1,
+                'id' => $s->id,
+                'name' => $s->name,
+                'progress' => $s->juzuk_completed . ' Juzuk',
+                'badge' => ($index === 0) ? '🏆' : (($index === 1) ? '🥈' : (($index === 2) ? '🥉' : ''))
+            ];
+        });
+    }
 }

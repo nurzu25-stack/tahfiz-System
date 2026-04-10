@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 import { Mic, Square, Play, CheckCircle2, AlertCircle, RefreshCcw, Loader2, Award, Zap, BookOpen, Volume2, Sparkles } from 'lucide-react';
 
 interface AssessmentResult {
@@ -16,10 +17,22 @@ export function HafazanAI() {
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [selectedSurah, setSelectedSurah] = useState('Al-Fatihah');
   const [timer, setTimer] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dashboardData, setDashboardData] = useState<any>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
+
+  useEffect(() => {
+    if (authUser.linked_id) {
+      axios.get(`/api/students/dashboard/${authUser.linked_id}`)
+        .then(res => setDashboardData(res.data))
+        .catch(err => console.error(err));
+    }
+  }, [authUser.linked_id]);
 
   const startRecording = async () => {
     try {
@@ -43,9 +56,15 @@ export function HafazanAI() {
       setStatus('recording');
       setTimer(0);
       timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error accessing microphone:', err);
-      alert('Sila benarkan akses mikrofon untuk memulakan penilaian.');
+      let msg = 'Sila benarkan akses mikrofon untuk memulakan penilaian.';
+      if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
+        msg = '⚠️ Akses mikrofon memerlukan sambungan selamat (HTTPS). Sila gunakan https:// atau akses melalui localhost.';
+      } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        msg = '⚠️ Akses mikrofon disekat oleh pelayar. Sila benarkan akses di bahagian tetapan/palang alamat (address bar).';
+      }
+      alert(msg);
     }
   };
 
@@ -71,6 +90,35 @@ export function HafazanAI() {
       transcription: "Bismillahir Rahmanir Rahim. Alhamdu lillahi Rabbil 'alamin. Ar-Rahmanir Rahim. Maliki Yawmiddin..."
     });
     setStatus('completed');
+  };
+
+  const handleSubmit = async () => {
+    if (!result) return;
+    if (!dashboardData?.student?.id) {
+        alert('Data pelajar tidak ditemui. Sila cuba lagi.');
+        return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await axios.post('/api/ai-assessments', {
+        studentId: dashboardData.student.id,
+        teacherId: dashboardData.student.teacher_id || 1, // Fallback if not assigned
+        surah: selectedSurah,
+        score: result.accuracy,
+        date: new Date().toISOString().split('T')[0],
+        status: 'pending',
+        feedback: result.mistakes.join(' | ')
+      });
+      alert('Penilaian telah dihantar kepada Murabbi anda!');
+      setStatus('idle');
+      setResult(null);
+    } catch (err) {
+      console.error(err);
+      alert('Gagal menghantar penilaian.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -217,10 +265,14 @@ export function HafazanAI() {
               </div>
 
               <div className="flex flex-col md:flex-row items-center gap-4 justify-center">
-                 <button className="w-full md:w-auto px-10 py-4 bg-[#1A4D50] text-white rounded-2xl font-black hover:bg-slate-900 shadow-xl transition-all active:scale-95">
-                    HANTAR KEPADA MURABBI
+                 <button 
+                   onClick={handleSubmit}
+                   disabled={isSubmitting}
+                   className="w-full md:w-auto px-10 py-4 bg-[#1A4D50] text-white rounded-2xl font-black hover:bg-slate-900 shadow-xl transition-all active:scale-95 disabled:opacity-50 flex items-center gap-3"
+                 >
+                    {isSubmitting ? <Loader2 className="size-5 animate-spin" /> : 'HANTAR KEPADA MURABBI'}
                  </button>
-                 <button onClick={() => setStatus('idle')} className="w-full md:w-auto px-10 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 transition-all">
+                 <button onClick={() => { setStatus('idle'); setResult(null); }} className="w-full md:w-auto px-10 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 transition-all font-bold">
                     BATAL
                  </button>
               </div>

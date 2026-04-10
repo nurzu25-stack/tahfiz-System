@@ -16,6 +16,32 @@ class AchievementController extends Controller
         return Achievement::where('student_id', $studentId)->get();
     }
 
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'name' => 'required|string',
+            'type' => 'required|string',
+        ]);
+
+        $achievement = Achievement::firstOrCreate([
+            'student_id' => $validated['student_id'],
+            'name' => $validated['name'],
+            'type' => $validated['type']
+        ], [
+            'earned_at' => now(),
+        ]);
+
+        return response()->json($achievement, 201);
+    }
+
+    public function destroy($id)
+    {
+        $achievement = Achievement::findOrFail($id);
+        $achievement->delete();
+        return response()->json(null, 204);
+    }
+
     public function sync($studentId)
     {
         $student = Student::findOrFail($studentId);

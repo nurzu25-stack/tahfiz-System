@@ -11,23 +11,32 @@ export function Achievements() {
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
   const studentUser = state.users.find(u => u.name === authUser.name && u.role === 'student') ?? state.users.find(u => u.role === 'student')!;
   const student = state.students.find(s => s.id === studentUser?.linkedId) ?? state.students[0];
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [dashboardData, setDashboardData] = useState<any>(null);
 
   useEffect(() => {
     if (student?.id) {
       axios.get(`/api/achievements/student/${student.id}`)
         .then(res => setEarnedAchievements(res.data))
-        .catch(err => console.error('Error fetching achievements', err))
+        .catch(err => console.error('Error fetching achievements', err));
+
+      axios.get(`/api/students/leaderboard/${student.classId || 'c1'}`)
+        .then(res => setLeaderboard(res.data))
+        .catch(err => console.error('Error fetching leaderboard', err));
+
+      axios.get(`/api/students/dashboard/${student.id}`)
+        .then(res => setDashboardData(res.data))
+        .catch(err => {
+             console.error('Error fetching dashboard data', err);
+             setLoading(false);
+        })
         .finally(() => setLoading(false));
     }
-  }, [student?.id]);
+  }, [student?.id, student?.classId]);
 
-  const streak = state.hafazanRecords
-    .filter(r => r.studentId === student?.id)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .length; // Simplified for UI display, actual streak calculated in backend
-
-  const rank = getStudentRank(student?.juzukCompleted ?? 0);
-  const leaderboard = getClassLeaderboard(state, student?.classId ?? 'c1');
+  const streak = dashboardData?.streak ?? 0;
+  const rank = getStudentRank(dashboardData?.juzukCompleted ?? 0);
+  // leaderboard is now state-based
 
   // Badge definitions
   const badges = [
