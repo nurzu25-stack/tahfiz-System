@@ -1,35 +1,49 @@
-import { useAppStore, getStudentLastRecords, getStudentStreak } from '../../store/AppContext';
-import { Target, Calendar, BookOpen, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Target, Calendar, BookOpen, TrendingUp, Loader2 } from 'lucide-react';
 
 export function HafazanTarget() {
-  const { state } = useAppStore();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  const studentUser = state.users.find(u => u.name === authUser.name && u.role === 'student') ?? state.users.find(u => u.role === 'student')!;
-  const student = state.students.find(s => s.id === studentUser?.linkedId) ?? state.students[0];
-  const records = getStudentLastRecords(state, student?.id ?? '', 365);
-  const streak = getStudentStreak(state, student?.id ?? '');
+  const studentId = authUser.linked_id;
 
-  // Compute weekly / monthly / yearly progress
-  const now = new Date();
-  const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const yearStart = new Date(now.getFullYear(), 0, 1);
+  useEffect(() => {
+    if (studentId) {
+      axios.get(`/api/students/targets/${studentId}`)
+        .then(res => setData(res.data))
+        .catch(err => console.error('Error fetching targets', err))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [studentId]);
 
-  const weeklyAyah = records.filter(r => new Date(r.date) >= weekAgo).reduce((s, r) => s + (r.ayahCount ?? 0), 0);
-  const monthlyAyah = records.filter(r => new Date(r.date) >= monthStart).reduce((s, r) => s + (r.ayahCount ?? 0), 0);
-  const yearlyAyah = records.filter(r => new Date(r.date) >= yearStart).reduce((s, r) => s + (r.ayahCount ?? 0), 0);
+  if (!studentId) {
+    return (
+      <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-gray-300">
+        <p className="text-gray-500 mb-4">Akaun anda belum dikaitkan dengan profil pelajar atau sesi anda telah tamat.</p>
+        <button onClick={() => window.location.href = '/app'} className="px-6 py-2 bg-indigo-600 text-white rounded-lg">
+          Log Masuk Semula
+        </button>
+      </div>
+    );
+  }
 
-  // Targets
-  const weeklyTarget = 100;   // ayah
-  const monthlyTarget = 400;  // ayah
-  const yearlyTarget = 4800;  // ayah (full quran ≈ 6236)
-
-  const bar = (val: number, target: number) => Math.min(100, Math.round((val / target) * 100));
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
+        <p className="text-gray-500">Memuatkan sasaran anda...</p>
+      </div>
+    );
+  }
 
   const targets = [
-    { label: 'Sasaran Mingguan', current: weeklyAyah, target: weeklyTarget, icon: <Calendar size={24} />, color: 'blue', period: 'Minggu Ini' },
-    { label: 'Sasaran Bulanan', current: monthlyAyah, target: monthlyTarget, icon: <Target size={24} />, color: 'green', period: 'Bulan Ini' },
-    { label: 'Sasaran Tahunan', current: yearlyAyah, target: yearlyTarget, icon: <TrendingUp size={24} />, color: 'purple', period: 'Tahun Ini' },
+    { label: 'Sasaran Mingguan', current: data?.weekly?.current ?? 0, target: data?.weekly?.target ?? 100, icon: <Calendar size={24} />, color: 'blue', period: 'Minggu Ini', progress: data?.weekly?.progress ?? 0 },
+    { label: 'Sasaran Bulanan', current: data?.monthly?.current ?? 0, target: data?.monthly?.target ?? 400, icon: <Target size={24} />, color: 'green', period: 'Bulan Ini', progress: data?.monthly?.progress ?? 0 },
+    { label: 'Sasaran Tahunan', current: data?.yearly?.current ?? 0, target: data?.yearly?.target ?? 4800, icon: <TrendingUp size={24} />, color: 'purple', period: 'Tahun Ini', progress: data?.yearly?.progress ?? 0 },
   ];
 
   const bgMap: Record<string, string> = { blue: 'bg-blue-50', green: 'bg-green-50', purple: 'bg-purple-50' };
@@ -43,9 +57,9 @@ export function HafazanTarget() {
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Hari Berturutan', value: `🔥 ${streak} hari`, color: 'text-orange-600' },
-          { label: 'Jumlah Rekod', value: records.length, color: 'text-blue-600' },
-          { label: 'Juzuk Selesai', value: `${student?.juzukCompleted ?? 0} / 30`, color: 'text-green-600' },
+          { label: 'Hari Berturutan', value: `🔥 ${data?.stats?.streak ?? 0} hari`, color: 'text-orange-600' },
+          { label: 'Jumlah Rekod', value: data?.stats?.totalRecords ?? 0, color: 'text-blue-600' },
+          { label: 'Juzuk Selesai', value: `${data?.stats?.juzukCompleted ?? 0} / 30`, color: 'text-green-600' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-4 text-center">
             <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -69,10 +83,10 @@ export function HafazanTarget() {
             </div>
           </div>
           <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-            <div className={`h-full ${barMap[t.color]} rounded-full transition-all`} style={{ width: `${bar(t.current, t.target)}%` }} />
+            <div className={`h-full ${barMap[t.color]} rounded-full transition-all`} style={{ width: `${t.progress}%` }} />
           </div>
           <div className="flex justify-between mt-2 text-xs text-gray-500">
-            <span>{bar(t.current, t.target)}% selesai</span>
+            <span>{t.progress}% selesai</span>
             <span>{Math.max(0, t.target - t.current)} ayat tinggal</span>
           </div>
         </div>
@@ -84,10 +98,10 @@ export function HafazanTarget() {
           <BookOpen className="text-green-600" size={22} />
           <h3 className="font-semibold text-green-900">Unjuran Khatam Al-Quran</h3>
         </div>
-        {weeklyAyah > 0 ? (
+        {data?.weekly?.current > 0 ? (
           <>
-            <p className="text-3xl font-bold text-green-700">{Math.ceil((6236 - (student?.juzukCompleted ?? 0) * 208) / (weeklyAyah / 7))} hari</p>
-            <p className="text-sm text-green-700 mt-1">Berdasarkan kadar semasa ~{Math.round(weeklyAyah / 7)} ayat/hari</p>
+            <p className="text-3xl font-bold text-green-700">{Math.ceil((6236 - (data?.stats?.juzukCompleted ?? 0) * 208) / (data?.weekly?.current / 7))} hari</p>
+            <p className="text-sm text-green-700 mt-1">Berdasarkan kadar semasa ~{Math.round(data?.weekly?.current / 7)} ayat/hari</p>
           </>
         ) : (
           <p className="text-gray-500 text-sm">Mula rekod hafazan untuk lihat unjuran anda!</p>

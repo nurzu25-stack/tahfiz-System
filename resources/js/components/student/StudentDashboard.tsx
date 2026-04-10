@@ -64,15 +64,32 @@ export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) 
         if (id) {
           const res = await axios.get(`/api/students/dashboard/${id}`);
           setDashboardData(res.data);
+        } else {
+          setLoading(false);
         }
       } catch (err) {
         console.error('Error fetching dashboard data', err);
+        setLoading(false);
       } finally {
         setLoading(false);
       }
     };
     fetchDashboard();
   }, [authUser.linked_id]);
+
+  if (!authUser.linked_id) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-12">
+        <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6">
+          <p className="font-bold">Akses Terhad</p>
+          <p>Sila log keluar dan log masuk semula untuk mengemaskini sesi anda.</p>
+        </div>
+        <button onClick={onLogout} className="px-8 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-100 hover:bg-red-700 transition-all">
+          LOG KELUAR & LOG MASUK SEMULA
+        </button>
+      </div>
+    );
+  }
 
   const student = dashboardData?.student;
   const stats = [

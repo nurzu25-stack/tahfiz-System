@@ -163,6 +163,7 @@ export function AuthPage() {
         name: json.user.name,
         userId: json.user.id,
         email: json.user.email,
+        linked_id: json.user.linked_id,
       });
       
       if (rememberMe) {
@@ -221,6 +222,7 @@ export function AuthPage() {
         name: json.user.name,
         userId: json.user.id,
         email: json.user.email,
+        linked_id: json.user.linked_id,
       }));
 
       navigate(roleDashboards[json.user.role as UserRole]);

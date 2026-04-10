@@ -30,19 +30,22 @@ class AuthController extends Controller
     public function apiLogin(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'email'    => ['required', 'string'], // renamed to email but can be name
             'password' => ['required'],
             'role'     => ['required', 'string', 'in:admin,teacher,parent,student'],
         ]);
 
         // Attempt login but ALSO check for active status
-        $user = User::where('email', $credentials['email'])
+        $user = User::where(function($query) use ($credentials) {
+                $query->where('email', $credentials['email'])
+                      ->orWhere('name', $credentials['email']);
+            })
             ->where('role', $credentials['role'])
             ->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
-                'message' => 'E-mel, kata laluan atau peranan tidak sah.',
+                'message' => 'E-mel/Nama, kata laluan atau peranan tidak sah.',
             ], 401);
         }
 

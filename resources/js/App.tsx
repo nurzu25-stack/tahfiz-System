@@ -9,9 +9,9 @@ import { PublicRegistration } from './components/auth/PublicRegistration';
 
 type UserRole = 'admin' | 'teacher' | 'parent' | 'student';
 
-function getSessionUser(): { role: UserRole; name: string } | null {
+function getSessionUser() {
   try {
-    const raw = sessionStorage.getItem('authUser');
+    const raw = sessionStorage.getItem('authUser') || localStorage.getItem('authUser');
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -20,6 +20,7 @@ function getSessionUser(): { role: UserRole; name: string } | null {
 
 function handleLogout() {
   sessionStorage.removeItem('authUser');
+  localStorage.removeItem('authUser');
   window.location.href = '/';
 }
 
