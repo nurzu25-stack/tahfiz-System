@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/AppContext';
 import { User, Teacher, Student } from '../../store/mockData';
+import axios from 'axios';
 
 interface ProfileViewProps {
   userId: string;
@@ -9,13 +10,10 @@ interface ProfileViewProps {
 export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
   const { state, dispatch } = useAppStore();
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Find current user object
-  const user = state.users.find(u => u.id === userId);
-  
-  // Role-specific data
-  const teacher = user?.role === 'teacher' ? state.teachers.find(t => String(t.id) === String(user.linkedId)) : null;
-  const student = user?.role === 'student' ? state.students.find(s => String(s.id) === String(user.linkedId)) : null;
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [teacher, setTeacher] = useState<any>(null);
+  const [student, setStudent] = useState<any>(null);
 
   // Local state for editing fields
   const [formData, setFormData] = useState({
@@ -61,126 +59,98 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
   });
 
   useEffect(() => {
-    if (user) {
+    fetchProfile();
+  }, [userId]);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const resp = await axios.get('/api/profile');
+      const u = resp.data;
+      setUser(u);
+      
+      const tData = u.teacher_data || null;
+      const sData = u.student_data || null;
+      setTeacher(tData);
+      setStudent(sData);
+
       setFormData({
-        name: user.name,
-        email: user.email,
-        phone: user.phone || teacher?.phone || student?.phone || '', 
-        address: user.address || '',
-        wage: user.wage || 0,
-        icNo: teacher?.icNo || student?.icNo || '',
-        qualification: teacher?.qualification || '',
-        experience: teacher?.experience || '',
-        educationBackground: student?.educationBackground || '',
-        intakeDate: student?.intakeDate || student?.enrolledDate || '',
-        dob: student?.dob || '',
-        pob: student?.pob || '',
-        race: student?.race || '',
-        religion: student?.religion || '',
-        gender: (student?.gender as any) || 'M',
-        bloodType: student?.bloodType || '',
-        maritalStatus: student?.maritalStatus || '',
-        citizenship: student?.citizenship || 'MAL',
-        familyIncome: student?.familyIncome || '',
-        medicalHistory: teacher?.medicalHistory || student?.medicalHistory || '',
-        emergencyContactName: teacher?.emergencyContactName || student?.emergencyContactName || '',
-        emergencyContactPhone: teacher?.emergencyContactPhone || student?.emergencyContactPhone || '',
+        name: u.name || '',
+        email: u.email || '',
+        phone: u.phone || tData?.phone || sData?.phone || '', 
+        address: u.address || '',
+        wage: u.wage || 0,
+        icNo: tData?.ic_no || sData?.icNo || '',
+        qualification: tData?.qualification || '',
+        experience: tData?.experience || '',
+        educationBackground: sData?.educationBackground || '',
+        intakeDate: sData?.intakeDate || sData?.enrolledDate || '',
+        dob: sData?.dob || '',
+        pob: sData?.pob || '',
+        race: sData?.race || '',
+        religion: sData?.religion || '',
+        gender: (sData?.gender as any) || 'M',
+        bloodType: sData?.bloodType || '',
+        maritalStatus: sData?.maritalStatus || '',
+        citizenship: sData?.citizenship || 'MAL',
+        familyIncome: sData?.familyIncome || '',
+        medicalHistory: tData?.medical_history || sData?.medicalHistory || '',
+        emergencyContactName: tData?.emergency_contact_name || sData?.emergencyContactName || '',
+        emergencyContactPhone: tData?.emergency_contact_phone || sData?.emergencyContactPhone || '',
         // Parent detailed profile logic
-        relation: user.relation || '',
-        postcode: user.postcode || '',
-        city: user.city || '',
-        district: user.district || '',
-        stateName: user.stateName || '',
-        country: user.country || 'MAL',
-        parliament: user.parliament || '',
-        job: user.job || '',
-        sector: user.sector || '',
-        officePhone: user.officePhone || '',
-        childCount: user.childCount || 0,
-        reference: user.reference || '',
+        relation: u.relation || '',
+        postcode: u.postcode || '',
+        city: u.city || '',
+        district: u.district || '',
+        stateName: u.stateName || '',
+        country: u.country || 'MAL',
+        parliament: u.parliament || '',
+        job: u.job || '',
+        sector: u.sector || '',
+        officePhone: u.officePhone || '',
+        childCount: u.childCount || 0,
+        reference: u.reference || '',
         // Murabbi
-        serviceStartDate: teacher?.serviceStartDate || '',
-        residence: teacher?.residence || '',
-        dependentsCount: teacher?.dependentsCount || 0,
+        serviceStartDate: tData?.service_start_date || '',
+        residence: tData?.residence || '',
+        dependentsCount: tData?.dependents_count || 0,
       });
+    } catch (err) {
+      console.error('Failed to fetch profile', err);
+    } finally {
+      setLoading(false);
     }
-  }, [user, teacher, student]);
-
-  if (!user) return <div className="p-8 text-slate-500">Log masuk untuk melihat profil.</div>;
-
-  const handleSave = () => {
-    // 1. Update User (Basics + Parent fields)
-    dispatch({
-      type: 'EDIT_USER',
-      payload: {
-        id: user.id,
-        name: formData.name,
-        phone: formData.phone,
-        address: formData.address,
-        wage: formData.wage,
-        relation: formData.relation,
-        postcode: formData.postcode,
-        city: formData.city,
-        district: formData.district,
-        stateName: formData.stateName,
-        country: formData.country,
-        parliament: formData.parliament,
-        job: formData.job,
-        sector: formData.sector,
-        officePhone: formData.officePhone,
-        childCount: formData.childCount,
-        reference: formData.reference,
-      }
-    });
-
-    // 2. Update Teacher specifically if applicable
-    if (teacher) {
-      dispatch({
-        type: 'EDIT_TEACHER',
-        payload: {
-          id: teacher.id as any,
-          name: formData.name,
-          phone: formData.phone,
-          icNo: formData.icNo,
-          qualification: formData.qualification,
-          experience: formData.experience,
-          medicalHistory: formData.medicalHistory,
-          emergencyContactName: formData.emergencyContactName,
-          emergencyContactPhone: formData.emergencyContactPhone,
-          serviceStartDate: formData.serviceStartDate,
-          residence: formData.residence,
-          dependentsCount: formData.dependentsCount,
-        }
-      });
-    }
-
-    // 3. Update Student specifically if applicable
-    if (student) {
-      dispatch({
-        type: 'EDIT_STUDENT',
-        payload: {
-          id: student.id,
-          name: formData.name,
-          icNo: formData.icNo,
-          gender: formData.gender as any,
-          bloodType: formData.bloodType,
-          maritalStatus: formData.maritalStatus,
-          dob: formData.dob,
-          pob: formData.pob,
-          citizenship: formData.citizenship,
-          race: formData.race,
-          religion: formData.religion,
-          familyIncome: formData.familyIncome,
-          intakeDate: formData.intakeDate,
-          medicalHistory: formData.medicalHistory,
-          emergencyContactName: formData.emergencyContactName,
-          emergencyContactPhone: formData.emergencyContactPhone,
-        }
-      });
-    }
-
-    setIsEditing(false);
   };
+
+  const handleSave = async () => {
+    try {
+      const payload = { ...formData };
+      await axios.post('/api/profile', payload);
+      
+      // Update local state and global context
+      dispatch({
+        type: 'EDIT_USER',
+        payload: { id: user.id, ...payload }
+      });
+      
+      if (teacher) {
+        dispatch({
+          type: 'EDIT_TEACHER',
+          payload: { id: teacher.id, ...payload }
+        });
+      }
+
+      alert('Profil berjaya disimpan ke pangkalan data.');
+      setIsEditing(false);
+      fetchProfile(); // Refresh
+    } catch (err: any) {
+      console.error('Failed to save profile', err);
+      alert('Gagal menyimpan profil: ' + (err.response?.data?.message || 'Ralat sambungan.'));
+    }
+  };
+
+  if (loading) return <div className="p-8 text-slate-500 flex items-center gap-2"><div className="w-5 h-5 border-2 border-[#6FC7CB] border-t-transparent rounded-full animate-spin"></div> Memuatkan profil...</div>;
+  if (!user) return <div className="p-8 text-slate-500">Log masuk untuk melihat profil.</div>;
 
   const renderField = (label: string, value: string | number, name: string, type: string = 'text', readOnly: boolean = false) => (
     <div className="border-b border-slate-100 py-3.5 flex flex-col md:flex-row md:items-center">
