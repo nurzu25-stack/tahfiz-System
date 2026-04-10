@@ -8,10 +8,13 @@ export function RecordHafazan() {
 
   // Get the logged-in teacher's ID from sessionStorage
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  const teacher = state.teachers.find(t => t.name.includes(authUser.name?.split(' ').slice(-1)[0] ?? '')) ?? state.teachers[0];
-  const teacherClasses = state.classes.filter(c => teacher?.classIds.includes(c.id));
+  const teacher = state.teachers.find(t => 
+    t.email === authUser.email || 
+    (authUser.name && t.name.toLowerCase().includes(authUser.name.toLowerCase().split(' ').slice(-1)[0]))
+  ) ?? state.teachers[0];
+  const teacherClasses = state.classes.filter(c => teacher?.classIds.some(cid => String(cid) === String(c.id)));
   const [selectedClassId, setSelectedClassId] = useState(teacherClasses[0]?.id ?? '');
-  const studentsInClass = state.students.filter(s => s.classId === selectedClassId);
+  const studentsInClass = state.students.filter(s => String(s.classId) === String(selectedClassId));
 
   const [selectedStudent, setSelectedStudent] = useState('');
   const [formData, setFormData] = useState({

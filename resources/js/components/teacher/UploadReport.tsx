@@ -5,8 +5,11 @@ import { Upload, FileText, CheckCircle } from 'lucide-react';
 export function UploadReport() {
   const { state, dispatch } = useAppStore();
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  const teacher = state.teachers.find(t => t.name.includes(authUser.name?.split(' ').slice(-1)[0] ?? '')) ?? state.teachers[0];
-  const teacherClasses = state.classes.filter(c => teacher?.classIds.includes(c.id));
+  const teacher = state.teachers.find(t => 
+    t.email === authUser.email || 
+    (authUser.name && t.name.toLowerCase().includes(authUser.name.toLowerCase().split(' ').slice(-1)[0]))
+  ) ?? state.teachers[0];
+  const teacherClasses = state.classes.filter(c => teacher?.classIds.some(cid => String(cid) === String(c.id)));
   const [classId, setClassId] = useState(teacherClasses[0]?.id ?? '');
   const [content, setContent] = useState('');
   const [fileName, setFileName] = useState('');

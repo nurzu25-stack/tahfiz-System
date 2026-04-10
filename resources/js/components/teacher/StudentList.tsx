@@ -5,9 +5,10 @@ import { useState, useEffect } from 'react';
 export function StudentList() {
   const { state } = useAppStore();
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  
-  // Try to find teacher in state, but fallback to authUser name if not found
-  const teacher = state.teachers.find(t => t.name.includes(authUser.name?.split(' ').slice(-1)[0] ?? '')) ?? state.teachers[0];
+  const teacher = state.teachers.find(t => 
+    t.email === authUser.email || 
+    (authUser.name && t.name.toLowerCase().includes(authUser.name.toLowerCase().split(' ').slice(-1)[0]))
+  ) ?? state.teachers[0];
   
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -40,7 +41,7 @@ export function StudentList() {
       }
     } catch (err) {
       console.error('Failed to fetch classes', err);
-      setClasses(state.classes.filter(c => teacher?.classIds.includes(c.id)));
+      setClasses(state.classes.filter(c => teacher?.classIds.some(cid => String(cid) === String(c.id))));
     }
   };
 

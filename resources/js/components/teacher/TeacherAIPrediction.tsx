@@ -10,7 +10,10 @@ export function TeacherAIPrediction() {
 
   // Resolve teacher
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  const teacher = state.teachers.find(t => t.name.includes(authUser.name?.split(' ').slice(-1)[0] ?? '')) ?? state.teachers[0];
+  const teacher = state.teachers.find(t => 
+    t.email === authUser.email || 
+    (authUser.name && t.name.toLowerCase().includes(authUser.name.toLowerCase().split(' ').slice(-1)[0]))
+  ) ?? state.teachers[0];
 
   useEffect(() => {
     if (teacher?.id) {
@@ -59,7 +62,7 @@ export function TeacherAIPrediction() {
   };
 
   // UI Derived state
-  const myStudents = state.students.filter(s => s.teacherId === teacher?.id);
+  const myStudents = state.students.filter(s => String(s.teacherId) === String(teacher?.id));
   const avgConfidence = predictions.length
     ? Math.round(predictions.reduce((sum, p) => sum + parseInt(p.confidence), 0) / predictions.length)
     : 0;
