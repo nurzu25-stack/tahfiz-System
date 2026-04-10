@@ -1,6 +1,7 @@
 import { useAppStore, getStudentAttendanceRate, getStudentLastRecords } from '../../store/AppContext';
 import { Eye } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export function StudentList() {
   const { state } = useAppStore();
@@ -29,15 +30,13 @@ export function StudentList() {
 
   const fetchClasses = async () => {
     try {
-      const resp = await fetch('/api/classes');
-      if (resp.ok) {
-        const data = await resp.json();
-        // Filter classes for this teacher
-        const teacherClasses = data.filter((c: any) => c.teacherId === teacher?.id);
-        setClasses(teacherClasses);
-        if (teacherClasses.length > 0 && !selectedClassId) {
-          setSelectedClassId(teacherClasses[0].id);
-        }
+      const resp = await axios.get('/api/classes');
+      const data = resp.data;
+      // Filter classes for this teacher
+      const teacherClasses = data.filter((c: any) => String(c.teacherId) === String(teacher?.id));
+      setClasses(teacherClasses);
+      if (teacherClasses.length > 0 && !selectedClassId) {
+        setSelectedClassId(teacherClasses[0].id);
       }
     } catch (err) {
       console.error('Failed to fetch classes', err);
@@ -48,18 +47,16 @@ export function StudentList() {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const resp = await fetch(`/api/students?classId=${selectedClassId}`);
-      if (resp.ok) {
-        const data = await resp.json();
-        setStudents(data);
-        
-        // Fetch last records for each student
-        data.forEach((student: any) => fetchLastRecord(student.id));
-      }
+      const resp = await axios.get(`/api/students`, { params: { classId: selectedClassId } });
+      const data = resp.data;
+      setStudents(data);
+      
+      // Fetch last records for each student
+      data.forEach((student: any) => fetchLastRecord(student.id));
     } catch (err) {
       console.error('Failed to fetch students', err);
       // Fallback to state if API fails
-      setStudents(state.students.filter(s => s.classId === selectedClassId));
+      setStudents(state.students.filter(s => String(s.classId) === String(selectedClassId)));
     } finally {
       setLoading(false);
     }
@@ -67,12 +64,10 @@ export function StudentList() {
 
   const fetchLastRecord = async (studentId: string) => {
     try {
-      const resp = await fetch(`/api/hafazan-records?student_id=${studentId}&limit=1`);
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.length > 0) {
-          setStudentRecords(prev => ({ ...prev, [studentId]: data[0] }));
-        }
+      const resp = await axios.get(`/api/hafazan-records`, { params: { student_id: studentId, limit: 1 } });
+      const data = resp.data;
+      if (data.length > 0) {
+        setStudentRecords(prev => ({ ...prev, [studentId]: data[0] }));
       }
     } catch (err) {
       console.error('Failed to fetch record', err);
