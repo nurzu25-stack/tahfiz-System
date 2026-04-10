@@ -62,6 +62,7 @@ Route::prefix('api')->group(function () {
     Route::post('/users/{id}/reject', [\App\Http\Controllers\UserController::class, 'rejectUser']);
     Route::get('/users/students-no-account', [\App\Http\Controllers\UserController::class, 'studentsWithoutAccounts']);
     Route::post('/users/student-account', [\App\Http\Controllers\UserController::class, 'createStudentAccount']);
+    Route::get('/achievements/student/{studentId}', [\App\Http\Controllers\AchievementController::class, 'index']);
 });
 
 // ─── Authenticated dashboard (blade fallback redirect) ────────────────────────
