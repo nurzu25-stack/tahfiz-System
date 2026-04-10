@@ -1,20 +1,50 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useAppStore } from '../../store/AppContext';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Payment } from '../../store/mockData';
 
 const MONTHS = ['','Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
 
-export function ViewPayments() {
-  const { state, dispatch } = useAppStore();
-  const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  const parentUser = state.users.find(u => u.name === authUser.name && u.role === 'parent') ?? state.users.find(u => u.role === 'parent')!;
-  const child = state.students.find(s => s.id === parentUser?.linkedId) ?? state.students[0];
-  const payments = [...state.payments.filter(p => p.studentId === child?.id)].sort((a, b) => b.year - a.year || b.month - a.month);
+interface ViewPaymentsProps {
+  childId: string;
+}
+
+export function ViewPayments({ childId }: ViewPaymentsProps) {
+  const { state } = useAppStore();
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const child = state.students.find(s => String(s.id) === String(childId));
+
+  useEffect(() => {
+    fetchPayments();
+  }, [childId]);
+
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const resp = await axios.get(`/api/payments?student_id=${childId}`);
+      setPayments(resp.data);
+    } catch (err) {
+      console.error('Failed to fetch payments', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const pending = payments.filter(p => p.status !== 'Dibayar');
   const totalPaid = payments.filter(p => p.status === 'Dibayar').reduce((s, p) => s + p.amount, 0);
 
-  const handlePay = (paymentId: string) => {
+  const handlePay = async (paymentId: string) => {
     if (confirm('Sahkan pembayaran? Invois akan ditandakan sebagai Dibayar.')) {
-      dispatch({ type: 'TOGGLE_PAYMENT', payload: { id: paymentId, status: 'Dibayar' } });
+      try {
+        await axios.put(`/api/payments/${paymentId}`, { status: 'Dibayar' });
+        alert('Pembayaran disahkan!');
+        fetchPayments();
+      } catch (err) {
+        alert('Gagal mengemaskini pembayaran.');
+      }
     }
   };
 
@@ -28,12 +58,14 @@ export function ViewPayments() {
     return <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${map[s] ?? ''}`}>{s}</span>;
   };
 
+  if (loading) return <div className="p-8 text-slate-500">Memuatkan sejarah pembayaran...</div>;
+
   return (
     <div className="space-y-6">
       <div><h2 className="text-2xl font-semibold text-gray-900">Sejarah Pembayaran</h2><p className="text-gray-600 mt-1">Jejak pembayaran yuran untuk {child?.name}</p></div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { label: 'Jumlah Dibayar', value: `RM ${totalPaid}`, color: 'text-green-600', bg: 'bg-green-50' },
           { label: 'Belum Bayar', value: pending.length, color: 'text-orange-600', bg: 'bg-orange-50' },
@@ -66,7 +98,7 @@ export function ViewPayments() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {payments.map(p => (
+              {[...payments].sort((a,b) => b.year - a.year || b.month - a.month).map(p => (
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{MONTHS[p.month]} {p.year}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">RM {p.amount}</td>
@@ -75,7 +107,7 @@ export function ViewPayments() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.paidDate ?? '—'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {p.status !== 'Dibayar' && (
-                      <button onClick={() => handlePay(p.id)} className="px-4 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700">Bayar Sekarang</button>
+                      <button onClick={() => handlePay(String(p.id))} className="px-4 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700">Bayar Sekarang</button>
                     )}
                   </td>
                 </tr>

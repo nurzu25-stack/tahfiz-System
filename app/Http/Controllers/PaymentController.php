@@ -9,9 +9,14 @@ class PaymentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $payments = \App\Models\Payment::all();
+        $studentId = $request->query('student_id');
+        $query = \App\Models\Payment::query();
+        if ($studentId) {
+            $query->where('student_id', $studentId);
+        }
+        $payments = $query->get();
         return $payments->map(function($p) {
             return [
                 'id' => $p->id,

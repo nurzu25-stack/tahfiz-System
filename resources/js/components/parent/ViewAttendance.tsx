@@ -1,12 +1,34 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useAppStore, getStudentAttendanceRate } from '../../store/AppContext';
+import { AttendanceRecord } from '../../store/mockData';
 
-export function ViewAttendance() {
+interface ViewAttendanceProps {
+  childId: string;
+}
+
+export function ViewAttendance({ childId }: ViewAttendanceProps) {
   const { state } = useAppStore();
-  const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  const parentUser = state.users.find(u => u.name === authUser.name && u.role === 'parent') ?? state.users.find(u => u.role === 'parent')!;
-  const child = state.students.find(s => s.id === parentUser?.linkedId) ?? state.students[0];
-  const records = [...state.attendance.filter(a => a.studentId === child?.id)].sort((a, b) => b.date.localeCompare(a.date));
-  const rate = getStudentAttendanceRate(state, child?.id ?? '');
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const child = state.students.find(s => String(s.id) === String(childId));
+  const rate = getStudentAttendanceRate(state, String(childId));
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        setLoading(true);
+        const resp = await axios.get(`/api/attendance?student_id=${childId}`);
+        setRecords(resp.data);
+      } catch (err) {
+        console.error('Failed to fetch attendance', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (childId) fetchAttendance();
+  }, [childId]);
 
   const statusBadge = (s: string) => {
     const map: Record<string, string> = { Hadir: 'bg-green-100 text-green-700', 'Tidak Hadir': 'bg-red-100 text-red-700', Lewat: 'bg-orange-100 text-orange-700' };
@@ -16,6 +38,8 @@ export function ViewAttendance() {
   const presentCount = records.filter(r => r.status === 'Hadir').length;
   const absentCount = records.filter(r => r.status === 'Tidak Hadir').length;
   const lateCount = records.filter(r => r.status === 'Lewat').length;
+
+  if (loading) return <div className="p-8 text-slate-500">Memuatkan sejarah kehadiran...</div>;
 
   return (
     <div className="space-y-6">
@@ -49,10 +73,10 @@ export function ViewAttendance() {
         <div className="p-4 bg-gray-50 border-b"><h3 className="font-semibold text-gray-900">Butiran Kehadiran</h3></div>
         {records.length === 0 && <p className="px-6 py-10 text-center text-gray-400 text-sm">Tiada rekod lagi.</p>}
         <div className="divide-y divide-gray-100">
-          {records.map(rec => (
+          {[...records].sort((a,b) => b.date.localeCompare(a.date)).map(rec => (
             <div key={rec.id} className="flex items-center justify-between px-6 py-4">
               <div>
-                <p className="font-medium text-gray-900 text-sm">{rec.date}</p>
+                <p className="font-medium text-gray-900 text-sm">{new Date(rec.date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 {rec.remarks && <p className="text-xs text-gray-500 mt-0.5">📝 {rec.remarks}</p>}
               </div>
               {statusBadge(rec.status)}

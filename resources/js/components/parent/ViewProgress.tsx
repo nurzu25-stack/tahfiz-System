@@ -1,15 +1,36 @@
-import { useAppStore, getStudentLastRecords } from '../../store/AppContext';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useAppStore } from '../../store/AppContext';
 import { BookOpen, TrendingUp, Star } from 'lucide-react';
+import { HafazanRecord } from '../../store/mockData';
 
-export function ViewProgress() {
+interface ViewProgressProps {
+  childId: string;
+}
+
+export function ViewProgress({ childId }: ViewProgressProps) {
   const { state } = useAppStore();
+  const [records, setRecords] = useState<HafazanRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Identify child for this parent
-  const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  const parentUser = state.users.find(u => u.name === authUser.name && u.role === 'parent') ?? state.users.find(u => u.role === 'parent')!;
-  const child = state.students.find(s => s.id === parentUser?.linkedId) ?? state.students[0];
-  const records = getStudentLastRecords(state, child?.id ?? '', 10);
+  // Identify child from global state for static details
+  const child = state.students.find(s => String(s.id) === String(childId));
   const progressPct = child ? Math.round((child.juzukCompleted / 30) * 100) : 0;
+
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        setLoading(true);
+        const resp = await axios.get(`/api/hafazan-records?student_id=${childId}&limit=10`);
+        setRecords(resp.data);
+      } catch (err) {
+        console.error('Failed to fetch hafazan records', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (childId) fetchRecords();
+  }, [childId]);
 
   const gradeColor = (g: string) =>
     g === 'Mumtaz' ? 'bg-green-100 text-green-700' :
@@ -20,6 +41,8 @@ export function ViewProgress() {
   const now = new Date();
   const monthRecords = records.filter(r => new Date(r.date).getMonth() === now.getMonth());
   const monthAyah = monthRecords.reduce((sum, r) => sum + (r.ayahCount ?? 0), 0);
+
+  if (loading) return <div className="p-8 text-slate-500">Memuatkan rekod hafazan...</div>;
 
   return (
     <div className="space-y-6">
@@ -63,7 +86,7 @@ export function ViewProgress() {
           {records.map(rec => (
             <div key={rec.id} className="border border-gray-100 rounded-xl p-4">
               <div className="flex justify-between items-center mb-3">
-                <span className="font-semibold text-gray-900 text-sm">{rec.date}</span>
+                <span className="font-semibold text-gray-900 text-sm">{new Date(rec.date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                 <span className="text-xs text-gray-500">{rec.ayahCount} ayat direkod</span>
               </div>
               <div className="grid grid-cols-3 gap-3">
@@ -72,11 +95,11 @@ export function ViewProgress() {
                   { type: 'Sabaqi', data: rec.sabaqi, color: 'blue' },
                   { type: 'Manzil', data: rec.manzil, color: 'purple' },
                 ].map(({ type, data, color }) => (
-                  <div key={type} className={`bg-${color}-50 rounded-lg p-3`}>
-                    <p className={`text-xs font-bold text-${color}-700 mb-1`}>{type}</p>
-                    <p className="text-sm font-medium text-gray-900">{data.surah || '—'}</p>
-                    {data.surah && <p className="text-xs text-gray-500">Ayah {data.from}–{data.to}</p>}
-                    {data.grade && <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${gradeColor(data.grade)}`}>{data.grade}</span>}
+                  <div key={type} className="bg-slate-50 rounded-lg p-3">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{type}</p>
+                    <p className="text-sm font-bold text-slate-800">{data.surah || '—'}</p>
+                    {data.surah && <p className="text-[11px] text-slate-500 font-medium">Ayah {data.from}–{data.to}</p>}
+                    {data.grade && <span className={`inline-block mt-2 px-2 py-0.5 text-[10px] font-bold rounded-full ${gradeColor(data.grade)}`}>{data.grade}</span>}
                   </div>
                 ))}
               </div>

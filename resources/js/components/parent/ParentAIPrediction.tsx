@@ -1,14 +1,16 @@
 import { Brain, TrendingUp, Calendar, Star, BookOpen, Users } from 'lucide-react';
 import { useAppStore, computeAIPrediction } from '../../store/AppContext';
 
-export function ParentAIPrediction() {
+interface ParentAIPredictionProps {
+  childId: string;
+}
+
+export function ParentAIPrediction({ childId }: ParentAIPredictionProps) {
   const { state } = useAppStore();
 
-  const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  const parentUser = state.users.find(u => u.name === authUser.name && u.role === 'parent') ?? state.users.find(u => u.role === 'parent')!;
-  const child = state.students.find(s => s.id === parentUser?.linkedId) ?? state.students[0];
+  const child = state.students.find(s => String(s.id) === String(childId));
 
-  const pred = child ? computeAIPrediction(state, child.id) : null;
+  const pred = child ? computeAIPrediction(state, String(childId)) : null;
   const childClass = state.classes.find(c => c.id === child?.classId);
   const teacher = state.teachers.find(t => t.id === child?.teacherId);
 

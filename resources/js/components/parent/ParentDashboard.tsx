@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { User, BookOpen, Calendar, DollarSign, Bell, Brain, LogOut, LayoutDashboard, X } from 'lucide-react';
 import { ViewProgress } from './ViewProgress';
 import { ViewAttendance } from './ViewAttendance';
@@ -30,17 +31,43 @@ const navItems: { id: ParentView; label: string; icon: React.ReactNode; badge?: 
 export function ParentDashboard({ userName, onLogout }: ParentDashboardProps) {
   const [currentView, setCurrentView] = useState<ParentView>('home');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [children, setChildren] = useState<any[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const { state } = useAppStore();
 
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
+
+  useEffect(() => {
+    fetchChildren();
+  }, []);
+
+  const fetchChildren = async () => {
+    try {
+      setLoading(true);
+      const resp = await axios.get('/api/parent/children');
+      setChildren(resp.data);
+      if (resp.data.length > 0) {
+        setSelectedChildId(String(resp.data[0].id));
+      }
+    } catch (err) {
+      console.error('Failed to fetch children', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const child = children.find(c => String(c.id) === selectedChildId) || children[0];
   const parentUser = state.users.find(u => u.name === authUser.name && u.role === 'parent') ?? state.users.find(u => u.role === 'parent')!;
-  const child = state.students.find(s => s.id === parentUser?.linkedId) ?? state.students[0];
-  const childClass = state.classes.find(c => c.id === child?.classId);
-  const childTeacher = state.teachers.find(t => t.id === child?.teacherId);
-  const attendance = getStudentAttendanceRate(state, child?.id ?? '');
-  const childPayments = state.payments.filter(p => p.studentId === child?.id);
+  
+  // These will be derived from the child object returned by API which already includes class_name/teacher_name
+  const childClass = { name: child?.class_name || '—' };
+  const childTeacher = { name: child?.teacher_name || '—' };
+
+  const attendance = child ? getStudentAttendanceRate(state, String(child.id)) : 0;
+  const childPayments = state.payments.filter(p => p.studentId === String(child?.id));
   const hasPending = childPayments.some(p => p.status !== 'Dibayar');
-  const unreadCount = state.notifications.filter(n => n.studentId === child?.id && !n.read).length;
+  const unreadCount = state.notifications.filter(n => n.studentId === String(child?.id) && !n.read).length;
 
   const navItemsWithBadge = navItems.map(n =>
     n.id === 'notifications' ? { ...n, badge: unreadCount > 0 ? String(unreadCount) : undefined } : n
@@ -55,30 +82,48 @@ export function ParentDashboard({ userName, onLogout }: ParentDashboardProps) {
 
   const childInfo = {
     name: child?.name ?? '—',
-    class: childClass?.name ?? '—',
-    teacher: childTeacher?.name ?? '—',
-    currentProgress: `${child?.juzukCompleted ?? 0} / 30 Juzuk (${Math.round(((child?.juzukCompleted ?? 0) / 30) * 100)}%)`,
+    class: child?.class_name ?? '—',
+    teacher: child?.teacher_name ?? '—',
+    currentProgress: `${child?.juzuk_completed ?? 0} / 30 Juzuk (${Math.round(((child?.juzuk_completed ?? 0) / 30) * 100)}%)`,
   };
 
   const renderContent = () => {
     switch (currentView) {
       case 'enrollment':    return <EnrollmentView />;
-      case 'progress':      return <ViewProgress />;
-      case 'attendance':    return <ViewAttendance />;
-      case 'payment':       return <ViewPayments />;
+      case 'progress':      return <ViewProgress childId={String(child?.id || '')} />;
+      case 'attendance':    return <ViewAttendance childId={String(child?.id || '')} />;
+      case 'payment':       return <ViewPayments childId={String(child?.id || '')} />;
       case 'notifications': return <Notifications />;
-      case 'ai':            return <ParentAIPrediction />;
+      case 'ai':            return <ParentAIPrediction childId={String(child?.id || '')} />;
       case 'profile':       return <ProfileView userId={parentUser?.id || ''} />;
       default:
+        if (loading) return <div className="p-8 text-slate-500">Memuatkan data anak...</div>;
+        if (children.length === 0) return <div className="p-8 text-slate-500">Tiada data anak dijumpai. Sila hubungi Admin.</div>;
+
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#111', margin: 0 }}>
-                Selamat Kembali, {userName} !
-              </h2>
-              <p style={{ color: '#6b7280', marginTop: '0.25rem', fontSize: '0.9rem' }}>
-                Pantau kemajuan Tahfiz anak anda
-              </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#111', margin: 0 }}>
+                  Selamat Kembali, {userName} !
+                </h2>
+                <p style={{ color: '#6b7280', marginTop: '0.25rem', fontSize: '0.9rem' }}>
+                  Pantau kemajuan Tahfiz anak anda
+                </p>
+              </div>
+
+              {/* Child Selector if multiple */}
+              {children.length > 1 && (
+                <select 
+                  value={selectedChildId || ''} 
+                  onChange={(e) => setSelectedChildId(e.target.value)}
+                  style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #e5e7eb', background: '#fff', fontSize: '0.9rem' }}
+                >
+                  {children.map(c => (
+                    <option key={c.id} value={String(c.id)}>{c.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {/* Child Profile Card */}

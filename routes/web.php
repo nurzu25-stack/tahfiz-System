@@ -50,6 +50,7 @@ Route::prefix('api')->group(function () {
     Route::post('/ai-predictions/generate/class/{classId}', [\App\Http\Controllers\AIPredictionController::class, 'generateClass']);
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show']);
     Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update']);
+    Route::get('/parent/children', [\App\Http\Controllers\ParentController::class, 'getChildren']);
 });
 
 // ─── Authenticated dashboard (blade fallback redirect) ────────────────────────
