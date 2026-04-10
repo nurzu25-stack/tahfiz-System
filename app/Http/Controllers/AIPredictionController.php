@@ -19,6 +19,12 @@ class AIPredictionController extends Controller
         return response()->json($predictions);
     }
 
+    public function getByStudent($studentId)
+    {
+        $prediction = AIPrediction::where('student_id', $studentId)->first();
+        return response()->json($prediction);
+    }
+
     /**
      * Generate or refresh predictions for a student.
      * (Normally this would call an AI service, but here we'll implement the logic to save to DB)

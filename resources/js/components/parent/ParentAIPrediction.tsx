@@ -1,5 +1,20 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Brain, TrendingUp, Calendar, Star, BookOpen, Users } from 'lucide-react';
-import { useAppStore, computeAIPrediction } from '../../store/AppContext';
+import { useAppStore } from '../../store/AppContext';
+
+interface AIPredictionData {
+  id: number;
+  student_id: number;
+  current_progress: string;
+  estimated_completion: string;
+  performance_trend: string;
+  confidence: string;
+  recommendations: string;
+  attendance_rate: string;
+  avg_ayah_per_day: string;
+  recommendation?: string; // Controller uses recommendation (singular) or recommendations (plural)? Let's check.
+}
 
 interface ParentAIPredictionProps {
   childId: string;
@@ -7,19 +22,41 @@ interface ParentAIPredictionProps {
 
 export function ParentAIPrediction({ childId }: ParentAIPredictionProps) {
   const { state } = useAppStore();
+  const [prediction, setPrediction] = useState<AIPredictionData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const child = state.students.find(s => String(s.id) === String(childId));
-
-  const pred = child ? computeAIPrediction(state, String(childId)) : null;
   const childClass = state.classes.find(c => c.id === child?.classId);
   const teacher = state.teachers.find(t => t.id === child?.teacherId);
 
-  const trendColor = (t: string) =>
-    t === 'Mumtaz' ? { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' } :
-    t === 'Jayyid' ? { bg: 'bg-blue-100',  text: 'text-blue-700',  border: 'border-blue-300'  } :
-                     { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300' };
+  useEffect(() => {
+    if (childId) {
+      fetchPrediction();
+    }
+  }, [childId]);
 
-  const tc = pred ? trendColor(pred.performanceTrend) : { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300' };
+  const fetchPrediction = async () => {
+    try {
+      setLoading(true);
+      const resp = await axios.get(`/api/ai-predictions/student/${childId}`);
+      setPrediction(resp.data);
+    } catch (err) {
+      console.error('Failed to fetch AI prediction', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const trendColor = (t: string) => {
+      const trend = t.toLowerCase();
+      if (trend.includes('cemerlang') || trend === 'mumtaz') return { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' };
+      if (trend.includes('baik') || trend === 'jayyid') return { bg: 'bg-blue-100',  text: 'text-blue-700',  border: 'border-blue-300'  };
+      return { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300' };
+  };
+
+  if (loading) return <div className="p-8 text-slate-500">Menjana analisis AI...</div>;
+
+  const tc = prediction ? trendColor(prediction.performance_trend) : { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300' };
 
   return (
     <div className="space-y-6">
@@ -41,7 +78,7 @@ export function ParentAIPrediction({ childId }: ParentAIPredictionProps) {
         </div>
       </div>
 
-      {!pred ? (
+      {!prediction ? (
         <div className="bg-gray-50 rounded-xl p-8 text-center text-gray-400">
           <Brain className="w-10 h-10 mx-auto mb-3 text-gray-300" />
           <p>Tiada data hafazan yang mencukupi untuk menjana ramalan.</p>
@@ -52,23 +89,22 @@ export function ParentAIPrediction({ childId }: ParentAIPredictionProps) {
           <div className={`rounded-xl p-6 border-2 ${tc.bg} ${tc.border}`}>
             <div className="flex items-center gap-3 mb-2">
               <Star className={`w-6 h-6 ${tc.text}`} />
-              <h3 className={`text-lg font-bold ${tc.text}`}>Trend Prestasi: {pred.performanceTrend}</h3>
+              <h3 className={`text-lg font-bold ${tc.text}`}>Trend Prestasi: {prediction.performance_trend}</h3>
             </div>
             <p className="text-gray-700 text-sm">
-              {pred.performanceTrend === 'Mumtaz'
-                ? '🌟 Anak anda menunjukkan prestasi cemerlang! Teruskan dokongan dan galakkan.'
-                : pred.performanceTrend === 'Jayyid'
-                ? '👍 Anak anda berkembang dengan baik. Konsistensi adalah kunci kejayaan.'
-                : '⚠️ Anak anda memerlukan perhatian lebih. Sila berbincang dengan ustaz/ustazah.'}
+                Analisis data menunjukkan perkembangan <strong>{prediction.performance_trend}</strong>. 
+                {prediction.performance_trend.toLowerCase().includes('cemerlang') 
+                  ? ' 🌟 Prestasi cemerlang! Teruskan usaha dan sokongan.' 
+                  : ' Konsistensi hafazan adalah kunci kejayaan.'}
             </p>
           </div>
 
           {/* Key metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { icon: <Calendar className="w-6 h-6 text-purple-600" />, bg: 'bg-purple-50 border-purple-200', label: 'Anggaran Khatam', value: pred.estimatedCompletion },
-              { icon: <TrendingUp className="w-6 h-6 text-blue-600" />, bg: 'bg-blue-50 border-blue-200',     label: 'Tahap Keyakinan AI', value: pred.confidence },
-              { icon: <BookOpen className="w-6 h-6 text-green-600" />, bg: 'bg-green-50 border-green-200',    label: 'Purata Ayat/Hari', value: pred.avgAyahPerDay },
+              { icon: <Calendar className="w-6 h-6 text-purple-600" />, bg: 'bg-purple-50 border-purple-200', label: 'Anggaran Khatam', value: prediction.estimated_completion },
+              { icon: <TrendingUp className="w-6 h-6 text-blue-600" />, bg: 'bg-blue-50 border-blue-200',     label: 'Tahap Keyakinan AI', value: prediction.confidence },
+              { icon: <BookOpen className="w-6 h-6 text-green-600" />, bg: 'bg-green-50 border-green-200',    label: 'Purata Ayat/Hari', value: prediction.avg_ayah_per_day },
             ].map(item => (
               <div key={item.label} className={`rounded-xl border p-5 ${item.bg} flex items-center gap-4`}>
                 <div className="p-2 bg-white rounded-lg shadow-sm">{item.icon}</div>
@@ -88,14 +124,14 @@ export function ParentAIPrediction({ childId }: ParentAIPredictionProps) {
                 <div className="p-3 bg-blue-50 rounded-lg"><Users className="w-5 h-5 text-blue-600" /></div>
                 <div>
                   <p className="text-xs text-gray-600">Kadar Kehadiran</p>
-                  <p className="text-xl font-bold text-blue-600">{pred.attendanceRate}</p>
+                  <p className="text-xl font-bold text-blue-600">{prediction.attendance_rate}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-green-50 rounded-lg"><BookOpen className="w-5 h-5 text-green-600" /></div>
                 <div>
                   <p className="text-xs text-gray-600">Kemajuan Semasa</p>
-                  <p className="text-xl font-bold text-green-600">{pred.currentProgress}</p>
+                  <p className="text-xl font-bold text-green-600">{prediction.current_progress}</p>
                 </div>
               </div>
             </div>
@@ -107,7 +143,7 @@ export function ParentAIPrediction({ childId }: ParentAIPredictionProps) {
               <Brain className="w-6 h-6 text-purple-600" />
               <h3 className="font-semibold text-purple-900">Cadangan AI</h3>
             </div>
-            <p className="text-purple-800 text-sm">{pred.recommendation}</p>
+            <p className="text-purple-800 text-sm">{prediction.recommendation || prediction.recommendations}</p>
           </div>
         </>
       )}

@@ -54,6 +54,7 @@ Route::prefix('api')->group(function () {
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
     Route::apiResource('notifications', \App\Http\Controllers\NotificationController::class)->only(['update', 'destroy']);
+    Route::get('/ai-predictions/student/{studentId}', [\App\Http\Controllers\AIPredictionController::class, 'getByStudent']);
 });
 
 // ─── Authenticated dashboard (blade fallback redirect) ────────────────────────
