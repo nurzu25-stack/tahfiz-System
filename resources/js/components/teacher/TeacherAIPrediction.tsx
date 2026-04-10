@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Brain, TrendingUp, Calendar, RefreshCw, Users } from 'lucide-react';
 import { useAppStore } from '../../store/AppContext';
+import axios from 'axios';
 
 export function TeacherAIPrediction() {
   const { state } = useAppStore();
@@ -25,20 +26,17 @@ export function TeacherAIPrediction() {
     setIsGenerating(true);
     try {
       const allPreds: any[] = [];
-      const classIds = teacher.classIds || [];
+      const classIds = (teacher?.classIds || []).map(id => String(id));
       
       for (const cid of classIds) {
-        const resp = await fetch(`/api/ai-predictions/class/${cid}`);
-        if (resp.ok) {
-          const data = await resp.json();
-          allPreds.push(...data);
-        }
+        const resp = await axios.get(`/api/ai-predictions/class/${cid}`);
+        allPreds.push(...resp.data);
       }
 
       const mapped = allPreds.map(p => ({
         id: p.id,
         studentId: p.student_id,
-        studentName: state.students.find(s => s.id === p.student_id)?.name || 'Pelajar',
+        studentName: state.students.find(s => String(s.id) === String(p.student_id))?.name || 'Pelajar',
         currentProgress: p.current_progress,
         estimatedCompletion: p.estimated_completion,
         performanceTrend: p.performance_trend,
@@ -57,8 +55,24 @@ export function TeacherAIPrediction() {
     }
   };
 
-  const handleGenerate = () => {
-    fetchPredictions();
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    try {
+      const classIds = (teacher?.classIds || []).map(id => String(id));
+      
+      for (const cid of classIds) {
+        await axios.post(`/api/ai-predictions/generate/class/${cid}`);
+      }
+      
+      // After generating, fetch updated results
+      await fetchPredictions();
+      alert('Ramalan AI telah dijana semula dan disimpan ke pangkalan data.');
+    } catch (err: any) {
+      console.error('Failed to generate AI predictions', err);
+      alert('Gagal menjana ramalan AI: ' + (err.response?.data?.message || 'Ralat sambungan.'));
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // UI Derived state

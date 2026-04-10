@@ -7,7 +7,7 @@ use App\Http\Controllers\HafazanRecordController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ClassRoomController;
 use App\Http\Controllers\AIAssessmentController;
-use App\Http\Controllers\AIController;
+use App\Http\Controllers\AIPredictionController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -31,5 +31,6 @@ Route::apiResource('teachers', TeacherController::class);
 Route::apiResource('ai-assessments', AIAssessmentController::class);
 
 // AI Predictions
-Route::get('/ai-predictions/student/{studentId}', [AIController::class, 'getPrediction']);
-Route::get('/ai-predictions/class/{classId}', [AIController::class, 'getClassPredictions']);
+Route::get('/ai-predictions/student/{studentId}', [AIPredictionController::class, 'generate']); // changed to use a method that exists
+Route::get('/ai-predictions/class/{classId}', [AIPredictionController::class, 'getByClass']);
+Route::post('/ai-predictions/generate/class/{classId}', [AIPredictionController::class, 'generateClass']);

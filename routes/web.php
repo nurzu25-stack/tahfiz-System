@@ -46,6 +46,10 @@ Route::prefix('api')->group(function () {
     Route::post('/attendance/bulk', [\App\Http\Controllers\AttendanceController::class, 'bulkStore']);
     Route::get('/attendance', [\App\Http\Controllers\AttendanceController::class, 'index']);
     Route::apiResource('hafazan-records', \App\Http\Controllers\HafazanRecordController::class);
+    Route::get('/ai-predictions/class/{classId}', [\App\Http\Controllers\AIPredictionController::class, 'getByClass']);
+    Route::post('/ai-predictions/generate/class/{classId}', [\App\Http\Controllers\AIPredictionController::class, 'generateClass']);
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show']);
+    Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update']);
 });
 
 // ─── Authenticated dashboard (blade fallback redirect) ────────────────────────
