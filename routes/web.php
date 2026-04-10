@@ -55,6 +55,13 @@ Route::prefix('api')->group(function () {
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
     Route::apiResource('notifications', \App\Http\Controllers\NotificationController::class)->only(['update', 'destroy']);
     Route::get('/ai-predictions/student/{studentId}', [\App\Http\Controllers\AIPredictionController::class, 'getByStudent']);
+    
+    // User management
+    Route::get('/users/pending', [\App\Http\Controllers\UserController::class, 'pendingUsers']);
+    Route::post('/users/{id}/approve', [\App\Http\Controllers\UserController::class, 'approveUser']);
+    Route::post('/users/{id}/reject', [\App\Http\Controllers\UserController::class, 'rejectUser']);
+    Route::get('/users/students-no-account', [\App\Http\Controllers\UserController::class, 'studentsWithoutAccounts']);
+    Route::post('/users/student-account', [\App\Http\Controllers\UserController::class, 'createStudentAccount']);
 });
 
 // ─── Authenticated dashboard (blade fallback redirect) ────────────────────────
