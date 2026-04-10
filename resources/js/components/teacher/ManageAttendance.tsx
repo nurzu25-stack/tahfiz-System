@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useAppStore } from '../../store/AppContext';
 import { AttendanceStatus } from '../../store/mockData';
 import { CheckCircle2, XCircle, Clock } from 'lucide-react';
@@ -18,6 +19,26 @@ export function ManageAttendance() {
 
   const studentsInClass = state.students.filter(s => String(s.classId) === String(selectedClassId));
 
+  useEffect(() => {
+    if (selectedClassId && date) {
+      fetchAttendance();
+    }
+  }, [selectedClassId, date]);
+
+  const fetchAttendance = async () => {
+    try {
+      const resp = await axios.get(`/api/attendance`, { params: { class_id: selectedClassId, date: date } });
+      const data = resp.data;
+      const map: Record<string, { status: AttendanceStatus; remarks: string }> = {};
+      data.forEach((row: any) => {
+        map[row.student_id] = { status: row.status, remarks: row.remarks || '' };
+      });
+      setAttendanceMap(map);
+    } catch (err) {
+      console.error('Failed to fetch attendance', err);
+    }
+  };
+
   const toggle = (studentId: string, status: AttendanceStatus) => {
     setAttendanceMap(prev => ({ ...prev, [studentId]: { status, remarks: prev[studentId]?.remarks ?? '' } }));
   };
@@ -28,7 +49,7 @@ export function ManageAttendance() {
     return existing?.status ?? 'Hadir';
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const records = studentsInClass.map(s => ({
       studentId: s.id,
       classId: selectedClassId,
@@ -36,9 +57,16 @@ export function ManageAttendance() {
       status: getStatusForStudent(s.id),
       remarks: attendanceMap[s.id]?.remarks ?? '',
     }));
-    dispatch({ type: 'MARK_ATTENDANCE', payload: records });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+
+    try {
+      await axios.post('/api/attendance/bulk', { records });
+      dispatch({ type: 'MARK_ATTENDANCE', payload: records });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error: any) {
+      console.error('Error saving attendance:', error);
+      alert('Gagal menyimpan kehadiran: ' + (error.response?.data?.message || 'Ralat sambungan rangkaian.'));
+    }
   };
 
   const todayStats = {
