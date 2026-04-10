@@ -23,7 +23,7 @@ const navItems: { id: ParentView; label: string; icon: React.ReactNode; badge?: 
   { id: 'progress',      label: 'Kemajuan Hafazan',      icon: <BookOpen size={20} /> },
   { id: 'attendance',    label: 'Lihat Kehadiran',       icon: <Calendar size={20} /> },
   { id: 'payment',       label: 'Status Yuran',          icon: <DollarSign size={20} /> },
-  { id: 'notifications', label: 'Pemberitahuan',         icon: <Bell size={20} />, badge: '3' },
+  { id: 'notifications', label: 'Pemberitahuan',         icon: <Bell size={20} /> },
   { id: 'ai',            label: 'Ramalan AI',            icon: <Brain size={20} /> },
   { id: 'profile',       label: 'Profil Saya',           icon: <User size={20} /> },
 ];
@@ -34,13 +34,25 @@ export function ParentDashboard({ userName, onLogout }: ParentDashboardProps) {
   const [children, setChildren] = useState<any[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notifCount, setNotifCount] = useState(0);
   const { state } = useAppStore();
 
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
 
   useEffect(() => {
     fetchChildren();
+    fetchUnreadCount();
   }, []);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const resp = await axios.get('/api/notifications');
+      const count = resp.data.filter((n: any) => !n.is_read).length;
+      setNotifCount(count);
+    } catch (err) {
+      console.error('Failed to fetch unread count', err);
+    }
+  };
 
   const fetchChildren = async () => {
     try {
@@ -70,7 +82,7 @@ export function ParentDashboard({ userName, onLogout }: ParentDashboardProps) {
   const unreadCount = state.notifications.filter(n => n.studentId === String(child?.id) && !n.read).length;
 
   const navItemsWithBadge = navItems.map(n =>
-    n.id === 'notifications' ? { ...n, badge: unreadCount > 0 ? String(unreadCount) : undefined } : n
+    n.id === 'notifications' ? { ...n, badge: notifCount > 0 ? String(notifCount) : undefined } : n
   );
 
   const stats = [
@@ -190,7 +202,7 @@ export function ParentDashboard({ userName, onLogout }: ParentDashboardProps) {
             <p style={{ color: '#E8F6F7', fontSize: '0.75rem', margin: '0.2rem 0 0', opacity: 0.9 }}>{userName}</p>
           </div>
           <nav style={{ flex: 1, padding: '0.5rem 0.6rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-            {navItems.map((item) => {
+            {navItemsWithBadge.map((item) => {
               const isActive = currentView === item.id;
               return (
                 <button key={item.id} onClick={() => setCurrentView(item.id)}

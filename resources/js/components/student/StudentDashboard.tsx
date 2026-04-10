@@ -11,7 +11,8 @@ import {
   Users, 
   Layers, 
   X,
-  DollarSign
+  DollarSign,
+  Bell
 } from 'lucide-react';
 import { LearningSchedule } from './LearningSchedule';
 import { HafazanTarget } from './HafazanTarget';
@@ -21,6 +22,7 @@ import { HafazanAI } from '../hafazan/HafazanAI';
 import { StudyRoadmap } from '../shared/StudyRoadmap';
 import { ProfileView } from '../profile/ProfileView';
 import { ViewPayments } from '../parent/ViewPayments';
+import { Notifications } from '../parent/Notifications';
 import { useAppStore, getStudentStreak, getStudentRank } from '../../store/AppContext';
 
 interface StudentDashboardProps {
@@ -28,13 +30,14 @@ interface StudentDashboardProps {
   onLogout: () => void;
 }
 
-type StudentView = 'home' | 'schedule' | 'target' | 'achievements' | 'ai' | 'penilaian-ai' | 'pembelajaran' | 'profile' | 'payment';
+type StudentView = 'home' | 'schedule' | 'target' | 'achievements' | 'ai' | 'penilaian-ai' | 'pembelajaran' | 'profile' | 'payment' | 'notifications';
 
 const navItems: { id: StudentView; label: string; icon: React.ReactNode }[] = [
   { id: 'home',         label: 'Papan Pemuka',      icon: <LayoutDashboard size={20} /> },
   { id: 'schedule',     label: 'Jadual Pelajaran',  icon: <Calendar size={20} /> },
   { id: 'target',       label: 'Sasaran Hafazan',   icon: <Target size={20} /> },
   { id: 'payment',      label: 'Status Yuran',      icon: <DollarSign size={20} /> },
+  { id: 'notifications', label: 'Pemberitahuan',    icon: <Bell size={20} /> },
   { id: 'pembelajaran', label: 'Pelan Pengajian',   icon: <Layers size={20} /> },
   { id: 'penilaian-ai', label: 'Penilaian AI (Beta)',  icon: <Mic2 size={20} /> },
   { id: 'achievements', label: 'Pencapaian',         icon: <Trophy size={20} /> },
@@ -72,6 +75,7 @@ export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) 
       case 'pembelajaran': return <StudyRoadmap />;
       case 'profile':      return <ProfileView userId={studentUser?.id || ''} />;
       case 'payment':      return <ViewPayments childId={String(student?.id || '')} readOnly={true} />;
+      case 'notifications': return <Notifications />;
       default:
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

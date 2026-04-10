@@ -51,6 +51,9 @@ Route::prefix('api')->group(function () {
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show']);
     Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update']);
     Route::get('/parent/children', [\App\Http\Controllers\ParentController::class, 'getChildren']);
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
+    Route::apiResource('notifications', \App\Http\Controllers\NotificationController::class)->only(['update', 'destroy']);
 });
 
 // ─── Authenticated dashboard (blade fallback redirect) ────────────────────────
