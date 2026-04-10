@@ -13,6 +13,17 @@ use App\Mail\EnrollmentSuccessMail;
 
 class EnrollmentController extends Controller
 {
+    public function getInterviewSchedules()
+    {
+        $schedules = Student::where('status', 'SCHEDULED')
+            ->whereNotNull('interview_date')
+            ->orderBy('interview_date', 'asc')
+            ->orderBy('interview_time', 'asc')
+            ->get();
+
+        return response()->json($schedules);
+    }
+
     /**
      * List all applicants for the Enrollment Hub.
      */
@@ -98,8 +109,10 @@ class EnrollmentController extends Controller
         
         if ($validated['decision'] === 'ACCEPT') {
             $student->update([
-                'status' => 'WAITING_PAYMENT',
-                'notes' => $student->notes . "\n[Penjaga]: Setuju dengan tawaran. " . ($validated['notes'] ?? '')
+                'status' => 'Aktif',
+                'admission_type' => 'tetap',
+                'enrolled_date' => now(),
+                'notes' => $student->notes . "\n[Penjaga]: Setuju dengan tawaran. Pendaftaran disahkan secara automatik."
             ]);
         } else {
             $student->update([
@@ -252,7 +265,7 @@ class EnrollmentController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($validated) {
+            return DB::transaction(function () use ($validated, $request) {
                 // 1. Create Parent User
                 $parent = User::create([
                     'name' => $validated['parentName'],
@@ -268,9 +281,11 @@ class EnrollmentController extends Controller
                 // 2. Create Student Record (Interview Phase)
                 $student = Student::create([
                     'name' => $validated['studentName'],
-                    'gender' => $validated['studentGender'] == 'M' ? 'Lelaki' : 'Perempuan',
-                    'dob' => $validated['studentDob'],
-                    'age' => $validated['studentAge'],
+                    'gender' => $request->studentGender == 'M' ? 'Lelaki' : 'Perempuan',
+                    'dob' => $request->studentDob,
+                    'age' => $request->studentAge,
+                    'address' => $request->studentAddress,
+                    'medical_history' => $request->medicalHistory,
                     'parent_id' => $parent->id, // Link to User.id
                     'parent_name' => $validated['parentName'],
                     'parent_phone' => $validated['parentPhone'],
@@ -278,6 +293,7 @@ class EnrollmentController extends Controller
                     'status' => 'PROSPECT', // Start as Prospect
                     'enrolled_date' => now()->format('Y-m-d'),
                     'intake_juzuk' => 0, // Guest students usually start at 0
+                    'notes' => "[Registration] Level: " . ($request->hafazanLevel ?? '0 Juzuk') . " | Tajwid: " . ($request->tajwidLevel ?? 'Asas')
                 ]);
 
                 // 3. Send Email berjaya didaftar, menunggu kelulusan mudir

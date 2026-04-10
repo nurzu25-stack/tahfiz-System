@@ -31,6 +31,7 @@ Route::prefix('api')->group(function () {
     // Public Enrollment Flow
     Route::post('/public/register-enrollment', [\App\Http\Controllers\EnrollmentController::class, 'publicRegister']);
     Route::get('/enrollment/applicants', [\App\Http\Controllers\EnrollmentController::class, 'index']);
+    Route::get('/enrollment/schedules', [\App\Http\Controllers\EnrollmentController::class, 'getInterviewSchedules']);
     Route::patch('/enrollment/status/{id}', [\App\Http\Controllers\EnrollmentController::class, 'updateStatus']);
     Route::post('/enrollment/schedule-interview/{id}', [\App\Http\Controllers\EnrollmentController::class, 'scheduleInterview']);
     Route::post('/enrollment/update-interview/{id}', [\App\Http\Controllers\EnrollmentController::class, 'updateInterview']);

@@ -22,6 +22,8 @@ export function PublicRegistration() {
     studentGender: 'M',
     studentDob: '',
     studentAge: 0,
+    studentAddress: '',
+    medicalHistory: '',
     tajwidLevel: 'Asas',
     hafazanLevel: '0 Juzuk',
   });
@@ -190,10 +192,19 @@ export function PublicRegistration() {
                     </div>
                   </div>
                </div>
-
                <div>
                  <label className={labelCls}>Tarikh Lahir *</label>
                  <input type="date" required className={inputCls} value={formData.studentDob} onChange={e => setFormData({ ...formData, studentDob: e.target.value })} />
+               </div>
+
+               <div>
+                 <label className={labelCls}>Alamat Rumah *</label>
+                 <textarea required className={`${inputCls} min-h-[100px] h-auto py-3`} placeholder="Alamat lengkap mengikut IC/surat-menyurat" value={formData.studentAddress} onChange={e => setFormData({ ...formData, studentAddress: e.target.value })} />
+               </div>
+
+               <div>
+                 <label className={labelCls}>Alahan / Masalah Kesihatan (Jika ada)</label>
+                 <textarea className={`${inputCls} min-h-[80px] h-auto py-3`} placeholder="Contoh: Asma, Alahan Kacang, dsb. (Tinggalkan kosong jika tiada)" value={formData.medicalHistory} onChange={e => setFormData({ ...formData, medicalHistory: e.target.value })} />
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4">

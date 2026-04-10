@@ -47,6 +47,8 @@ export function EnrollmentHub() {
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showAllSchedules, setShowAllSchedules] = useState(false);
+  const [allSchedules, setAllSchedules] = useState<any[]>([]);
   const [interviewMarks, setInterviewMarks] = useState({ hafazan: 0, tajwid: 0, akhlaq: 0 });
   const [scheduleForm, setScheduleForm] = useState({
     date: '',
@@ -112,8 +114,8 @@ export function EnrollmentHub() {
   };
 
   const stats = [
-    { label: 'Prospek Baharu', count: applicants.filter(a => a.status === 'PROSPECT').length, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Temuduga', count: applicants.filter(a => a.status === 'INTERVIEW').length, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Calon Baharu', count: applicants.filter(a => a.status === 'PROSPECT').length, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Sesi Temuduga', count: applicants.filter(a => a.status === 'INTERVIEW').length, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Menunggu Tawaran', count: applicants.filter(a => a.status === 'ACCEPTED').length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
@@ -170,7 +172,7 @@ export function EnrollmentHub() {
       setApplicants(prev => prev.map(a => a.id === id ? { ...a, marks: interviewMarks, status: 'ACCEPTED' } : a));
       if (selectedApplicant?.id === id) setSelectedApplicant(prev => prev ? { ...prev, marks: interviewMarks, status: 'ACCEPTED' } : null);
     } catch (err) {
-      alert('Failed to save interview marks');
+      alert('Gagal menyimpan markah temuduga');
     }
   };
 
@@ -182,7 +184,7 @@ export function EnrollmentHub() {
 
   const getStatusBadge = (status: EnrollmentStatus) => {
     const config = {
-      PROSPECT: { label: 'Prospek', cls: 'bg-blue-100 text-blue-700' },
+      PROSPECT: { label: 'Calon', cls: 'bg-blue-100 text-blue-700' },
       SCHEDULED: { label: 'Dijadualkan', cls: 'bg-indigo-100 text-indigo-700' },
       INTERVIEW: { label: 'Temuduga', cls: 'bg-amber-100 text-amber-700' },
       ACCEPTED: { label: 'Diterima', cls: 'bg-emerald-100 text-emerald-700' },
@@ -198,14 +200,21 @@ export function EnrollmentHub() {
     <div className="space-y-6 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight underline decoration-[#6FC7CB] decoration-4 underline-offset-8">Hub Pendaftaran Digital</h2>
-          <p className="text-slate-500 font-medium mt-3">Proses pendaftaran & temuduga sistematik (Automasi AWFATECH).</p>
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight underline decoration-[#6FC7CB] decoration-4 underline-offset-8">Pusat Pengurusan Kemasukan</h2>
+          <p className="text-slate-500 font-medium mt-3">Proses pendaftaran & temuduga sistematik (Automasi AKMAL).</p>
         </div>
         <div className="flex gap-2">
           <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition-all">
             <Download className="size-4" /> EKSPORT DATA
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-[#6FC7CB] text-white rounded-xl font-bold text-xs hover:bg-[#5FB3B7] shadow-xl shadow-cyan-100 transition-all">
+          <button 
+            onClick={async () => {
+              const res = await axios.get('/api/enrollment/schedules');
+              setAllSchedules(res.data);
+              setShowAllSchedules(true);
+            }}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#6FC7CB] text-white rounded-xl font-bold text-xs hover:bg-[#5FB3B7] shadow-xl shadow-cyan-100 transition-all font-black tracking-widest"
+          >
             <Calendar className="size-4" /> JADUAL TEMUDUGA
           </button>
         </div>
@@ -228,7 +237,7 @@ export function EnrollmentHub() {
             className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${activeTab === t ? 'bg-[#1A4D50] text-[#6FC7CB] border-[#1A4D50] shadow-lg' : 'bg-white text-slate-400 border-slate-200 hover:border-[#6FC7CB]'
               }`}
           >
-            {t === 'ALL' ? 'Semua Calon' : t}
+            {t === 'ALL' ? 'Semua Pemohon' : t === 'PROSPECT' ? 'Calon' : t === 'SCHEDULED' ? 'Dijadualkan' : t === 'INTERVIEW' ? 'Temuduga' : t === 'ACCEPTED' ? 'Layak' : t === 'OFFERED' ? 'Tawaran' : 'Bayaran'}
           </button>
         ))}
       </div>
@@ -383,8 +392,8 @@ export function EnrollmentHub() {
 
       {showOfferModal && selectedApplicant && (
         <div className="fixed inset-0 bg-[#1A4D50]/80 backdrop-blur-xl flex items-center justify-center p-6 z-[60]">
-          <div className="bg-white w-full max-w-2xl rounded-[48px] overflow-hidden shadow-2xl animate-in zoom-in duration-500">
-            <div className="p-12 bg-white">
+          <div className="bg-white w-full max-w-2xl rounded-[48px] overflow-hidden shadow-2xl animate-in zoom-in duration-500 flex flex-col max-h-[90vh]">
+            <div className="flex-1 overflow-y-auto p-12 scrollbar-thin scrollbar-thumb-slate-200">
               <div className="flex justify-between items-start mb-12">
                 <img src="/images/logo.png" alt="Logo Akmal" className="h-16 object-contain" />
 
@@ -442,7 +451,7 @@ export function EnrollmentHub() {
               </div>
             </div>
 
-            <div className="p-12 pt-0">
+            <div className="p-12 pt-4 bg-white border-t border-slate-50">
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handleDownloadPDF}
@@ -525,6 +534,49 @@ export function EnrollmentHub() {
               <button onClick={() => setShowScheduleModal(false)} className="px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">BATAL</button>
             </div>
           </div>
+        </div>
+      )}
+      {/* Global Schedules Modal */}
+      {showAllSchedules && (
+        <div className="fixed inset-0 bg-[#1A4D50]/90 backdrop-blur-xl flex items-center justify-center p-6 z-[70]">
+           <div className="bg-white w-full max-w-4xl rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500">
+              <div className="p-10 flex justify-between items-center border-b border-slate-50">
+                <div>
+                  <h3 className="text-3xl font-black text-slate-800 tracking-tight">Semua Jadual Temuduga</h3>
+                  <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Total: {allSchedules.length} Sesi Aktif</p>
+                </div>
+                <button onClick={() => setShowAllSchedules(false)} className="size-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 transition-all text-2xl">✕</button>
+              </div>
+
+              <div className="p-10 max-h-[60vh] overflow-y-auto">
+                {allSchedules.length === 0 ? (
+                  <div className="py-20 text-center text-slate-300 italic font-medium">Tiada jadual temuduga yang aktif setakat ini.</div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {allSchedules.map((s) => (
+                      <div key={s.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-[#6FC7CB] transition-all flex gap-4">
+                        <div className="size-12 bg-white rounded-2xl flex flex-col items-center justify-center border border-slate-100 shrink-0">
+                           <p className="text-[10px] font-black text-[#6FC7CB] uppercase">{new Date(s.interview_date).toLocaleString('default', { month: 'short' })}</p>
+                           <p className="text-lg font-black text-slate-800 leading-none">{new Date(s.interview_date).getDate()}</p>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-slate-800">{s.name}</h4>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <span className="px-2 py-0.5 bg-white text-[10px] font-bold text-slate-500 rounded-lg border border-slate-100 uppercase">{s.interview_time}</span>
+                            <span className="px-2 py-0.5 bg-sky-50 text-[10px] font-bold text-sky-600 rounded-lg border border-sky-100 uppercase">{s.interview_type}</span>
+                            <span className="px-2 py-0.5 bg-slate-900 text-[10px] font-bold text-white rounded-lg uppercase truncate max-w-[150px]">{s.interview_location}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-10 pt-0">
+                <button onClick={() => setShowAllSchedules(false)} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-black transition-all">TUTUP KALENDAR</button>
+              </div>
+           </div>
         </div>
       )}
     </div>

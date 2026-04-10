@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, User, Shield, BookOpen, HeartPulse, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, User, Shield, BookOpen, HeartPulse, ChevronRight, ChevronLeft, Check, CreditCard } from 'lucide-react';
 import { useAppStore } from '../../store/AppContext';
 import axios from 'axios';
 
@@ -87,8 +87,19 @@ export function ManageStudents() {
   const filtered = state.students.filter(s => {
     const matchesSearch = (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || getClassName(s.classId).toString().toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesClass = (!classFilter || String(s.classId) === String(classFilter));
-    const type = s.admissionType || 'tetap';
-    const matchesTab = type === activeTab;
+    
+    // Logic: If status is 'Aktif', they belong in 'tetap'. 
+    // Otherwise, they belong in whatever tab matches their admissionType (default 'tetap')
+    const currentStatus = s.status;
+    const admission = s.admissionType || 'tetap';
+    
+    let matchesTab = false;
+    if (activeTab === 'tetap') {
+      matchesTab = (admission === 'tetap' || currentStatus === 'Aktif' || currentStatus === 'ENROLLED');
+    } else {
+      matchesTab = (admission === 'interview' && currentStatus !== 'Aktif' && currentStatus !== 'ENROLLED');
+    }
+
     return matchesSearch && matchesClass && matchesTab;
   });
 
@@ -134,8 +145,21 @@ export function ManageStudents() {
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.put(`/api/students/${editForm.id}`, editForm);
-      dispatch({ type: 'EDIT_STUDENT', payload: response.data });
+      const res = await axios.put(`/api/students/${editForm.id}`, {
+        name: editForm.name,
+        ic_no: editForm.icNo,
+        gender: editForm.gender,
+        age: editForm.age,
+        class_id: editForm.classId,
+        teacher_id: editForm.teacherId,
+        status: editForm.status,
+        juzuk_completed: editForm.juzukCompleted,
+        parent_name: editForm.parentName,
+        parent_phone: editForm.parentPhone,
+        address: editForm.address,
+        medical_history: editForm.medicalHistory
+      });
+      dispatch({ type: 'EDIT_STUDENT', payload: res.data });
       setShowEditModal(false);
       setEditForm(null);
     } catch (error) {
@@ -263,10 +287,39 @@ export function ManageStudents() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-mono tracking-tighter">{getAttendance(student.id)}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${student.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{student.status}</span>
+                    {(() => {
+                      const statusMap: { [key: string]: { label: string, cls: string } } = {
+                        'PROSPECT': { label: 'Calon Baharu', cls: 'bg-blue-100 text-blue-700' },
+                        'SCHEDULED': { label: 'Dijadualkan', cls: 'bg-indigo-100 text-indigo-700' },
+                        'INTERVIEW': { label: 'Temuduga', cls: 'bg-amber-100 text-amber-700' },
+                        'ACCEPTED': { label: 'Layak', cls: 'bg-emerald-100 text-emerald-700' },
+                        'OFFERED': { label: 'Tawaran Dihantar', cls: 'bg-purple-100 text-purple-700' },
+                        'WAITING_PAYMENT': { label: 'Menunggu Bayaran', cls: 'bg-orange-100 text-orange-700' },
+                        'ENROLLED': { label: 'Aktif', cls: 'bg-slate-900 text-white' },
+                        'Aktif': { label: 'Aktif', cls: 'bg-green-100 text-green-700' },
+                      };
+                      const config = statusMap[student.status] || { label: student.status, cls: 'bg-slate-100 text-slate-600' };
+                      return <span className={`inline-flex px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${config.cls}`}>{config.label}</span>;
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
+                      {student.status === 'WAITING_PAYMENT' && (
+                        <button 
+                          onClick={() => {
+                            if (confirm(`Sahkan pembayaran untuk ${student.name}? Pelajar akan didaftarkan sebagai 'Aktif' secara automatik.`)) {
+                              axios.patch(`/api/enrollment/status/${student.id}`, { status: 'ENROLLED' })
+                                .then(() => {
+                                  dispatch({ type: 'EDIT_STUDENT', payload: { ...student, status: 'Aktif' } });
+                                  alert('Pembayaran disahkan. Pelajar kini Aktif.');
+                                });
+                            }
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
+                        >
+                          <CreditCard className="w-3.5 h-3.5" /> SAHKAN BAYARAN
+                        </button>
+                      )}
                       <button onClick={() => { setSelectedStudent(student); setShowViewModal(true); }} className="p-2 bg-slate-50 text-slate-400 hover:text-[#6FC7CB] rounded-xl transition-all"><Eye className="w-4 h-4" /></button>
                       <button onClick={() => { setEditForm({ ...student }); setShowEditModal(true); }} className="p-2 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-xl transition-all"><Edit className="w-4 h-4" /></button>
                       <button onClick={() => handleDelete(student)} className="p-2 bg-slate-50 text-slate-400 hover:text-red-600 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
@@ -445,37 +498,78 @@ export function ManageStudents() {
 
       {/* Edit Modal */}
       {showEditModal && editForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-[32px] max-w-lg w-full p-8 shadow-2xl animate-in zoom-in duration-300">
-            <h3 className="text-2xl font-bold text-slate-800 mb-6 tracking-tight">Kemaskini Pelajar</h3>
-            <form className="space-y-5" onSubmit={handleEdit}>
-              <div><label className={labelCls}>Nama Penuh</label><input required className={inputCls} value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelCls}>No. IC / MyKid</label><input className={inputCls} value={editForm.icNo} onChange={e => setEditForm({ ...editForm, icNo: e.target.value })} /></div>
-                <div><label className={labelCls}>Umur</label><input type="number" required className={inputCls} value={editForm.age} onChange={e => setEditForm({ ...editForm, age: e.target.value })} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelCls}>Kelas</label>
-                  <select className={inputCls} value={editForm.classId} onChange={e => {
-                    const selectedClass = state.classes.find(c => String(c.id) === String(e.target.value));
-                    setEditForm({ 
-                      ...editForm, 
-                      classId: e.target.value,
-                      teacherId: selectedClass?.teacherId || editForm.teacherId
-                    });
-                  }}>
-                    {state.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-[40px] max-w-2xl w-full shadow-2xl animate-in zoom-in duration-300 my-8 flex flex-col max-h-[90vh]">
+            <div className="p-10 pb-4 border-b border-slate-50 shrink-0">
+               <h3 className="text-3xl font-black text-slate-800 tracking-tight">Kemaskini Pelajar</h3>
+            </div>
+            
+            <form className="flex-1 overflow-y-auto p-10 space-y-8 scrollbar-thin scrollbar-thumb-slate-200" onSubmit={handleEdit}>
+              {/* 1. Maklumat Asas */}
+              <div className="space-y-4">
+                <p className="text-[10px] font-black text-[#6FC7CB] uppercase tracking-[0.2em]">1. Maklumat Asas & Akademik</p>
+                <div><label className={labelCls}>Nama Penuh</label><input required className={inputCls} value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="col-span-2"><label className={labelCls}>No. IC / MyKid</label><input className={inputCls} value={editForm.icNo} onChange={e => setEditForm({ ...editForm, icNo: e.target.value })} /></div>
+                  <div><label className={labelCls}>Jantina</label>
+                    <select className={inputCls} value={editForm.gender} onChange={e => setEditForm({ ...editForm, gender: e.target.value })}>
+                      <option value="Lelaki">Lelaki</option>
+                      <option value="Perempuan">Perempuan</option>
+                    </select>
+                  </div>
+                  <div><label className={labelCls}>Umur</label><input type="number" required className={inputCls} value={editForm.age} onChange={e => setEditForm({ ...editForm, age: e.target.value })} /></div>
                 </div>
-                <div><label className={labelCls}>Murabbi / Murabbiah</label>
-                  <select className={inputCls} value={editForm.teacherId} onChange={e => setEditForm({ ...editForm, teacherId: e.target.value })}>
-                    {state.teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className={labelCls}>Kelas</label>
+                    <select className={inputCls} value={editForm.classId} onChange={e => {
+                      const selectedClass = state.classes.find(c => String(c.id) === String(e.target.value));
+                      setEditForm({ 
+                        ...editForm, 
+                        classId: e.target.value,
+                        teacherId: selectedClass?.teacherId || editForm.teacherId
+                      });
+                    }}>
+                      {state.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div><label className={labelCls}>Murabbi / Murabbiah</label>
+                    <select className={inputCls} value={editForm.teacherId} onChange={e => setEditForm({ ...editForm, teacherId: e.target.value })}>
+                      {state.teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className={labelCls}>Status Pelajar</label>
+                    <select className={`${inputCls} font-bold ${editForm.status === 'Aktif' ? 'text-green-600' : 'text-slate-600'}`} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
+                      <option value="Aktif">Aktif</option>
+                      <option value="Cuti">Cuti</option>
+                      <option value="Berhenti">Berhenti</option>
+                      <option value="Digantung">Digantung</option>
+                    </select>
+                  </div>
+                  <div><label className={labelCls}>Tahap Hafazan (Juzuk)</label><input type="number" className={inputCls} value={editForm.juzukCompleted} onChange={e => setEditForm({ ...editForm, juzukCompleted: e.target.value })} /></div>
                 </div>
               </div>
-              <div className="flex gap-3 pt-6">
-                <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 transition-all">SIMPAN</button>
-                <button type="button" onClick={() => setShowEditModal(false)} className="px-6 py-3 border-2 border-slate-100 text-slate-400 rounded-xl hover:bg-slate-50 font-bold transition-all">BATAL</button>
+
+              {/* 2. Penjaga */}
+              <div className="space-y-4 pt-4 border-t border-slate-50">
+                <p className="text-[10px] font-black text-[#6FC7CB] uppercase tracking-[0.2em]">2. Maklumat Penjaga & Perhubungan</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><label className={labelCls}>Nama Penjaga Utama</label><input className={inputCls} value={editForm.parentName} onChange={e => setEditForm({ ...editForm, parentName: e.target.value })} /></div>
+                  <div><label className={labelCls}>No. Telefon Penjaga</label><input className={inputCls} value={editForm.parentPhone} onChange={e => setEditForm({ ...editForm, parentPhone: e.target.value })} /></div>
+                </div>
+                <div><label className={labelCls}>Alamat Rumah</label><textarea rows={2} className={inputCls} value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} /></div>
+              </div>
+
+              {/* 3. Kesihatan */}
+              <div className="space-y-4 pt-4 border-t border-slate-50">
+                <p className="text-[10px] font-black text-red-400 uppercase tracking-[0.2em]">3. Keselamatan & Kesihatan</p>
+                <div><label className={labelCls}>Alahan / Masalah Kesihatan</label><textarea rows={2} className={inputCls} value={editForm.medicalHistory} onChange={e => setEditForm({ ...editForm, medicalHistory: e.target.value })} placeholder="Contoh: Alahan kacang, Asma, dsb." /></div>
+              </div>
+
+              <div className="flex gap-4 pt-8 sticky bottom-0 bg-white pb-2">
+                <button type="submit" className="flex-1 py-4 bg-[#6FC7CB] text-white rounded-2xl hover:bg-[#5FB3B7] font-black text-sm uppercase tracking-widest shadow-xl shadow-cyan-50 transition-all">SIMPAN PERUBAHAN</button>
+                <button type="button" onClick={() => setShowEditModal(false)} className="px-10 py-4 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 font-black text-sm uppercase tracking-widest transition-all">BATAL</button>
               </div>
             </form>
           </div>
@@ -485,74 +579,108 @@ export function ManageStudents() {
       {/* View Modal */}
       {showViewModal && selectedStudent && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-[32px] max-w-3xl w-full p-8 shadow-2xl overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-8">
-               <button onClick={() => setShowViewModal(false)} className="w-10 h-10 flex items-center justify-center bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-all">✕</button>
+          <div className="bg-white rounded-[40px] max-w-3xl w-full shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+            <div className="absolute top-0 right-0 p-8 z-10">
+               <button onClick={() => setShowViewModal(false)} className="w-10 h-10 flex items-center justify-center bg-white/80 backdrop-blur-sm shadow-sm rounded-full text-slate-400 hover:text-slate-600 transition-all">✕</button>
             </div>
             
-            <div className="flex items-center gap-6 mb-8">
-               <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-[#6FC7CB] to-[#5FB3B7] flex items-center justify-center text-white text-4xl font-bold shadow-xl shadow-cyan-100">
-                 {selectedStudent.name.charAt(0)}
-               </div>
-               <div>
-                  <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{selectedStudent.name}</h3>
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-bold uppercase tracking-widest">{selectedStudent.id}</span>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-widest">{selectedStudent.status}</span>
+            <div className="p-10 overflow-y-auto space-y-8 scrollbar-thin scrollbar-thumb-slate-200">
+              <div className="flex items-center gap-6 mb-2">
+                 <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-[#6FC7CB] to-[#5FB3B7] flex items-center justify-center text-white text-4xl font-bold shadow-xl shadow-cyan-100">
+                   {selectedStudent.name.charAt(0)}
+                 </div>
+                 <div>
+                    <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{selectedStudent.name}</h3>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-bold uppercase tracking-widest">{selectedStudent.id}</span>
+                      <span className={`px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-widest`}>
+                        {(() => {
+                          const statusMap: { [key: string]: string } = {
+                            'PROSPECT': 'Calon Baharu',
+                            'SCHEDULED': 'Dijadualkan',
+                            'INTERVIEW': 'Temuduga',
+                            'ACCEPTED': 'Layak',
+                            'OFFERED': 'Tawaran Dihantar',
+                            'WAITING_PAYMENT': 'Menunggu Bayaran',
+                            'ENROLLED': 'Aktif',
+                            'Aktif': 'Aktif',
+                          };
+                          return statusMap[selectedStudent.status] || selectedStudent.status;
+                        })()}
+                      </span>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-50 pt-8">
+                <div>
+                  <h4 className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mb-4">Butiran Peribadi</h4>
+                  <div className="space-y-4">
+                    {[
+                      ['Kad Pengenalan', selectedStudent.icNo || '—'],
+                      ['Jantina', selectedStudent.gender === 'F' ? 'Perempuan' : 'Lelaki'],
+                      ['Tarikh Lahir', selectedStudent.dob || '—'],
+                      ['Umur', `${selectedStudent.age} Tahun`],
+                      ['Alamat', selectedStudent.address || '—'],
+                    ].map(([l, v]) => (
+                      <div key={l as string} className="flex justify-between items-start">
+                        <span className="text-xs text-slate-400 font-medium">{l}</span>
+                        <span className="text-sm font-bold text-slate-700 text-right max-w-[200px]">{v}</span>
+                      </div>
+                    ))}
                   </div>
-               </div>
-            </div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-50 pt-8">
-              <div>
-                <h4 className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mb-4">Butiran Peribadi</h4>
-                <div className="space-y-4">
-                  {[
-                    ['Kad Pengenalan', selectedStudent.icNo || '—'],
-                    ['Jantina', selectedStudent.gender === 'F' ? 'Perempuan' : 'Lelaki'],
-                    ['Tarikh Lahir', selectedStudent.dob || '—'],
-                    ['Umur', `${selectedStudent.age} Tahun`],
-                    ['Alamat', selectedStudent.address || '—'],
-                  ].map(([l, v]) => (
-                    <div key={l} className="flex justify-between items-center border-b border-dashed border-slate-100 pb-2">
-                      <span className="text-xs text-slate-400 font-medium">{l}</span>
-                      <span className="text-sm text-slate-700 font-bold">{v}</span>
+                <div>
+                  <h4 className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mb-4">Matlamat & Murabbi</h4>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-slate-400 font-medium">Kelas</span>
+                      <span className="text-sm font-bold text-slate-700">{getClassName(selectedStudent.classId)}</span>
                     </div>
-                  ))}
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-slate-400 font-medium">Murabbi</span>
+                      <span className="text-sm font-bold text-slate-700">{getTeacherName(selectedStudent.teacherId)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-slate-400 font-medium">Hafazan</span>
+                      <span className="text-sm font-bold text-[#6FC7CB]">{selectedStudent.juzukCompleted ?? 0} Juzuk</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-slate-400 font-medium">Baki Yuran</span>
+                      <span className="text-sm font-bold text-slate-700">RM {state.payments.filter(p => String(p.studentId) === String(selectedStudent.id) && p.status !== 'Dibayar').reduce((acc, curr) => acc + curr.amount, 0)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <h4 className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mb-4">Akademik & Penjaga</h4>
-                <div className="space-y-4">
-                  {[
-                    ['Kelas', getClassName(selectedStudent.classId)],
-                    ['Murabbi/ah', getTeacherName(selectedStudent.teacherId)],
-                    ['Hafazan', `${selectedStudent.juzukCompleted} Juzuk`],
-                    ['Penjaga', state.users.find(u => u.id === selectedStudent.parentId)?.name || 'Hassan bin Ahmad'],
-                    ['Tarikh Daftar', selectedStudent.enrolledDate],
-                  ].map(([l, v]) => (
-                    <div key={l} className="flex justify-between items-center border-b border-dashed border-slate-100 pb-2">
-                      <span className="text-xs text-slate-400 font-medium">{l}</span>
-                      <span className="text-sm text-slate-700 font-bold">{v}</span>
-                    </div>
-                  ))}
+              <div className="pt-8 border-t border-slate-50">
+                <h4 className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mb-4">Sejarah Kesihatan</h4>
+                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 text-sm italic text-slate-500 min-h-[60px]">
+                  {selectedStudent.medicalHistory || 'Tiada sejarah kesihatan atau alahan yang direkodkan.'}
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 p-6 bg-red-50/50 rounded-3xl border border-red-100">
-               <h4 className="text-[10px] font-bold text-red-400 uppercase tracking-[0.2em] mb-2">Maklumat Kesihatan</h4>
-               <p className="text-slate-700 text-sm font-medium">{selectedStudent.medicalHistory || 'Tiada sejarah perubatan dilaporkan.'}</p>
-            </div>
-
-            <div className="mt-8 pt-4">
-              <button 
-                onClick={() => setShowViewModal(false)} 
-                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-100"
-              >
-                TUTUP PROFIL
-              </button>
+            <div className="p-10 pt-4 border-t border-slate-50 shrink-0 space-y-3">
+               {selectedStudent.status === 'WAITING_PAYMENT' && (
+                 <button 
+                  onClick={() => {
+                    if (confirm(`Sahkan pembayaran untuk ${selectedStudent.name}? Pelajar akan didaftarkan sebagai 'Aktif' secara automatik.`)) {
+                      axios.patch(`/api/enrollment/status/${selectedStudent.id}`, { status: 'ENROLLED' })
+                        .then(() => {
+                          dispatch({ type: 'EDIT_STUDENT', payload: { ...selectedStudent, status: 'Aktif' } });
+                          setSelectedStudent({ ...selectedStudent, status: 'Aktif' });
+                          alert('Pembayaran disahkan. Pelajar kini Aktif.');
+                        });
+                    }
+                  }}
+                  className="w-full py-4 bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-100"
+                 >
+                   <CreditCard className="w-4 h-4" /> SAHKAN PEMBAYARAN & DAFTAR
+                 </button>
+               )}
+               <button onClick={() => setShowViewModal(false)} className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">TUTUP PROFIL</button>
             </div>
           </div>
         </div>

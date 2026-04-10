@@ -40,7 +40,7 @@ export interface Student {
   teacherId: string;
   parentId: string; // userId of parent
   juzukCompleted: number;
-  status: 'Aktif' | 'Tidak Aktif';
+  status: 'Aktif' | 'Tidak Aktif' | 'PROSPECT' | 'SCHEDULED' | 'INTERVIEW' | 'ACCEPTED' | 'OFFERED' | 'WAITING_PAYMENT' | 'ENROLLED' | string;
   enrolledDate: string;
   phone?: string; 
   
