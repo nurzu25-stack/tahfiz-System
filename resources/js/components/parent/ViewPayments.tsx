@@ -8,9 +8,10 @@ const MONTHS = ['','Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos'
 
 interface ViewPaymentsProps {
   childId: string;
+  readOnly?: boolean;
 }
 
-export function ViewPayments({ childId }: ViewPaymentsProps) {
+export function ViewPayments({ childId, readOnly = false }: ViewPaymentsProps) {
   const { state } = useAppStore();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,7 +107,7 @@ export function ViewPayments({ childId }: ViewPaymentsProps) {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.dueDate}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.paidDate ?? '—'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {p.status !== 'Dibayar' && (
+                    {p.status !== 'Dibayar' && !readOnly && (
                       <button onClick={() => handlePay(String(p.id))} className="px-4 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700">Bayar Sekarang</button>
                     )}
                   </td>
