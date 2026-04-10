@@ -63,6 +63,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role'  => $user->role,
                 'status' => $user->status,
+                'linked_id' => $user->linked_id,
             ],
         ]);
     }
@@ -129,6 +130,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role'  => $user->role,
                 'status' => $user->status,
+                'linked_id' => $user->linked_id,
             ],
         ]);
     }

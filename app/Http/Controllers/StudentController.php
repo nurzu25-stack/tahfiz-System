@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Student;
+use App\Models\HafazanRecord;
+use App\Models\Achievement;
+use Illuminate\Support\Facades\Log;
 
 class StudentController extends Controller
 {
@@ -237,5 +240,62 @@ class StudentController extends Controller
                 'parentPhone' => $s->parent_phone,
             ];
         });
+    }
+
+    public function dashboard($id)
+    {
+        $student = Student::with(['classRoom.teacher', 'teacher'])->findOrFail($id);
+        
+        // Calculate streak
+        $dates = HafazanRecord::where('student_id', $id)
+            ->orderBy('date', 'desc')
+            ->pluck('date')
+            ->unique()
+            ->toArray();
+
+        $streak = 0;
+        if (!empty($dates)) {
+            $currentDate = new \DateTime();
+            $lastRecordDate = new \DateTime($dates[0]);
+            $diff = $currentDate->diff($lastRecordDate)->days;
+            
+            if ($diff <= 1) {
+                $prevDate = null;
+                foreach ($dates as $dateStr) {
+                    $date = new \DateTime($dateStr);
+                    if ($prevDate === null) {
+                        $streak = 1;
+                    } else {
+                        $interval = $prevDate->diff($date);
+                        if ($interval->days === 1) {
+                            $streak++;
+                        } else {
+                            break;
+                        }
+                    }
+                    $prevDate = $date;
+                }
+            }
+        }
+
+        // Rank name based on juzuk
+        $juzuk = $student->juzuk_completed ?? 0;
+        $rankName = 'Beginner';
+        if ($juzuk >= 1) $rankName = 'Warrior';
+        if ($juzuk >= 5) $rankName = 'Elite';
+        if ($juzuk >= 15) $rankName = 'Master';
+        if ($juzuk >= 30) $rankName = 'Al-Hafiz';
+
+        return response()->json([
+            'juzukCompleted' => $juzuk,
+            'streak' => $streak,
+            'rankName' => $rankName,
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'className' => $student->classRoom->name ?? 'Falah',
+                'teacherName' => $student->classRoom->teacher->name ?? $student->teacher->name ?? 'Ustaz Abdullah',
+            ]
+        ]);
     }
 }

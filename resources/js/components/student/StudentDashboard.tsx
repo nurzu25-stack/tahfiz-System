@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
   Calendar, 
   Target, 
@@ -12,7 +13,8 @@ import {
   Layers, 
   X,
   DollarSign,
-  Bell
+  Bell,
+  Loader2
 } from 'lucide-react';
 import { LearningSchedule } from './LearningSchedule';
 import { HafazanTarget } from './HafazanTarget';
@@ -23,7 +25,7 @@ import { StudyRoadmap } from '../shared/StudyRoadmap';
 import { ProfileView } from '../profile/ProfileView';
 import { ViewPayments } from '../parent/ViewPayments';
 import { Notifications } from '../parent/Notifications';
-import { useAppStore, getStudentStreak, getStudentRank } from '../../store/AppContext';
+import { useAppStore } from '../../store/AppContext';
 
 interface StudentDashboardProps {
   userName: string;
@@ -48,24 +50,51 @@ const navItems: { id: StudentView; label: string; icon: React.ReactNode }[] = [
 export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) {
   const [currentView, setCurrentView] = useState<StudentView>('home');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<any>(null);
   const { state } = useAppStore();
 
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  const studentUser = state.users.find(u => u.name === authUser.name && u.role === 'student') ?? state.users.find(u => u.role === 'student')!;
-  const student = state.students.find(s => s.id === studentUser?.linkedId) ?? state.students[0];
-  const streak = getStudentStreak(state, student?.id ?? '');
-  const rank = getStudentRank(student?.juzukCompleted ?? 0);
-  const studentClass = state.classes.find(c => c.id === student?.classId);
+  
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        const id = authUser.linked_id;
+        if (id) {
+          const res = await axios.get(`/api/students/dashboard/${id}`);
+          setDashboardData(res.data);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, [authUser.linked_id]);
+
+  const student = dashboardData?.student;
+  const stats = [
+    { label: 'Kemajuan Semasa',  value: `${dashboardData?.juzukCompleted ?? 0} Juzuk`, icon: <BookOpen size={28} />, color: '#10b981', bg: '#f0fdf4' },
+    { label: 'Pangkat Semasa',   value: dashboardData?.rankName ?? 'Beginner',         icon: <Trophy size={28} />,   color: '#8b5cf6', bg: '#faf5ff' },
+    { label: 'Hari Berturutan',  value: `${dashboardData?.streak ?? 0} hari`,          icon: <Target size={28} />,   color: '#f59e0b', bg: '#fffbeb' },
+  ];
+
+  const studentClass = state.classes.find(c => c.id === student?.class_id);
   const todayName = new Date().toLocaleDateString('ms-MY', { weekday: 'long' });
   const todaySchedule = (studentClass?.schedule ?? []).filter(s => s.day === todayName);
 
-  const stats = [
-    { label: 'Kemajuan Semasa',  value: `${student?.juzukCompleted ?? 0} Juzuk`, icon: <BookOpen size={28} />, color: '#10b981', bg: '#f0fdf4' },
-    { label: 'Pangkat Semasa',   value: rank.name,                                  icon: <Trophy size={28} />,   color: '#8b5cf6', bg: '#faf5ff' },
-    { label: 'Hari Berturutan',  value: `${streak} hari`,                           icon: <Target size={28} />,   color: '#f59e0b', bg: '#fffbeb' },
-  ];
-
   const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="w-10 h-10 text-emerald-600 animate-spin mb-4" />
+          <p className="text-gray-500">Memuatkan data papan pemuka anda...</p>
+        </div>
+      );
+    }
+
     switch (currentView) {
       case 'schedule':     return <LearningSchedule />;
       case 'target':       return <HafazanTarget />;
@@ -73,7 +102,7 @@ export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) 
       case 'ai':           return <StudentAIPrediction />;
       case 'penilaian-ai': return <HafazanAI />;
       case 'pembelajaran': return <StudyRoadmap />;
-      case 'profile':      return <ProfileView userId={studentUser?.id || ''} />;
+      case 'profile':      return <ProfileView userId={authUser?.id || ''} />;
       case 'payment':      return <ViewPayments childId={String(student?.id || '')} readOnly={true} />;
       case 'notifications': return <Notifications />;
       default:
@@ -95,10 +124,10 @@ export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) 
               </div>
               <div>
                 <p style={{ margin: 0, fontWeight: 700, fontSize: '1rem', color: '#111' }}>{userName}</p>
-                <p style={{ margin: '0.15rem 0 0', fontSize: '0.82rem', color: '#6b7280' }}>Kelas: <strong>{studentClass?.name ?? 'Al-Falah'}</strong> · Ustaz: <strong>{state.teachers.find(t=>t.id===student?.teacherId)?.name ?? 'Ustaz Abdullah'}</strong></p>
+                <p style={{ margin: '0.15rem 0 0', fontSize: '0.82rem', color: '#6b7280' }}>Kelas: <strong>{dashboardData?.student?.className || 'N/A'}</strong> · Ustaz: <strong>{dashboardData?.student?.teacherName || 'Ustaz Abdullah'}</strong></p>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
-                  <span style={{ background: '#ede9fe', color: '#7c3aed', fontSize: '0.72rem', fontWeight: 700, borderRadius: '999px', padding: '2px 10px' }}>🏆 Elite Rank</span>
-                  <span style={{ background: '#dcfce7', color: '#16a34a', fontSize: '0.72rem', fontWeight: 700, borderRadius: '999px', padding: '2px 10px' }}>{student?.juzukCompleted ?? 0} Juzuk Dihafal</span>
+                  <span style={{ background: '#ede9fe', color: '#7c3aed', fontSize: '0.72rem', fontWeight: 700, borderRadius: '999px', padding: '2px 10px' }}>🏆 {dashboardData?.rankName || 'Beginner'}</span>
+                  <span style={{ background: '#dcfce7', color: '#16a34a', fontSize: '0.72rem', fontWeight: 700, borderRadius: '999px', padding: '2px 10px' }}>{dashboardData?.juzukCompleted ?? 0} Juzuk Dihafal</span>
                 </div>
               </div>
             </div>
