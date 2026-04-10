@@ -45,6 +45,7 @@ Route::prefix('api')->group(function () {
     Route::apiResource('payments', \App\Http\Controllers\PaymentController::class);
     Route::post('/attendance/bulk', [\App\Http\Controllers\AttendanceController::class, 'bulkStore']);
     Route::get('/attendance', [\App\Http\Controllers\AttendanceController::class, 'index']);
+    Route::apiResource('hafazan-records', \App\Http\Controllers\HafazanRecordController::class);
 });
 
 // ─── Authenticated dashboard (blade fallback redirect) ────────────────────────

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Save, RefreshCw, BookOpen, CheckCircle } from 'lucide-react';
 import { useAppStore } from '../../store/AppContext';
 import { Grade } from '../../store/mockData';
@@ -48,13 +49,9 @@ export function RecordHafazan() {
     };
 
     try {
-      const resp = await fetch('/api/hafazan-records', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const resp = await axios.post('/api/hafazan-records', payload);
 
-      if (resp.ok) {
+      if (resp.status === 201 || resp.status === 200) {
         dispatch({ type: 'RECORD_HAFAZAN', payload });
         setShowSuccess(true);
         setTimeout(() => { 
@@ -62,16 +59,10 @@ export function RecordHafazan() {
           setSelectedStudent(''); 
           reset(); 
         }, 2000);
-      } else {
-        const err = await resp.json();
-        alert('Gagal menyimpan rekod: ' + (err.message || 'Ralat tidak diketahui'));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('API Error:', err);
-      // Fallback to local dispatch if API is down
-      dispatch({ type: 'RECORD_HAFAZAN', payload });
-      setShowSuccess(true);
-      setTimeout(() => { setShowSuccess(false); setSelectedStudent(''); reset(); }, 2000);
+      alert('Gagal menyimpan rekod: ' + (err.response?.data?.message || 'Ralat sambungan rangkaian.'));
     }
   };
 
