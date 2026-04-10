@@ -13,7 +13,9 @@ export function ViewAttendance({ childId }: ViewAttendanceProps) {
   const [loading, setLoading] = useState(true);
 
   const child = state.students.find(s => String(s.id) === String(childId));
-  const rate = getStudentAttendanceRate(state, String(childId));
+  const total = records.length;
+  const present = records.filter(r => r.status === 'Hadir' || r.status === 'Lewat').length;
+  const rate = total > 0 ? Math.round((present / total) * 100) : 0;
 
   useEffect(() => {
     const fetchAttendance = async () => {
