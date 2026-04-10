@@ -14,6 +14,7 @@ class PaymentController extends Controller
         $studentId = $request->query('student_id');
         $query = \App\Models\Payment::query();
         if ($studentId) {
+            $this->syncPayments($studentId);
             $query->where('student_id', $studentId);
         }
         $payments = $query->get();
@@ -96,5 +97,30 @@ class PaymentController extends Controller
         $payment = \App\Models\Payment::findOrFail($id);
         $payment->delete();
         return response()->json(['success' => true]);
+    }
+
+    private function syncPayments($studentId)
+    {
+        $now = \Carbon\Carbon::now();
+        $startYear = $now->year;
+        
+        // Generate bills for each month of the current year up to now
+        for ($m = 1; $m <= $now->month; $m++) {
+            $exists = \App\Models\Payment::where('student_id', $studentId)
+                ->where('month', $m)
+                ->where('year', $startYear)
+                ->exists();
+            
+            if (!$exists) {
+                \App\Models\Payment::create([
+                    'student_id' => $studentId,
+                    'month'      => $m,
+                    'year'       => $startYear,
+                    'amount'     => 200,
+                    'status'     => 'Belum Bayar',
+                    'due_date'   => \Carbon\Carbon::create($startYear, $m, 7)->toDateString(),
+                ]);
+            }
+        }
     }
 }
