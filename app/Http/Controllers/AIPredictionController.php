@@ -35,15 +35,36 @@ class AIPredictionController extends Controller
             'student_id' => 'required|exists:students,id',
         ]);
 
-        $student = Student::find($request->student_id);
+        $student = Student::with(['hafazanRecords', 'attendanceRecords', 'payments'])->find($request->student_id);
         
-        // Mock AI Logic based on student data
+        // 1. Progress & Speed
         $juzuk = $student->juzuk_completed ?? 0;
-        $trend = $juzuk > 15 ? 'Cemerlang' : ($juzuk > 5 ? 'Baik' : 'Perlu Perhatian');
-        $confidence = rand(80, 98) . '%';
-        $avgAyah = rand(3, 10);
-        $completionDate = now()->addMonths(30 - $juzuk)->format('Y-m-d');
-        
+        $records = $student->hafazanRecords;
+        $totalAyah = $records->sum('ayah_count');
+        $avgAyah = $records->count() > 0 ? round($totalAyah / $records->count(), 1) : 5;
+
+        // 2. Attendance
+        $attendance = $student->attendanceRecords;
+        $attendanceRate = 'N/A';
+        if ($attendance->count() > 0) {
+            $present = $attendance->whereIn('status', ['Hadir', 'Lewat'])->count();
+            $attendanceRate = round(($present / $attendance->count()) * 100) . '%';
+        }
+
+        // 3. Trends & Confidence
+        $trend = ($juzuk >= 15 || $avgAyah >= 10) ? 'Cemerlang' : (($juzuk >= 5 || $avgAyah >= 5) ? 'Baik' : 'Perlu Perhatian');
+        $confidence = min(98, 70 + ($records->count() * 2)) . '%';
+
+        // 4. Estimation
+        // 30 juzuk approx 6236 ayah
+        $remainingAyat = (30 - $juzuk) * 208; // approx 208 ayah per juzuk
+        $daysNeeded = $avgAyah > 0 ? ceil($remainingAyat / $avgAyah) : 1000;
+        $completionDate = now()->addDays($daysNeeded)->format('Y-m-d');
+
+        $rec = 'Teruskan momentum anda.';
+        if ($juzuk < 10) $rec = 'Tumpukan pada memantapkan bacaan juzuk awal.';
+        if (intval($attendanceRate) < 80) $rec = 'Kehadiran yang lebih baik akan mempercepatkan hafazan anda.';
+
         $prediction = AIPrediction::updateOrCreate(
             ['student_id' => $student->id],
             [
@@ -51,8 +72,8 @@ class AIPredictionController extends Controller
                 'estimated_completion' => $completionDate,
                 'performance_trend' => $trend,
                 'confidence' => $confidence,
-                'recommendation' => 'Teruskan usaha dalam hafazan. ' . ($juzuk < 10 ? 'Fokus pada tajwid.' : 'Tingkatkan kualiti murajaah.'),
-                'attendance_rate' => rand(85, 100) . '%',
+                'recommendation' => $rec,
+                'attendance_rate' => $attendanceRate === 'N/A' ? '90%' : $attendanceRate,
                 'avg_ayah_per_day' => $avgAyah,
             ]
         );

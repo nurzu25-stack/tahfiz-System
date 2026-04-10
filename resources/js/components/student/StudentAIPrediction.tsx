@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Brain, TrendingUp, Calendar, Star, Zap, BookOpen } from 'lucide-react';
+import { Brain, TrendingUp, Calendar, Star, Zap, BookOpen, RefreshCw, Award, Target, HelpCircle } from 'lucide-react';
 import { useAppStore, getStudentStreak } from '../../store/AppContext';
 
 interface AIPredictionData {
@@ -32,13 +32,26 @@ export function StudentAIPrediction() {
     }
   }, [student?.id]);
 
-  const fetchPrediction = async (id: string) => {
+  const fetchPrediction = async (id: string | number) => {
     try {
       setLoading(true);
       const resp = await axios.get(`/api/ai-predictions/student/${id}`);
       setPrediction(resp.data);
     } catch (err) {
       console.error('Failed to fetch AI prediction', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    if (!student?.id) return;
+    try {
+      setLoading(true);
+      const resp = await axios.post('/api/ai-predictions/generate', { student_id: student.id });
+      setPrediction(resp.data);
+    } catch (err) {
+      alert('Gagal menjana ramalan AI.');
     } finally {
       setLoading(false);
     }
@@ -62,10 +75,19 @@ export function StudentAIPrediction() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Ramalan AI Saya</h2>
-        <p className="text-gray-600 mt-1">Anggaran khatam dan cadangan peribadi berdasarkan kemajuan hafazan anda</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-black text-slate-800">Ramalan AI Saya</h2>
+          <p className="text-slate-500 font-medium mt-1">Analisis pintar berdasarkan rekod hafazan dan disiplin anda</p>
+        </div>
+        <button 
+          onClick={handleGenerate} 
+          disabled={loading}
+          className="flex items-center gap-2 px-6 py-3 bg-[#1A4D50] text-white rounded-2xl font-black hover:bg-slate-900 shadow-xl transition-all active:scale-95 disabled:opacity-50"
+        >
+          {loading ? <RefreshCw className="size-5 animate-spin" /> : <Brain className="size-5" />}
+          {prediction ? 'KEMASKINI ANALISIS' : 'JANA RAMALAN'}
+        </button>
       </div>
 
       {!prediction ? (
