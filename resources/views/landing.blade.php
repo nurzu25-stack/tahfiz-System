@@ -1458,9 +1458,12 @@
             <div>
                 <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
                     <img src="/images/logo.png" alt="Logo" style="height: 45px;">
-                    <span style="font-weight: 800; font-size: 1.2rem; letter-spacing: -0.02em;">AKMAL</span>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 800; font-size: 1.2rem; letter-spacing: -0.02em;">AKMAL</span>
+                        <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 600;">Universiti Sains Islam Malaysia</span>
+                    </div>
                 </div>
-                <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6;">Akademi Al-Quran Amalillah komited dalam membina generasi Al-Quran yang cemerlang dunia dan akhirat.</p>
+                <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6;">Akademi Al-Quran Amalillah dengan kerjasama Universiti Sains Islam Malaysia komited dalam membina generasi Al-Quran yang cemerlang.</p>
             </div>
             <div>
                 <h4 style="font-weight: 700; margin-bottom: 1.5rem; font-size: 1rem;">Navigasi</h4>
@@ -1473,7 +1476,7 @@
             </div>
         </div>
         <div style="max-width: 1200px; margin: 0 auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; color: #64748b; font-size: 0.75rem;">
-            &copy; 2024 Akademi Al-Quran Amalillah (AKMAL). Hak Cipta Terpelihara.
+            &copy; 2024 Akademi Al-Quran Amalillah (AKMAL) — Kerjasama Universiti Sains Islam Malaysia.
         </div>
     </footer>
 </body>

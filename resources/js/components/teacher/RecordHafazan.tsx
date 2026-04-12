@@ -75,7 +75,7 @@ export function RecordHafazan() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">Rekod Hafazan</h2>
-          <p className="text-gray-600 mt-1">Rekodkan Sabaq, Sabaqi, dan Manzil untuk pelajar</p>
+          <p className="text-gray-600 mt-1">Rekodkan Sabaq, Sabaq Para, dan Dhor untuk pelajar</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg">
           <BookOpen className="w-5 h-5" /><span className="font-medium">Ibu bapa dimaklumkan semasa simpan</span>
@@ -143,8 +143,8 @@ export function RecordHafazan() {
           {/* SABAQ */}
           {[
             { key: 'sabaq', label: 'Sabaq (Hafazan Baharu)', color: 'green', num: 1 },
-            { key: 'sabaqi', label: 'Sabaqi (Ulang Kaji Terkini)', color: 'blue', num: 2 },
-            { key: 'manzil', label: 'Manzil (Ulang Kaji Jangka Panjang)', color: 'purple', num: 3 },
+            { key: 'sabaqi', label: 'Sabaq Para (Semakan Terbaharu)', color: 'blue', num: 2 },
+            { key: 'manzil', label: 'Dhor (Ulangan Lama)', color: 'purple', num: 3 },
           ].map(section => (
             <div key={section.key} className={`p-6 bg-${section.color}-50 rounded-xl border-2 border-${section.color}-200`}>
               <div className="flex items-center gap-2 mb-4">
@@ -211,9 +211,9 @@ export function RecordHafazan() {
       <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
         <h4 className="font-semibold text-blue-900 mb-2">📚 Tentang Sistem Rekod Hafazan</h4>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li>• <strong>Sabaq:</strong> Ayat baharu yang dihafal hari ini</li>
-          <li>• <strong>Sabaqi:</strong> Ayat yang baru dihafal untuk ulang kaji (jangka pendek)</li>
-          <li>• <strong>Manzil:</strong> Ayat hafazan lama untuk pengekalan jangka panjang</li>
+          <li>• <strong>Sabaq:</strong> Surah/Ayat baru yang dihafal hari ini</li>
+          <li>• <strong>Sabaq Para:</strong> Semakan terbaharu atau ulang kaji (jangka pendek)</li>
+          <li>• <strong>Dhor:</strong> Ulangan lama atau pengekalan jangka panjang</li>
           <li>• Semua rekod disimpan secara automatik dan ibu bapa menerima pemberitahuan segera</li>
         </ul>
       </div>
