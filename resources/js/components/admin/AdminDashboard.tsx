@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Users, GraduationCap, DollarSign, FileText, Brain, LogOut, LayoutDashboard, X, UserPlus, Shield } from 'lucide-react';
+import { Users, GraduationCap, DollarSign, FileText, Brain, LogOut, LayoutDashboard, X, UserPlus, Shield, Home } from 'lucide-react';
 import { ManageStudents } from './ManageStudents';
 import { ManageTeachers } from './ManageTeachers';
 import { ManagePayments } from './ManagePayments';
+import { ManageHostels } from './ManageHostels';
 import { ViewReports } from './ViewReports';
 import { AIPrediction } from './AIPrediction';
 import { EnrollmentHub } from './EnrollmentHub';
@@ -14,13 +15,14 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminView = 'home' | 'students' | 'enrollment' | 'teachers' | 'payments' | 'reports' | 'ai' | 'users';
+type AdminView = 'home' | 'students' | 'enrollment' | 'teachers' | 'payments' | 'reports' | 'ai' | 'users' | 'hostels';
 
 const navItems: { id: AdminView; label: string; icon: React.ReactNode }[] = [
   { id: 'home',       label: 'Papan Pemuka',        icon: <LayoutDashboard size={20} /> },
   { id: 'enrollment', label: 'Kemasukan Pelajar',    icon: <UserPlus size={20} /> },
   { id: 'students',   label: 'Urus Pelajar',         icon: <Users size={20} /> },
   { id: 'teachers',   label: 'Urus Murabbi',         icon: <GraduationCap size={20} /> },
+  { id: 'hostels',    label: 'Pengurusan Asrama',    icon: <Home size={20} /> },
   { id: 'users',      label: 'Pengurusan Akses',     icon: <Shield size={20} /> },
   { id: 'payments',   label: 'Bayaran & Invois',     icon: <DollarSign size={20} /> },
   { id: 'reports',    label: 'Lihat Laporan',        icon: <FileText size={20} /> },
@@ -52,6 +54,7 @@ export function AdminDashboard({ userName, onLogout }: AdminDashboardProps) {
       case 'enrollment': return <EnrollmentHub />;
       case 'teachers':   return <ManageTeachers />;
       case 'payments':   return <ManagePayments />;
+      case 'hostels':    return <ManageHostels />;
       case 'reports':    return <ViewReports />;
       case 'ai':         return <AIPrediction />;
       case 'users':      return <UserApproval />;
