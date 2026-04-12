@@ -14,12 +14,14 @@ import {
   X,
   DollarSign,
   Bell,
-  Loader2
+  Loader2,
+  QrCode
 } from 'lucide-react';
 import { LearningSchedule } from './LearningSchedule';
 import { HafazanTarget } from './HafazanTarget';
 import { Achievements } from './Achievements';
 import { StudentAIPrediction } from './StudentAIPrediction';
+import { StudentQRCode } from './StudentQRCode';
 import { HafazanAI } from '../hafazan/HafazanAI';
 import { StudyRoadmap } from '../shared/StudyRoadmap';
 import { ProfileView } from '../profile/ProfileView';
@@ -32,10 +34,11 @@ interface StudentDashboardProps {
   onLogout: () => void;
 }
 
-type StudentView = 'home' | 'schedule' | 'target' | 'achievements' | 'ai' | 'penilaian-ai' | 'pembelajaran' | 'profile' | 'payment' | 'notifications';
+type StudentView = 'home' | 'schedule' | 'target' | 'achievements' | 'ai' | 'penilaian-ai' | 'pembelajaran' | 'profile' | 'payment' | 'notifications' | 'qr';
 
 const navItems: { id: StudentView; label: string; icon: React.ReactNode }[] = [
   { id: 'home',         label: 'Papan Pemuka',      icon: <LayoutDashboard size={20} /> },
+  { id: 'qr',           label: 'Kod QR Kehadiran',  icon: <QrCode size={20} /> },
   { id: 'schedule',     label: 'Jadual Pelajaran',  icon: <Calendar size={20} /> },
   { id: 'target',       label: 'Sasaran Hafazan',   icon: <Target size={20} /> },
   { id: 'payment',      label: 'Status Yuran',      icon: <DollarSign size={20} /> },
@@ -122,6 +125,7 @@ export function StudentDashboard({ userName, onLogout }: StudentDashboardProps) 
       case 'profile':      return <ProfileView userId={authUser?.id || ''} />;
       case 'payment':      return <ViewPayments childId={String(student?.id || '')} readOnly={true} />;
       case 'notifications': return <Notifications />;
+      case 'qr':           return <StudentQRCode />;
       default:
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
