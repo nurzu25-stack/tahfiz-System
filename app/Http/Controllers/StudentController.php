@@ -7,6 +7,8 @@ use App\Models\Student;
 use App\Models\HafazanRecord;
 use App\Models\Achievement;
 use Illuminate\Support\Facades\Log;
+use App\Imports\StudentsImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StudentController extends Controller
 {
@@ -52,6 +54,9 @@ class StudentController extends Controller
                 'medicalHistory' => $s->medical_history,
                 'admissionType' => $s->admission_type,
                 'ranking' => $s->ranking,
+                'matricNo' => $s->matric_no,
+                'matric_no' => $s->matric_no,
+                'intake' => $s->intake,
             ];
         });
     }
@@ -88,6 +93,8 @@ class StudentController extends Controller
             'medicalHistory' => 'nullable|string',
             'admissionType' => 'nullable|string',
             'ranking' => 'nullable|integer',
+            'matricNo' => 'nullable|string',
+            'intake' => 'nullable|string',
         ]);
 
         $student = Student::create([
@@ -120,6 +127,8 @@ class StudentController extends Controller
             'medical_history' => $validated['medicalHistory'] ?? null,
             'admission_type' => $validated['admissionType'] ?? 'tetap',
             'ranking' => $validated['ranking'] ?? null,
+            'matric_no' => $validated['matricNo'] ?? $request->matric_no ?? null,
+            'intake' => $validated['intake'] ?? null,
         ]);
 
         // Returns newly created student in camelCase
@@ -143,6 +152,8 @@ class StudentController extends Controller
             'medicalHistory' => $student->medical_history,
             'admissionType' => $student->admission_type,
             'ranking' => $student->ranking,
+            'matricNo' => $student->matric_no,
+            'intake' => $student->intake,
         ]);
     }
 
@@ -181,6 +192,8 @@ class StudentController extends Controller
             'medical_history' => $request->medicalHistory ?? $request->medical_history ?? $student->medical_history,
             'admission_type' => $request->admissionType ?? $request->admission_type ?? $student->admission_type,
             'ranking' => $request->ranking ?? $student->ranking,
+            'matric_no' => $request->matricNo ?? $request->matric_no ?? $student->matric_no,
+            'intake' => $request->intake ?? $student->intake,
         ]);
 
         return response()->json([
@@ -203,6 +216,8 @@ class StudentController extends Controller
             'medicalHistory' => $student->medical_history,
             'admissionType' => $student->admission_type,
             'ranking' => $student->ranking,
+            'matricNo' => $student->matric_no,
+            'intake' => $student->intake,
         ]);
     }
 
@@ -314,5 +329,46 @@ class StudentController extends Controller
                 'badge' => ($index === 0) ? '🏆' : (($index === 1) ? '🥈' : (($index === 2) ? '🥉' : ''))
             ];
         });
+    }
+
+    /**
+     * Import students from an Excel / CSV file.
+     * POST /api/students/import
+     */
+    public function importFromExcel(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        $import = new StudentsImport();
+
+        try {
+            Excel::import($import, $request->file('file'));
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            return response()->json([
+                'success'  => false,
+                'message'  => 'Ralat pengesahan fail Excel.',
+                'errors'   => collect($e->failures())->map(fn($f) => "Baris {$f->row()}: " . implode(', ', $f->errors()))->values(),
+                'imported' => 0,
+                'skipped'  => 0,
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success'  => false,
+                'message'  => 'Gagal membaca fail: ' . $e->getMessage(),
+                'errors'   => [],
+                'imported' => 0,
+                'skipped'  => 0,
+            ], 500);
+        }
+
+        return response()->json([
+            'success'  => true,
+            'imported' => $import->imported,
+            'skipped'  => $import->skipped,
+            'errors'   => $import->errors,
+            'message'  => "{$import->imported} pelajar berjaya diimport, {$import->skipped} baris dilangkau.",
+        ]);
     }
 }

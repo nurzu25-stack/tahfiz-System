@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, User, Shield, BookOpen, HeartPulse, ChevronRight, ChevronLeft, Check, CreditCard } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Search, Edit, Trash2, Eye, User, Shield, BookOpen, HeartPulse, ChevronRight, ChevronLeft, Check, CreditCard, Upload, FileSpreadsheet, X, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAppStore } from '../../store/AppContext';
 import axios from 'axios';
 
@@ -11,6 +11,14 @@ export function ManageStudents() {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [classFilter, setClassFilter] = useState('');
+
+  // Import state
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState<{ success: boolean; imported: number; skipped: number; errors: string[]; message: string } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Wizard State
   const [currentStep, setCurrentStep] = useState(1);
@@ -26,6 +34,8 @@ export function ManageStudents() {
     parentPhone: '',
     parentId: '1',
     // Academic
+    matricNo: '',
+    intake: '',
     studentId: '', // System generated or manual
     classId: '',
     teacherId: '',
@@ -131,6 +141,8 @@ export function ManageStudents() {
       parentName: '',
       parentPhone: '',
       parentId: '1',
+      matricNo: '',
+      intake: '',
       studentId: '',
       classId: state.classes[0]?.id || '',
       teacherId: state.teachers[0]?.id || '',
@@ -157,7 +169,9 @@ export function ManageStudents() {
         parent_name: editForm.parentName,
         parent_phone: editForm.parentPhone,
         address: editForm.address,
-        medical_history: editForm.medicalHistory
+        medical_history: editForm.medicalHistory,
+        matric_no: editForm.matric_no || editForm.matricNo,
+        intake: editForm.intake
       });
       dispatch({ type: 'EDIT_STUDENT', payload: res.data });
       setShowEditModal(false);
@@ -178,6 +192,41 @@ export function ManageStudents() {
         alert('Gagal memadam pelajar.');
       }
     }
+  };
+
+  const handleImport = async () => {
+    if (!importFile) return;
+    setImportLoading(true);
+    setImportResult(null);
+    const formData = new FormData();
+    formData.append('file', importFile);
+    try {
+      const res = await axios.post('/api/students/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setImportResult(res.data);
+      // Refresh student list
+      const studentsRes = await axios.get('/api/students');
+      dispatch({ type: 'SET_STUDENTS', payload: studentsRes.data });
+    } catch (error: any) {
+      const errData = error?.response?.data;
+      setImportResult({
+        success: false,
+        imported: 0,
+        skipped: 0,
+        errors: errData?.errors ?? [errData?.message ?? 'Ralat tidak diketahui.'],
+        message: errData?.message ?? 'Import gagal.',
+      });
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) { setImportFile(file); setImportResult(null); }
   };
 
   const inputCls = 'w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[15px] focus:ring-2 focus:ring-[#6FC7CB] outline-none transition-all';
@@ -221,9 +270,17 @@ export function ManageStudents() {
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Akademi Al-Quran Amalillah — <span className="text-slate-500 font-medium lowercase">urus pelajar</span></h2>
           <p className="text-slate-500 mt-1 text-sm leading-relaxed">Pendaftaran pelajar baharu kini lebih tersusun dengan sistem wizard multi-step.</p>
         </div>
-        <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-6 py-2.5 bg-[#6FC7CB] text-white rounded-xl hover:bg-[#5FB3B7] shadow-lg shadow-cyan-50 transition-all font-bold">
-          <Plus className="w-5 h-5" /> DAFTAR PELAJAR
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setShowImportModal(true); setImportFile(null); setImportResult(null); }}
+            className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-emerald-200 text-emerald-600 rounded-xl hover:bg-emerald-50 hover:border-emerald-400 transition-all font-bold text-sm shadow-sm"
+          >
+            <Upload className="w-4 h-4" /> IMPORT PELAJAR
+          </button>
+          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-6 py-2.5 bg-[#6FC7CB] text-white rounded-xl hover:bg-[#5FB3B7] shadow-lg shadow-cyan-50 transition-all font-bold">
+            <Plus className="w-5 h-5" /> DAFTAR PELAJAR
+          </button>
+        </div>
       </div>
 
       {/* TABS */}
@@ -277,10 +334,18 @@ export function ManageStudents() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-bold text-slate-800">{student.name}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">ID: {student.id}</div>
+                    <div className="flex gap-2">
+                       <span className="text-[10px] text-slate-400 font-mono">ID: {student.id}</span>
+                       {(student.matric_no || student.matricNo) && (
+                         <span className="text-[10px] text-blue-500 font-bold">MATRIK: {student.matric_no || student.matricNo}</span>
+                       )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">{student.age} thn</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{getClassName(student.classId)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-slate-600 font-medium">{getClassName(student.classId)}</div>
+                    {student.intake && <div className="text-[10px] text-[#6FC7CB] font-bold uppercase tracking-wider">{student.intake}</div>}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{getTeacherName(student.teacherId)}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                      <span className="px-2.5 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-bold">{student.juzukCompleted} Juzuk</span>
@@ -415,6 +480,16 @@ export function ManageStudents() {
                 <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
+                      <label className={labelCls}>No. Matrik</label>
+                      <input className={inputCls} placeholder="Contoh: TZ001" value={addForm.matricNo} onChange={e => setAddForm({ ...addForm, matricNo: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Sesi Intake</label>
+                      <input className={inputCls} placeholder="Contoh: Mac 2024" value={addForm.intake} onChange={e => setAddForm({ ...addForm, intake: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
                       <label className={labelCls}>Kelas *</label>
                       <select required className={inputCls} value={addForm.classId} onChange={e => setAddForm({ ...addForm, classId: e.target.value })}>
                         {state.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -520,6 +595,10 @@ export function ManageStudents() {
                   <div><label className={labelCls}>Umur</label><input type="number" required className={inputCls} value={editForm.age} onChange={e => setEditForm({ ...editForm, age: e.target.value })} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                  <div><label className={labelCls}>No. Matrik</label><input className={inputCls} value={editForm.matric_no || editForm.matricNo} onChange={e => setEditForm({ ...editForm, matricNo: e.target.value })} /></div>
+                  <div><label className={labelCls}>Sesi Intake</label><input className={inputCls} value={editForm.intake} onChange={e => setEditForm({ ...editForm, intake: e.target.value })} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div><label className={labelCls}>Kelas</label>
                     <select className={inputCls} value={editForm.classId} onChange={e => {
                       const selectedClass = state.classes.find(c => String(c.id) === String(e.target.value));
@@ -618,6 +697,8 @@ export function ManageStudents() {
                   <div className="space-y-4">
                     {[
                       ['Kad Pengenalan', selectedStudent.icNo || '—'],
+                      ['No. Matrik', selectedStudent.matric_no || selectedStudent.matricNo || '—'],
+                      ['Sesi Intake', selectedStudent.intake || '—'],
                       ['Jantina', selectedStudent.gender === 'F' ? 'Perempuan' : 'Lelaki'],
                       ['Tarikh Lahir', selectedStudent.dob || '—'],
                       ['Umur', `${selectedStudent.age} Tahun`],
@@ -681,6 +762,143 @@ export function ManageStudents() {
                  </button>
                )}
                <button onClick={() => setShowViewModal(false)} className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">TUTUP PROFIL</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── IMPORT MODAL ── */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-[32px] max-w-xl w-full p-8 shadow-2xl animate-in zoom-in duration-300">
+            {/* Header */}
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                  <FileSpreadsheet className="w-6 h-6 text-emerald-500" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">Import Pelajar</h3>
+                  <p className="text-slate-400 text-xs">Muat naik fail Excel / CSV</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="w-9 h-9 flex items-center justify-center bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Column guide */}
+            <div className="mb-5 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+              <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">⚠ Format Lajur Excel Yang Diperlukan</p>
+              <div className="flex flex-wrap gap-1.5">
+                {['No','School','Name','Matric','M/F','Class 2025','IC No','Birth Date','Register','End','Name (Father)','IC No (Father)','Name (Mother)','IC No (Mother)','Status','Intake'].map(col => (
+                  <span key={col} className="px-2 py-0.5 bg-white border border-amber-200 text-amber-700 rounded-md text-[10px] font-bold">{col}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Drop zone */}
+            {!importResult && (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleFileDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                  dragOver ? 'border-emerald-400 bg-emerald-50' : importFile ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) { setImportFile(f); setImportResult(null); } }}
+                />
+                {importFile ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <FileSpreadsheet className="w-10 h-10 text-emerald-500" />
+                    <p className="font-bold text-emerald-700 text-sm">{importFile.name}</p>
+                    <p className="text-slate-400 text-xs">{(importFile.size / 1024).toFixed(1)} KB</p>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setImportFile(null); }}
+                      className="mt-1 text-[10px] text-red-400 hover:text-red-600 font-bold uppercase tracking-wider"
+                    >
+                      Tukar Fail
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="w-10 h-10 text-slate-300" />
+                    <p className="font-bold text-slate-500 text-sm">Seret &amp; lepas fail di sini</p>
+                    <p className="text-slate-400 text-xs">atau klik untuk pilih fail</p>
+                    <p className="text-[10px] text-slate-300 mt-1 uppercase tracking-widest font-bold">XLSX · XLS · CSV (maks 10MB)</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Result summary */}
+            {importResult && (
+              <div className={`rounded-2xl border p-5 ${
+                importResult.success ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'
+              }`}>
+                <div className="flex items-center gap-3 mb-3">
+                  {importResult.success
+                    ? <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                    : <AlertCircle className="w-6 h-6 text-red-500" />
+                  }
+                  <p className={`font-bold text-sm ${ importResult.success ? 'text-emerald-700' : 'text-red-700' }`}>
+                    {importResult.message}
+                  </p>
+                </div>
+                {importResult.success && (
+                  <div className="flex gap-6 text-sm mb-3">
+                    <span className="font-black text-emerald-600">{importResult.imported} Diimport</span>
+                    <span className="font-black text-slate-400">{importResult.skipped} Dilangkau</span>
+                  </div>
+                )}
+                {importResult.errors.length > 0 && (
+                  <div className="mt-3 space-y-1 max-h-36 overflow-y-auto">
+                    <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Ralat Baris:</p>
+                    {importResult.errors.map((err, i) => (
+                      <p key={i} className="text-xs text-red-600 bg-white rounded-lg px-3 py-1.5 border border-red-100">{err}</p>
+                    ))}
+                  </div>
+                )}
+                <button
+                  onClick={() => { setImportFile(null); setImportResult(null); }}
+                  className="mt-4 text-[10px] text-slate-400 hover:text-slate-600 font-bold uppercase tracking-wider"
+                >
+                  Import Fail Lain
+                </button>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex gap-3 mt-6">
+              {!importResult && (
+                <button
+                  onClick={handleImport}
+                  disabled={!importFile || importLoading}
+                  className="flex-1 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-100"
+                >
+                  {importLoading ? (
+                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Mengimport...</>
+                  ) : (
+                    <><Upload className="w-4 h-4" /> MULA IMPORT</>
+                  )}
+                </button>
+              )}
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="px-6 py-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 font-bold text-sm transition-all"
+              >
+                {importResult?.success ? 'TUTUP' : 'BATAL'}
+              </button>
             </div>
           </div>
         </div>

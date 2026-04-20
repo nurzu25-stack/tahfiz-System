@@ -14,6 +14,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Student related
+Route::post('/students/import', [StudentController::class, 'importFromExcel']);
 Route::apiResource('students', StudentController::class);
 Route::get('/teacher/students', [StudentController::class, 'getTeacherStudents']);
 

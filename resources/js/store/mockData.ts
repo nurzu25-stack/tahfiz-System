@@ -46,6 +46,10 @@ export interface Student {
   
   // New profile fields
   icNo?: string;
+  matricNo?: string;
+  matric_no?: string; // fallback
+  intake?: string;
+  intakeJuzuk?: number;
   gender?: 'F' | 'M';
   maritalStatus?: string;
   bloodType?: string;
