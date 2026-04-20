@@ -27,6 +27,7 @@ class User extends Authenticatable
         'phone',
         'job',
         'wage',
+        'linked_id',
     ];
 
     /**

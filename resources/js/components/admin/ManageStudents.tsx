@@ -339,14 +339,17 @@ export function ManageStudents() {
                        {(student.matric_no || student.matricNo) && (
                          <span className="text-[10px] text-blue-500 font-bold">MATRIK: {student.matric_no || student.matricNo}</span>
                        )}
+                       {student.parentName && (
+                         <span className="text-[10px] text-slate-400 font-medium"> • PENJAGA: {student.parentName} {student.parentPhone ? `(${student.parentPhone})` : ''}</span>
+                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">{student.age} thn</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-600 font-medium">{getClassName(student.classId)}</div>
+                    <div className="text-sm text-slate-600 font-medium">{student.className || getClassName(student.classId)}</div>
                     {student.intake && <div className="text-[10px] text-[#6FC7CB] font-bold uppercase tracking-wider">{student.intake}</div>}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{getTeacherName(student.teacherId)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{student.teacherName || getTeacherName(student.teacherId)}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                      <span className="px-2.5 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-bold">{student.juzukCompleted} Juzuk</span>
                   </td>
@@ -703,6 +706,8 @@ export function ManageStudents() {
                       ['Tarikh Lahir', selectedStudent.dob || '—'],
                       ['Umur', `${selectedStudent.age} Tahun`],
                       ['Alamat', selectedStudent.address || '—'],
+                      ['Nama Penjaga', selectedStudent.parentName || '—'],
+                      ['Telefon Penjaga', selectedStudent.parentPhone || '—'],
                     ].map(([l, v]) => (
                       <div key={l as string} className="flex justify-between items-start">
                         <span className="text-xs text-slate-400 font-medium">{l}</span>
@@ -717,11 +722,11 @@ export function ManageStudents() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-slate-400 font-medium">Kelas</span>
-                      <span className="text-sm font-bold text-slate-700">{getClassName(selectedStudent.classId)}</span>
+                      <span className="text-sm font-bold text-slate-700">{selectedStudent.className || getClassName(selectedStudent.classId)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-slate-400 font-medium">Murabbi</span>
-                      <span className="text-sm font-bold text-slate-700">{getTeacherName(selectedStudent.teacherId)}</span>
+                      <span className="text-sm font-bold text-slate-700">{selectedStudent.teacherName || getTeacherName(selectedStudent.teacherId)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-slate-400 font-medium">Hafazan</span>

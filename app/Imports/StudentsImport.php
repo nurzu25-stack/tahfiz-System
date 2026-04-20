@@ -147,10 +147,10 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 $icNo  = preg_replace('/[^0-9]/', '', $icRaw);
 
                 // ── Matric No ──
-                $matricNo = $this->pick($row, ['matric', 'no_matrik', 'matric_no', 1, 11]);
+                $matricNo = $this->pick($row, ['matric', 'no_matrik', 'matric_no', 11]);
 
                 // ── Gender ──
-                $genderRaw = strtoupper($this->pick($row, ['m_f', 'gender', 'jantina', 'sex', 2, 13], ''));
+                $genderRaw = strtoupper($this->pick($row, ['m_f', 'gender', 'jantina', 'sex', 13], ''));
                 if (strlen($genderRaw) === 1) {
                     $gender = in_array($genderRaw, ['F', 'P']) ? 'F' : 'M';
                 } else {
@@ -165,7 +165,7 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 }
 
                 // ── DOB & Age ──
-                $dobRaw = $this->pick($row, ['birth_date', 'dob', 'tarikh_lahir', 'date_of_birth', 5, 20]);
+                $dobRaw = $this->pick($row, ['birth_date', 'dob', 'tarikh_lahir', 'date_of_birth', 20]);
                 $dob = $this->parseDate($dobRaw);
                 if (!$dob && $icNo) {
                     $dob = $this->parseIcDob($icNo);
@@ -173,7 +173,7 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 $age = $dob ? \Carbon\Carbon::parse($dob)->age : 10;
 
                 // ── Class ──
-                $className = $this->pick($row, ['class_2026', 'class_2025', 'class', 'kelas', 3, 15]);
+                $className = $this->pick($row, ['class_2026', 'class_2025', 'class', 'kelas', 15]);
                 $classId = null;
                 if ($className && $className !== '- None -') {
                     $classRoom = ClassRoom::firstOrCreate(['name' => $className]);
@@ -181,11 +181,11 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 }
 
                 // ── Dates ──
-                $enrolledRaw  = $this->pick($row, ['register', 'enrolled_date', 'tarikh_daftar', 'tarikh_masuk', 'registration_date', 6, 22]);
+                $enrolledRaw  = $this->pick($row, ['register', 'enrolled_date', 'tarikh_daftar', 'tarikh_masuk', 'registration_date', 22]);
                 $enrolledDate = $this->parseDate($enrolledRaw) ?? now()->format('Y-m-d');
 
                 // ── Status ──
-                $statusRaw = $this->pick($row, ['status', 12, 44], 'Aktif');
+                $statusRaw = $this->pick($row, ['status', 44], 'Aktif');
                 $statusMap = [
                     'aktif'    => 'Aktif',
                     'active'   => 'Aktif',
@@ -211,13 +211,15 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 }
 
                 // ── Parent info ──
-                // Mapping: Father Name (index 8/26), Father IC (index 9/32), Mother Name (index 10/35), Mother IC (index 11/41)
-                $fatherName = $this->pick($row, ['name_father_', 'name_father', 'nama_bapa', 'father_name', 8, 26]);
-                $fatherIcRaw = $this->pick($row, ['ic_no_father_', 'ic_no_father', 'ic_bapa', 'father_ic', 9, 32]);
+                // Mapping based on reference image: 
+                // AA (26): Name (Father), AB (27): IC No (Father)
+                // AJ (35): Name (Mother), AK (36): IC No (Mother)
+                $fatherName = $this->pick($row, ['name_father_', 'name_father', 'nama_bapa', 'father_name', 26]);
+                $fatherIcRaw = $this->pick($row, ['ic_no_father_', 'ic_no_father', 'ic_bapa', 'father_ic', 27]);
                 $fatherIc = preg_replace('/[^0-9]/', '', $fatherIcRaw);
 
-                $motherName = $this->pick($row, ['name_mother_', 'name_mother', 'nama_ibu', 'mother_name', 10, 35]);
-                $motherIcRaw = $this->pick($row, ['ic_no_mother_', 'ic_no_mother', 'ic_ibu', 'mother_ic', 11, 41]);
+                $motherName = $this->pick($row, ['name_mother_', 'name_mother', 'nama_ibu', 'mother_name', 35]);
+                $motherIcRaw = $this->pick($row, ['ic_no_mother_', 'ic_no_mother', 'ic_ibu', 'mother_ic', 36]);
                 $motherIc = preg_replace('/[^0-9]/', '', $motherIcRaw);
 
                 $parentName = $fatherName ?: $motherName;

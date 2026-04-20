@@ -66,6 +66,10 @@ export interface Student {
   familyIncome?: string;
   admissionType?: 'tetap' | 'interview';
   ranking?: number;
+  teacherName?: string;
+  className?: string;
+  parentName?: string;
+  parentPhone?: string;
 }
 
 export interface Teacher {
