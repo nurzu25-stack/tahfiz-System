@@ -28,6 +28,6 @@ class ParentProfile extends Model
 
     public function students()
     {
-        return $this->hasMany(Student::class, 'parent_id');
+        return $this->belongsToMany(Student::class, 'student_parent', 'parent_id', 'student_id');
     }
 }

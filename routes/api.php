@@ -42,6 +42,7 @@ Route::post('/ai-predictions/generate/class/{classId}', [AIPredictionController:
 
 // Parent Portal
 Route::get('/parent/children', [\App\Http\Controllers\ParentController::class, 'getChildren']);
+Route::get('/parents', [\App\Http\Controllers\ParentController::class, 'index']);
 
 // User & Access Management
 Route::get('/users/pending', [\App\Http\Controllers\UserController::class, 'pendingUsers']);
@@ -59,3 +60,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show']);
     Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update']);
 });
+
+// Export Routes
+Route::get('/export/students', [\App\Http\Controllers\ExportController::class, 'exportStudents']);
+Route::get('/export/teachers', [\App\Http\Controllers\ExportController::class, 'exportTeachers']);
+Route::get('/export/parents', [\App\Http\Controllers\ExportController::class, 'exportParents']);

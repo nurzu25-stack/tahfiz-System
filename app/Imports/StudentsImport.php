@@ -136,6 +136,7 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 
             try {
                 // ── Name ──
+                unset($fProfile, $mProfile);
                 $name = $this->pick($row, ['name', 'nama', 'nama_pelajar', 'student_name', 0, 1]);
                 if (empty($name) || $name === 'NAME' || $name === 'NAMA') {
                     $this->skipped++;
@@ -143,7 +144,6 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 }
 
                 // ── IC No ──
-                // Row mapping based on image: IC No is likely around index 4 or 5 if empty cols stripped, or 18 if not.
                 $icRaw = $this->pick($row, ['ic_no', 'ic', 'no_ic', 'ic_number', 'no_mykad', 4, 18]);
                 $icNo  = preg_replace('/[^0-9]/', '', $icRaw);
 
@@ -199,65 +199,88 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 $status = $statusMap[strtolower($statusRaw)] ?? 'Aktif';
 
                 // ── Intake (Session/Year) ──
-                // Mapping: Intake is the last column in the image (AU = 46, or index 13 if stripped)
                 $intake = $this->pick($row, ['intake', 'session', 'sesi', 13, 46]);
 
                 // ── Intake Juzuk ──
                 $intakeJuzukRaw = $this->pick($row, ['intake_juzuk', 'juzuk_awal', 'juzuk']);
                 $intakeJuzuk = (is_numeric($intakeJuzukRaw) && (int)$intakeJuzukRaw <= 30) ? (int)$intakeJuzukRaw : 0;
                 
-                // If intake_juzuk is still 0, check if 'intake' column is a valid juzuk number (1-30)
                 if ($intakeJuzuk === 0 && is_numeric($intake) && (int)$intake <= 30) {
                     $intakeJuzuk = (int)$intake;
                 }
 
                 // ── Parent info ──
-                // Mapping based on reference image: 
-                // AA (26): Name (Father), AB (27): IC No (Father)
-                // AJ (35): Name (Mother), AK (36): IC No (Mother)
-                $fatherName = $this->pick($row, ['name_father_', 'name_father', 'nama_bapa', 'father_name', 26]);
-                $fatherIcRaw = $this->pick($row, ['ic_no_father_', 'ic_no_father', 'ic_bapa', 'father_ic', 27]);
+                $fatherName = $this->pick($row, ['name__father_', 'name_father', 'nama_bapa', 'father_name', 26]);
+                $fatherIcRaw = $this->pick($row, ['ic_no__father_', 'ic_no_father', 'ic_bapa', 'father_ic', 27]);
                 $fatherIc = preg_replace('/[^0-9]/', '', $fatherIcRaw);
 
-                $motherName = $this->pick($row, ['name_mother_', 'name_mother', 'nama_ibu', 'mother_name', 35]);
-                $motherIcRaw = $this->pick($row, ['ic_no_mother_', 'ic_no_mother', 'ic_ibu', 'mother_ic', 36]);
+                $motherName = $this->pick($row, ['name__mother_', 'name_mother', 'nama_ibu', 'mother_name', 35]);
+                $motherIcRaw = $this->pick($row, ['ic_no__mother_', 'ic_no_mother', 'ic_ibu', 'mother_ic', 36]);
                 $motherIc = preg_replace('/[^0-9]/', '', $motherIcRaw);
 
-                $parentName = $fatherName ?: $motherName;
-                $parentName = str_replace(['(', ')'], '', $parentName); // Clean up "(Father)"
-                $parentIc   = $fatherIc ?: $motherIc;
-                
+                // Phone numbers (if available in excel, using common indices)
                 $fatherPhone = $this->pick($row, ['phone_father', 'tel_bapa', 28]);
                 $motherPhone = $this->pick($row, ['phone_mother', 'tel_ibu', 37]);
-                $parentPhone = $fatherPhone ?: $motherPhone;
 
-                // ── Parent User & Profile ──
-                $parentProfileId = null;
-                if ($parentIc && strlen($parentIc) >= 6) {
-                    $parentEmail = $parentIc . '@parent.tahfiz.edu.my';
-                    
-                    // Create User Account (Central identity)
-                    $parentUser = User::updateOrCreate(
-                        ['email' => $parentEmail],
+                $primaryParentId = null;
+                $primaryParentName = null;
+                $primaryParentIc = null;
+                $primaryParentPhone = null;
+
+                // Handle Father Profile
+                if ($fatherIc && strlen($fatherIc) >= 6) {
+                    $fUser = User::updateOrCreate(
+                        ['email' => $fatherIc . '@parent.tahfiz.edu.my'],
                         [
-                            'name'      => $parentIc, // Use IC as Username
-                            'full_name' => $parentName,
-                            'password'  => Hash::make($parentIc),
+                            'name'      => $fatherIc,
+                            'full_name' => $fatherName ?: 'Bapa ' . $name,
+                            'password'  => Hash::make($fatherIc),
                             'role'      => 'parent',
                             'status'    => 'active',
                         ]
                     );
-
-                    // Create Parent Profile (Specific details)
-                    $parentProfile = ParentProfile::updateOrCreate(
-                        ['user_id' => $parentUser->id],
+                    $fProfile = ParentProfile::updateOrCreate(
+                        ['user_id' => $fUser->id],
                         [
-                            'ic_no' => $parentIc,
-                            'phone' => $parentPhone,
-                            'relationship_type' => 'parent',
+                            'ic_no' => $fatherIc,
+                            'phone' => $fatherPhone,
+                            'relationship_type' => 'father',
                         ]
                     );
-                    $parentProfileId = $parentProfile->id;
+                    $primaryParentId = $fProfile->id;
+                    $primaryParentName = $fatherName;
+                    $primaryParentIc = $fatherIc;
+                    $primaryParentPhone = $fatherPhone;
+                }
+
+                // Handle Mother Profile
+                if ($motherIc && strlen($motherIc) >= 6) {
+                    $mUser = User::updateOrCreate(
+                        ['email' => $motherIc . '@parent.tahfiz.edu.my'],
+                        [
+                            'name'      => $motherIc,
+                            'full_name' => $motherName ?: 'Ibu ' . $name,
+                            'password'  => Hash::make($motherIc),
+                            'role'      => 'parent',
+                            'status'    => 'active',
+                        ]
+                    );
+                    $mProfile = ParentProfile::updateOrCreate(
+                        ['user_id' => $mUser->id],
+                        [
+                            'ic_no' => $motherIc,
+                            'phone' => $motherPhone,
+                            'relationship_type' => 'mother',
+                        ]
+                    );
+                    
+                    // If no father was found, set mother as primary
+                    if (!$primaryParentId) {
+                        $primaryParentId = $mProfile->id;
+                        $primaryParentName = $motherName;
+                        $primaryParentIc = $motherIc;
+                        $primaryParentPhone = $motherPhone;
+                    }
                 }
 
                 // ── Create/Update Student ──
@@ -274,22 +297,35 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                     'intake_juzuk'     => $intakeJuzuk,
                     'juzuk_completed'  => $intakeJuzuk,
                     'status'           => $status,
-                    'parent_id'        => $parentProfileId,
-                    'parent_name'      => $parentName ?: null,
-                    'parent_ic'        => $parentIc ?: null,
-                    'parent_phone'     => $parentPhone ?: null,
+                    'parent_id'        => $primaryParentId, // Keep for legacy/primary contact
+                    'parent_name'      => $primaryParentName ?: null,
+                    'parent_ic'        => $primaryParentIc ?: null,
+                    'parent_phone'     => $primaryParentPhone ?: null,
                     'admission_type'   => 'tetap',
                 ];
 
                 $existingStudent = $icNo ? Student::where('ic_no', $icNo)->first() : null;
                 if ($existingStudent) {
-                    if (!$parentProfileId) unset($studentData['parent_id']);
-                    if (!$parentName) unset($studentData['parent_name']);
+                    // Don't overwrite some fields if they are null in row but exist in DB
+                    if (!$primaryParentId) unset($studentData['parent_id']);
                     if (!$classId) unset($studentData['class_id']);
                     $existingStudent->update($studentData);
+                    $student = $existingStudent;
                 } else {
-                    Student::create($studentData);
+                    $student = Student::create($studentData);
                 }
+
+                // Link parents in pivot table
+                $parentIds = [];
+                if (isset($fProfile)) $parentIds[] = $fProfile->id;
+                if (isset($mProfile)) $parentIds[] = $mProfile->id;
+                
+                // If neither found in this row but we have a legacy parent_id from db
+                if (empty($parentIds) && $primaryParentId) {
+                    $parentIds[] = $primaryParentId;
+                }
+
+                $student->parents()->sync($parentIds);
 
                 $this->imported++;
             } catch (\Exception $e) {

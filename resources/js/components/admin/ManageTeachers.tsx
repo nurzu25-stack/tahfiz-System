@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, FileSpreadsheet, Eye, User, Briefcase, Phone, BookOpen, HeartPulse } from 'lucide-react';
 import { useAppStore } from '../../store/AppContext';
 import axios from 'axios';
 
@@ -9,6 +9,8 @@ export function ManageTeachers() {
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEditClassModal, setShowEditClassModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [addForm, setAddForm] = useState({ name: '', email: '', phone: '', icNo: '', username: '', specialization: '', gender: 'M' });
   const [addClassForm, setAddClassForm] = useState({ name: '', capacity: 20, teacherId: '' });
   const [editClassForm, setEditClassForm] = useState<any>(null);
@@ -189,6 +191,12 @@ export function ManageTeachers() {
           <button onClick={() => setShowAddClassModal(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             <Plus className="w-5 h-5" /> Tambah Kelas
           </button>
+          <a
+            href="/api/export/teachers"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-all font-semibold"
+          >
+            <FileSpreadsheet className="w-5 h-5" /> Export Excel
+          </a>
         </div>
       </div>
 
@@ -206,7 +214,10 @@ export function ManageTeachers() {
                   <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">{teacher.status}</span>
                 </div>
               </div>
-              <button onClick={() => handleDelete(teacher)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setSelectedTeacher(teacher); setShowViewModal(true); }} className="p-1 text-gray-400 hover:text-[#6FC7CB]"><Eye className="w-4 h-4" /></button>
+                <button onClick={() => handleDelete(teacher)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+              </div>
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-gray-600">Emel:</span><span className="text-gray-900 truncate ml-2">{teacher.email}</span></div>
@@ -479,6 +490,93 @@ export function ManageTeachers() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Teacher Modal */}
+      {showViewModal && selectedTeacher && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-[40px] max-w-2xl w-full shadow-2xl animate-in zoom-in duration-300 my-8">
+            <div className="p-10 pb-0 shrink-0">
+               <h3 className="text-3xl font-black text-slate-800 tracking-tight">Profil Murabbi/ah</h3>
+               <p className="text-[#6FC7CB] font-bold text-xs uppercase tracking-widest mt-1">
+                 {selectedTeacher.gender === 'F' ? 'MURABBIAH' : 'MURABBI'} — {selectedTeacher.status}
+               </p>
+            </div>
+            
+            <div className="p-10 pt-8 space-y-8">
+              <section className="grid grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"><User className="w-5 h-5" /></div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Nama Penuh</p>
+                      <p className="font-bold text-slate-700">{selectedTeacher.name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"><BookOpen className="w-5 h-5" /></div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Kepakaran</p>
+                      <p className="font-bold text-slate-700">{selectedTeacher.specialization || '—'}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"><Phone className="w-5 h-5" /></div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No. Telefon</p>
+                      <p className="font-bold text-slate-700">{selectedTeacher.phone}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"><Briefcase className="w-5 h-5" /></div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Pengalaman</p>
+                      <p className="font-bold text-slate-700">{selectedTeacher.experience || 'Baru'}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <hr className="border-slate-50" />
+
+              <section className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                 <div>
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Pendidikan / Kelayakan</p>
+                    <p className="text-sm text-slate-600 leading-relaxed font-medium">{selectedTeacher.qualification || 'Tiada maklumat'}</p>
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Sejarah Kesihatan</p>
+                    <p className="text-sm text-slate-600 leading-relaxed font-medium">{selectedTeacher.medicalHistory || 'Tiada rekod perubatan'}</p>
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Kecemasan (Nama)</p>
+                    <p className="text-sm text-slate-700 font-bold">{selectedTeacher.emergencyContactName || '—'}</p>
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Kecemasan (Telefon)</p>
+                    <p className="text-sm text-slate-700 font-bold">{selectedTeacher.emergencyContactPhone || '—'}</p>
+                 </div>
+              </section>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  onClick={() => { setShowViewModal(false); setEditForm(selectedTeacher); setShowEditModal(true); }}
+                  className="flex-1 py-4 bg-[#6FC7CB] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#5FB3B7] transition-all shadow-lg shadow-cyan-100"
+                >
+                  EDIT PROFIL
+                </button>
+                <button 
+                  onClick={() => setShowViewModal(false)} 
+                  className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all font-bold"
+                >
+                  TUTUP
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -271,6 +271,12 @@ export function ManageStudents() {
           <p className="text-slate-500 mt-1 text-sm leading-relaxed">Pendaftaran pelajar baharu kini lebih tersusun dengan sistem wizard multi-step.</p>
         </div>
         <div className="flex items-center gap-3">
+          <a
+            href="/api/export/students"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#6FC7CB] text-[#6FC7CB] rounded-xl hover:bg-cyan-50 transition-all font-bold text-sm shadow-sm"
+          >
+            <FileSpreadsheet className="w-4 h-4" /> EXPORT EXCEL
+          </a>
           <button
             onClick={() => { setShowImportModal(true); setImportFile(null); setImportResult(null); }}
             className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-emerald-200 text-emerald-600 rounded-xl hover:bg-emerald-50 hover:border-emerald-400 transition-all font-bold text-sm shadow-sm"

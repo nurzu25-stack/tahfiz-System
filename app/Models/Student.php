@@ -32,6 +32,11 @@ class Student extends Model
         return $this->belongsTo(Teacher::class, 'teacher_id');
     }
 
+    public function parents()
+    {
+        return $this->belongsToMany(ParentProfile::class, 'student_parent', 'student_id', 'parent_id');
+    }
+
     public function parentProfile()
     {
         return $this->belongsTo(ParentProfile::class, 'parent_id');
