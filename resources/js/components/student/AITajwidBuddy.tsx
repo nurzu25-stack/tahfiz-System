@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, Sparkles, X, MessageSquare, Info, Zap } from 'lucide-react';
+import axios from 'axios';
+import { 
+  Send, Bot, User, Sparkles, X, MessageSquare, Info, Zap, 
+  Book, ShieldCheck, Heart, Mic, Paperclip, Volume2, History, RotateCcw
+} from 'lucide-react';
 
 interface Message {
   id: string;
@@ -8,22 +12,17 @@ interface Message {
   timestamp: Date;
 }
 
-const TAJWID_RULES: Record<string, string> = {
-  'ikhfa': 'Ikhfa dari segi bahasa bermaksud menyembunyikan. Dari segi istilah tajwid, ia bermaksud menyebut huruf di antara sebutan Izhar dan Idgham tanpa Tasydid, berserta dengan Ghunnah (dengung).',
-  'izhar': "Izhar bermaksud menerangkan atau menjelaskan sebutan huruf Nun Sakinah atau Tanwin tanpa dengung apabila bertemu dengan huruf-huruf Halqi (Alif, Ha, Kha, 'Ain, Ghain, Ha).",
-  'idgham': 'Idgham bermaksud memasukkan suara huruf pertama ke dalam huruf kedua. Terbahagi kepada dua: Idgham Maal Ghunnah (dengan dengung) dan Idgham Bila Ghunnah (tanpa dengung).',
-  'iqlab': 'Iqlab bermaksud menukarkan bunyi Nun Sakinah atau Tanwin kepada bunyi Mim (m) yang ringan apabila bertemu dengan huruf Ba (ب), berserta dengan dengung.',
-  'mad': 'Mad bermaksud memanjangkan suara pada huruf Mad (Alif, Wau, Ya). Terdapat pelbagai jenis Mad seperti Mad Asli, Mad Wajib Muttasil, dan Mad Jaiz Munfasil.',
-  'qalqalah': 'Qalqalah bermaksud bunyi lantunan atau pantulan suara apabila menyebut huruf-huruf Qalqalah (Qaf, Tha, Ba, Jim, Dal) yang bertanda sukun atau diwaqafkan.',
-  'waqaf': 'Waqaf bermaksud memberhentikan bacaan di akhir kalimah untuk mengambil nafas dengan niat untuk menyambung semula bacaan.',
-  'salam': 'Waalaikumussalam! Saya Pembantu AI Tajwid anda. Ada apa yang boleh saya bantu hari ini?',
-  'hai': 'Hai! Saya sedia membantu anda belajar Tajwid. Tanya saya tentang Ikhfa, Izhar, Qalqalah atau apa sahaja!',
-  'terima kasih': 'Sama-sama! Semoga Allah permudahkan urusan hafalan dan pembelajaran anda. Amin.',
-};
-
 export function AITajwidBuddy() {
+  const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
+  const studentId = authUser.linked_id;
+
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: 'Assalamualaikum! Saya Ustaz Bot, pembantu AI Tajwid anda. Ada sebarang hukum tajwid yang ingin anda tanyakan?', sender: 'bot', timestamp: new Date() }
+    { 
+      id: '1', 
+      text: `Assalamualaikum ${authUser.name?.split(' ')[0] || 'Pelajar'}! Saya Ustaz AI, asisten pintar TMS anda. Saya boleh membantu menyemak rekod hafazan, jadual kelas, atau menjawab kemusykilan agama. Apa yang boleh saya bantu?`, 
+      sender: 'bot', 
+      timestamp: new Date() 
+    }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -35,7 +34,7 @@ export function AITajwidBuddy() {
     }
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMsg: Message = {
@@ -46,125 +45,164 @@ export function AITajwidBuddy() {
     };
 
     setMessages(prev => [...prev, userMsg]);
+    const currentInput = input;
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI thinking
-    setTimeout(() => {
-      const response = getBotResponse(input);
+    try {
+      // Connect to system backend for dynamic responses
+      const res = await axios.post('/api/chatbot/handle', {
+        query: currentInput,
+        student_id: studentId
+      });
+
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: response,
+        text: res.data.response,
         sender: 'bot',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMsg]);
+    } catch (err) {
+      console.error('Chatbot error', err);
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Maaf, sistem sedang sibuk. Sila cuba sebentar lagi.",
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, botMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1200);
-  };
-
-  const getBotResponse = (query: string) => {
-    const q = query.toLowerCase();
-    
-    for (const key in TAJWID_RULES) {
-      if (q.includes(key)) return TAJWID_RULES[key];
     }
-
-    return "Maaf, saya masih belajar tentang itu. Buat masa ini saya pakar tentang hukum Nun Sakinah (Ikhfa, Izhar, dll), Qalqalah, dan Mad. Cuba tanya soalan berkaitan!";
   };
 
   return (
-    <div className="flex flex-col h-[600px] bg-slate-50 rounded-3xl overflow-hidden border border-slate-200 shadow-xl relative">
+    <div className="flex h-[700px] bg-slate-100 rounded-[40px] overflow-hidden border border-slate-200 shadow-2xl relative">
       
-      {/* Header */}
-      <div className="bg-[#1A4D50] p-6 text-white flex items-center justify-between shadow-lg z-10">
-        <div className="flex items-center gap-3">
-          <div className="bg-white/20 p-2 rounded-2xl backdrop-blur-md">
-            <Bot className="w-6 h-6 text-teal-100" />
-          </div>
-          <div>
-            <h3 className="font-black text-lg tracking-tight">AI Tajwid Buddy</h3>
-            <div className="flex items-center gap-1.5">
-               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-               <span className="text-[10px] font-bold text-teal-200 uppercase">Sedia Membantu</span>
+      {/* Sidebar - History (Mock) */}
+      <div className="w-64 bg-slate-50 border-r border-slate-200 hidden lg:flex flex-col p-6">
+         <div className="flex items-center gap-2 mb-8 text-[#1A4D50]">
+            <History className="w-5 h-5" />
+            <h4 className="font-black text-xs uppercase tracking-widest">History</h4>
+         </div>
+         <div className="flex-1 space-y-3">
+             <div className="p-3 bg-white rounded-2xl border border-slate-100 shadow-sm text-[11px] font-bold text-slate-500 cursor-pointer hover:bg-[#1A4D50] hover:text-white transition-all">
+                Semakan Hafazan Terakhir
+             </div>
+             <div className="p-3 bg-white rounded-2xl border border-slate-100 shadow-sm text-[11px] font-bold text-slate-500 cursor-pointer hover:bg-[#1A4D50] hover:text-white transition-all">
+                Hukum Ikhfa Syafawi
+             </div>
+             <div className="p-3 bg-white rounded-2xl border border-slate-100 shadow-sm text-[11px] font-bold text-slate-500 cursor-pointer hover:bg-[#1A4D50] hover:text-white transition-all">
+                Jadual Tasmi' Abu Bakar
+             </div>
+         </div>
+         <button className="flex items-center gap-2 justify-center py-3 text-slate-400 text-[10px] font-bold hover:text-slate-600">
+            <RotateCcw className="w-3 h-3" /> CLEAR HISTORY
+         </button>
+      </div>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="bg-[#1A4D50] p-6 text-white flex items-center justify-between shadow-lg z-10">
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 p-2 rounded-2xl backdrop-blur-md">
+              <Bot className="w-7 h-7 text-teal-100" />
             </div>
+            <div>
+              <h3 className="font-black text-lg tracking-tight uppercase">Ustaz AI Assistant</h3>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-[10px] font-black text-teal-200 uppercase tracking-widest">Integrated with TMS Database</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all">
+               <Volume2 className="w-4 h-4" />
+            </button>
+            <button className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all">
+               <Info className="w-4 h-4" />
+            </button>
           </div>
         </div>
-        <div className="bg-white/10 p-2 rounded-xl text-xs font-bold font-mono">
-           v2.0-SABAR
-        </div>
-      </div>
 
-      {/* Messages Area */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]"
-      >
-        {messages.map((m) => (
-          <div key={m.id} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] flex gap-3 ${m.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-               <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${m.sender === 'user' ? 'bg-indigo-600' : 'bg-[#1A4D50]'}`}>
-                  {m.sender === 'user' ? <User className="w-4 h-4 text-white" /> : <Sparkles className="w-4 h-4 text-teal-200" />}
-               </div>
-               <div className={`p-4 rounded-2xl shadow-sm relative ${
-                 m.sender === 'user' 
-                  ? 'bg-indigo-600 text-white rounded-tr-none' 
-                  : 'bg-white text-slate-700 border border-slate-200 rounded-tl-none'
-               }`}>
-                  <p className="text-sm font-medium leading-relaxed">{m.text}</p>
-                  <span className={`text-[9px] mt-2 block opacity-50 font-bold ${m.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                    {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-               </div>
-            </div>
-          </div>
-        ))}
-        
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-slate-100 flex gap-1">
-               <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
-               <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce delay-75"></div>
-               <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce delay-150"></div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Suggestions */}
-      <div className="px-6 py-3 bg-white/50 backdrop-blur-sm border-t border-slate-100 flex gap-2 overflow-x-auto no-scrollbar">
-         {['Apa itu Ikhfa?', 'Hukum Qalqalah', 'Terangkan Mad', 'Nasihat Motivasi'].map((hint, i) => (
-           <button 
-             key={i} 
-             onClick={() => setInput(hint)}
-             className="whitespace-nowrap px-4 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 hover:bg-[#1A4D50] hover:text-white hover:border-[#1A4D50] transition-all shadow-sm"
-           >
-             {hint}
-           </button>
-         ))}
-      </div>
-
-      {/* Input Area */}
-      <div className="p-4 bg-white border-t border-slate-100 flex items-center gap-3">
-        <input 
-          type="text" 
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Tanya soalan tajwid..."
-          className="flex-1 bg-slate-50 border-none rounded-2xl px-5 py-3 focus:ring-2 focus:ring-[#1A4D50] transition-all text-sm font-medium"
-        />
-        <button 
-          onClick={handleSend}
-          className="p-3 bg-[#1A4D50] text-white rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-teal-900/20"
+        {/* Messages Area - Clean Background */}
+        <div 
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto p-8 space-y-8 scroll-smooth bg-white"
         >
-          <Send className="w-5 h-5" />
-        </button>
-      </div>
+          {messages.map((m) => (
+            <div key={m.id} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] flex gap-4 ${m.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                 <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${m.sender === 'user' ? 'bg-indigo-600' : 'bg-[#1A4D50]'}`}>
+                    {m.sender === 'user' ? <User className="w-4 h-4 text-white" /> : <Sparkles className="w-4 h-4 text-teal-200" />}
+                 </div>
+                 <div className={`p-5 rounded-[28px] shadow-sm relative ${
+                   m.sender === 'user' 
+                    ? 'bg-indigo-600 text-white rounded-tr-none' 
+                    : 'bg-slate-50 text-slate-700 border border-slate-100 rounded-tl-none font-medium'
+                 }`}>
+                    <p className="text-sm md:text-base leading-relaxed">{m.text}</p>
+                    <span className={`text-[9px] mt-3 block opacity-30 font-black ${m.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                      {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                 </div>
+              </div>
+            </div>
+          ))}
+          
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-slate-50 p-4 rounded-2xl rounded-tl-none border border-slate-100 flex gap-1.5 shadow-sm">
+                 <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce"></div>
+                 <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce delay-75"></div>
+                 <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce delay-150"></div>
+              </div>
+            </div>
+          )}
+        </div>
 
-      {/* Background Micro-animation */}
-      <div className="absolute top-20 right-10 opacity-5 pointer-events-none">
-         <Zap className="w-40 h-40 text-[#1A4D50]" />
+        {/* Actions Area */}
+        <div className="px-8 py-3 bg-white border-t border-slate-50 flex gap-2 overflow-x-auto no-scrollbar">
+           {['Semak Hafazan Saya', 'Jadual Kelas', 'Hukum Ikhfa', 'Motivasi Hari Ini'].map((hint, i) => (
+             <button 
+               key={i} 
+               onClick={() => setInput(hint)}
+               className="whitespace-nowrap px-4 py-2 bg-slate-50 border border-slate-100 rounded-full text-[10px] font-black text-slate-500 hover:bg-[#1A4D50] hover:text-white transition-all uppercase tracking-tighter"
+             >
+               {hint}
+             </button>
+           ))}
+        </div>
+
+        {/* Input Area */}
+        <div className="p-6 bg-white border-t border-slate-100 flex items-center gap-4">
+          <div className="flex gap-2">
+             <button title="Input Suara" className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-teal-50 hover:text-teal-600 transition-all border border-slate-100">
+                <Mic className="w-5 h-5" />
+             </button>
+             <button title="Muat Naik Fail" className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-slate-100">
+                <Paperclip className="w-5 h-5" />
+             </button>
+          </div>
+          
+          <input 
+            type="text" 
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Tanya Ustaz AI tentang hafazan, jadual, atau tajwid..."
+            className="flex-1 bg-slate-50 border-none rounded-[24px] px-6 py-4 focus:ring-2 focus:ring-[#1A4D50]/10 transition-all text-sm font-bold placeholder:text-slate-300"
+          />
+          
+          <button 
+            onClick={handleSend}
+            className="p-4 bg-[#1A4D50] text-white rounded-3xl hover:bg-slate-800 transition-all shadow-xl shadow-teal-900/20 active:scale-95"
+          >
+            <Send className="w-6 h-6" />
+          </button>
+        </div>
       </div>
     </div>
   );

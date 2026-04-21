@@ -11,9 +11,11 @@ use App\Http\Controllers\AIPredictionController;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\FinancialAnalyticsController;
+use App\Http\Controllers\ChatbotController;
 
 Route::get('/achievements/student/{studentId}', [AchievementController::class, 'index']);
 Route::get('/analytics/financial', [FinancialAnalyticsController::class, 'index']);
+Route::post('/chatbot/handle', [ChatbotController::class, 'handle']);
 Route::post('/ai/import-alumni', [AIController::class, 'importAlumni']);
 Route::get('/ai/benchmarks', [AIController::class, 'getAIBenchmarks']);
 

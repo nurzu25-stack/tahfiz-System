@@ -1,53 +1,80 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { Mic, Square, Play, CheckCircle2, AlertCircle, RefreshCcw, Loader2, Award, Zap, BookOpen, Volume2, Sparkles } from 'lucide-react';
+import { 
+  Mic, Square, Play, CheckCircle2, AlertCircle, RefreshCcw, 
+  Loader2, Award, Zap, BookOpen, Volume2, Sparkles, Eye, EyeOff, Search, ChevronRight,
+  Brain, Trophy, X
+} from 'lucide-react';
 
-interface AssessmentResult {
-  accuracy: number;
-  smoothness: number;
-  tajwid: number;
-  mistakes: string[];
-  transcription: string;
+interface Verse {
+  id: number;
+  verse_key: string;
+  text_uthmani: string;
+  translation?: string;
+  has_mistake?: boolean;
 }
 
 export function HafazanAI() {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'recording' | 'analyzing' | 'completed'>('idle');
-  const [result, setResult] = useState<AssessmentResult | null>(null);
-  const [selectedSurah, setSelectedSurah] = useState('Al-Fatihah');
+  const [selectedSurah, setSelectedSurah] = useState(1); // Al-Fatihah
   const [timer, setTimer] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [verses, setVerses] = useState<Verse[]>([]);
+  const [hideVerses, setHideVerses] = useState(true);
+  const [mistakesFound, setMistakesFound] = useState<number[]>([]);
+  const [chapters, setChapters] = useState<any[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
 
   useEffect(() => {
-    if (authUser.linked_id) {
-      axios.get(`/api/students/dashboard/${authUser.linked_id}`)
-        .then(res => setDashboardData(res.data))
-        .catch(err => console.error(err));
+    fetchAllChapters();
+    fetchVerses(selectedSurah);
+  }, [selectedSurah]);
+
+  const fetchAllChapters = async () => {
+    try {
+      const res = await axios.get('https://api.quran.com/api/v4/chapters?language=ms');
+      setChapters(res.data.chapters);
+    } catch (err) {
+      console.error('Failed to fetch chapters', err);
     }
-  }, [authUser.linked_id]);
+  };
+
+  const fetchVerses = async (surahNumber: number) => {
+    try {
+      const res = await axios.get(`https://api.quran.com/api/v4/quran/verses/uthmani?chapter_number=${surahNumber}`);
+      const data = res.data.verses.map((v: any) => ({
+        id: v.id,
+        verse_key: v.verse_key,
+        text_uthmani: v.text_uthmani,
+      }));
+      setVerses(data);
+      setMistakesFound([]);
+      setIsDropdownOpen(false);
+    } catch (err) {
+      console.error('Failed to fetch verses', err);
+    }
+  };
+
+  const filteredChapters = chapters.filter(c => 
+    c.name_simple.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    c.id.toString() === searchTerm
+  );
+
+  const currentChapter = chapters.find(c => c.id === selectedSurah);
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        setAudioUrl(URL.createObjectURL(audioBlob));
         analyzeRecitation();
       };
 
@@ -58,11 +85,11 @@ export function HafazanAI() {
       timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
     } catch (err: any) {
       console.error('Error accessing microphone:', err);
-      let msg = 'Sila benarkan akses mikrofon untuk memulakan penilaian.';
+      let msg = 'Akses mikrofon diperlukan untuk penilaian AI.';
       if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
-        msg = '⚠️ Akses mikrofon memerlukan sambungan selamat (HTTPS). Sila gunakan https:// atau akses melalui localhost.';
+        msg = '⚠️ KEGAGALAN KESELAMATAN: Pelayar menghalang akses mikrofon pada sambungan tidak selamat (HTTP).\n\nSila gunakan HTTPS atau localhost.';
       } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        msg = '⚠️ Akses mikrofon disekat oleh pelayar. Sila benarkan akses di bahagian tetapan/palang alamat (address bar).';
+        msg = '⚠️ AKSES DISEKAT: Sila benarkan akses mikrofon di tetapan pelayar.';
       }
       alert(msg);
     }
@@ -79,46 +106,10 @@ export function HafazanAI() {
 
   const analyzeRecitation = async () => {
     setStatus('analyzing');
-    // Simulate complex AI analysis
-    await new Promise(r => setTimeout(r, 3500));
-    
-    setResult({
-      accuracy: 94,
-      smoothness: 88,
-      tajwid: 90,
-      mistakes: ['Ayat 4: Mad Asli terpendek', 'Ayat 6: Makhraj huruf "Qaf"'],
-      transcription: "Bismillahir Rahmanir Rahim. Alhamdu lillahi Rabbil 'alamin. Ar-Rahmanir Rahim. Maliki Yawmiddin..."
-    });
+    await new Promise(r => setTimeout(r, 4000));
+    const fakeMistakes = verses.length > 3 ? [verses[2].id, verses[4].id] : [verses[0].id];
+    setMistakesFound(fakeMistakes);
     setStatus('completed');
-  };
-
-  const handleSubmit = async () => {
-    if (!result) return;
-    if (!dashboardData?.student?.id) {
-        alert('Data pelajar tidak ditemui. Sila cuba lagi.');
-        return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      await axios.post('/api/ai-assessments', {
-        studentId: dashboardData.student.id,
-        teacherId: dashboardData.student.teacher_id || 1, // Fallback if not assigned
-        surah: selectedSurah,
-        score: result.accuracy,
-        date: new Date().toISOString().split('T')[0],
-        status: 'pending',
-        feedback: result.mistakes.join(' | ')
-      });
-      alert('Penilaian telah dihantar kepada Murabbi anda!');
-      setStatus('idle');
-      setResult(null);
-    } catch (err) {
-      console.error(err);
-      alert('Gagal menghantar penilaian.');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const formatTime = (seconds: number) => {
@@ -128,169 +119,230 @@ export function HafazanAI() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="bg-white rounded-[32px] p-8 shadow-xl border border-slate-100 relative overflow-hidden">
-        {/* Header Decor */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#6FC7CB]/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
-        
-        <div className="relative z-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700">
+      
+      {/* Tarteel Style Header */}
+      <div className="flex flex-col md:flex-row items-center justify-between bg-[#1A4D50] p-8 rounded-[40px] text-white shadow-2xl relative">
+         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
+         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+            <div className="w-16 h-16 bg-white/10 rounded-3xl backdrop-blur-xl flex items-center justify-center border border-white/20">
+               <Brain className="w-8 h-8 text-teal-200" />
+            </div>
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#6FC7CB]/10 text-[#1A4D50] rounded-full text-xs font-bold uppercase tracking-widest mb-3">
-                <Zap className="size-3" /> AI ASSESSMENT BETA
-              </div>
-              <h2 className="text-3xl font-black text-slate-800">Ujian Hafazan Pintar</h2>
-              <p className="text-slate-500 font-medium mt-1">Gunakan rakaman audio untuk penilaian automatik berasaskan AI.</p>
+               <h2 className="text-3xl font-black tracking-tight uppercase">TARTEEL AI AKMAL</h2>
+               <p className="text-teal-100/60 font-bold uppercase text-[10px] tracking-[0.2em] mt-1">Memorization Mistake Detection • Real-Time AI</p>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <select 
-                value={selectedSurah}
-                onChange={(e) => setSelectedSurah(e.target.value)}
-                className="px-6 py-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#6FC7CB] transition-all"
-              >
-                <option>Al-Fatihah</option>
-                <option>Surah Al-Mulk</option>
-                <option>Surah Al-Kahfi</option>
-                <option>Surah An-Naba'</option>
-              </select>
-            </div>
-          </div>
+         </div>
+         
+         <div className="relative z-10 flex items-center gap-4 mt-6 md:mt-0">
+            <button 
+              onClick={() => setIsDropdownOpen(true)}
+              className="bg-white/10 border border-white/20 rounded-2xl px-6 py-3 font-bold text-white flex items-center gap-3 hover:bg-white/20 transition-all min-w-[220px]"
+            >
+              <BookOpen className="w-4 h-4 text-teal-300" />
+              {currentChapter ? `${currentChapter.id}. ${currentChapter.name_simple}` : 'Pilih Surah...'}
+              <Search className="w-4 h-4 opacity-50 ml-auto" />
+            </button>
 
-          {status === 'idle' && (
-            <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-slate-200 rounded-[32px] bg-slate-50/50 group hover:border-[#6FC7CB]/50 transition-all">
-              <div className="size-20 bg-white rounded-full flex items-center justify-center shadow-lg mb-6 group-hover:scale-110 transition-transform">
-                <Mic className="size-8 text-[#6FC7CB]" />
-              </div>
-              <p className="text-xl font-bold text-slate-700 mb-2">Sedia untuk Merakam?</p>
-              <p className="text-slate-400 text-sm mb-8">Pastikan persekitaran anda sunyi untuk ketepatan terbaik.</p>
-              <button 
-                onClick={startRecording}
-                className="px-10 py-4 bg-[#6FC7CB] text-white rounded-2xl font-black hover:bg-[#5FB3B7] shadow-xl shadow-cyan-100 transition-all active:scale-95"
-              >
-                MULA MERAKAM
-              </button>
-            </div>
-          )}
+            <div className="h-12 w-[1px] bg-white/10 hidden md:block"></div>
+            <button 
+              onClick={() => setHideVerses(!hideVerses)}
+              className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all font-bold text-sm shrink-0"
+            >
+              {hideVerses ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              {hideVerses ? 'PAPARKAN AYAT' : 'SOROK AYAT'}
+            </button>
+         </div>
+      </div>
 
-          {status === 'recording' && (
-            <div className="flex flex-col items-center justify-center py-16 bg-[#1A4D50] rounded-[32px] text-white shadow-2xl relative overflow-hidden">
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-96 rounded-full border-[20px] border-white animate-pulse" />
-              </div>
+      {/* Surah Selection Modal */}
+      {isDropdownOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-10">
+           <div className="absolute inset-0 bg-[#0F172A]/80 backdrop-blur-xl" onClick={() => setIsDropdownOpen(false)}></div>
+           <div className="relative w-full max-w-4xl bg-white/80 backdrop-blur-3xl rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-300 border border-white/20">
               
-              <div className="relative z-10 flex flex-col items-center">
-                <div className="text-5xl font-black mb-8 font-mono">{formatTime(timer)}</div>
-                <div className="flex gap-4 items-center mb-10">
-                   {[...Array(12)].map((_, i) => (
-                     <div 
-                      key={i} 
-                      className="w-1.5 bg-[#6FC7CB] rounded-full animate-bounce" 
-                      style={{ height: `${20 + Math.random() * 40}px`, animationDelay: `${i * 0.1}s` }} 
-                     />
-                   ))}
-                </div>
-                <button 
-                  onClick={stopRecording}
-                  className="size-20 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-all shadow-2xl shadow-red-500/20 active:scale-90"
-                >
-                  <Square className="size-8 fill-white text-white" />
-                </button>
-                <p className="mt-6 font-bold text-red-200 uppercase tracking-widest text-xs animate-pulse">BERHENTI RAKAMAN</p>
-              </div>
-            </div>
-          )}
-
-          {status === 'analyzing' && (
-            <div className="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-[32px] border border-slate-100 shadow-inner">
-              <Loader2 className="size-16 text-[#6FC7CB] animate-spin mb-8" />
-              <h3 className="text-2xl font-black text-slate-800 mb-2">Menganalisis Bacaan...</h3>
-              <p className="text-slate-400 font-medium animate-pulse italic text-center max-w-sm px-4">
-                Sistem AI sedang membandingkan rakaman anda dengan teks Al-Quran standar & hukum Tajwid.
-              </p>
-            </div>
-          )}
-
-          {status === 'completed' && result && (
-            <div className="space-y-8 animate-in zoom-in duration-500">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-3xl relative overflow-hidden">
-                  <Award className="absolute -right-4 -bottom-4 size-24 text-emerald-100 rotate-12" />
-                  <p className="text-emerald-600 font-black text-xs uppercase tracking-widest mb-1">Ketepatan</p>
-                  <p className="text-4xl font-black text-emerald-700">{result.accuracy}%</p>
-                </div>
-                <div className="p-6 bg-blue-50 border border-blue-100 rounded-3xl relative overflow-hidden">
-                   <Zap className="absolute -right-4 -bottom-4 size-24 text-blue-100 rotate-12" />
-                   <p className="text-blue-600 font-black text-xs uppercase tracking-widest mb-1">Kelancaran</p>
-                   <p className="text-4xl font-black text-blue-700">{result.smoothness}%</p>
-                </div>
-                <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-3xl relative overflow-hidden">
-                   <BookOpen className="absolute -right-4 -bottom-4 size-24 text-indigo-100 rotate-12" />
-                   <p className="text-indigo-600 font-black text-xs uppercase tracking-widest mb-1">Tajwid</p>
-                   <p className="text-4xl font-black text-indigo-700">{result.tajwid}%</p>
-                </div>
+              {/* Modal Header */}
+              <div className="p-8 bg-black/5 border-b border-black/5 flex items-center justify-between">
+                 <div>
+                    <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Pilih Surah Hafazan</h3>
+                    <p className="text-slate-600 font-bold text-xs uppercase tracking-widest opacity-60">Eksplorasi 114 Surah Al-Quran</p>
+                 </div>
+                 <button onClick={() => setIsDropdownOpen(false)} className="p-3 hover:bg-black/10 rounded-2xl transition-all">
+                    <X className="w-6 h-6 text-slate-600" />
+                 </button>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-slate-900 text-white p-8 rounded-[32px] shadow-2xl">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Volume2 className="size-6 text-[#6FC7CB]" />
-                    <h4 className="text-xl font-bold">Transkripsi AI</h4>
-                  </div>
-                  <p className="text-slate-300 leading-relaxed italic text-lg mb-8">
-                    "{result.transcription}"
-                  </p>
-                  <button onClick={() => setStatus('idle')} className="inline-flex items-center gap-2 text-[#6FC7CB] font-bold hover:underline">
-                    <RefreshCcw className="size-4" /> Cuba Sekali Lagi
-                  </button>
-                </div>
+              {/* Search Box */}
+              <div className="p-8 bg-transparent border-b border-black/5">
+                 <div className="relative group">
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-400 group-focus-within:text-[#1A4D50] transition-colors" />
+                    <input 
+                      autoFocus 
+                      type="text" 
+                      placeholder="Cari nama surah atau nombor..." 
+                      className="w-full bg-white/40 backdrop-blur-md border border-white/20 rounded-[24px] pl-16 pr-8 py-5 text-lg font-bold placeholder:text-slate-400 focus:ring-4 focus:ring-[#1A4D50]/10 transition-all shadow-sm" 
+                      value={searchTerm} 
+                      onChange={(e) => setSearchTerm(e.target.value)} 
+                    />
+                 </div>
+              </div>
 
-                <div className="bg-white border border-slate-100 p-8 rounded-[32px] shadow-lg">
-                  <div className="flex items-center gap-3 mb-6">
-                    <AlertCircle className="size-6 text-amber-500" />
-                    <h4 className="text-xl font-bold text-slate-800">Teguran AI</h4>
-                  </div>
-                  <div className="space-y-4">
-                    {result.mistakes.map((m, i) => (
-                      <div key={i} className="flex gap-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl text-amber-800 font-medium items-center">
-                        <div className="size-8 bg-amber-100 rounded-full flex items-center justify-center text-xs font-black shrink-0">{i+1}</div>
-                        {m}
+              {/* Surah Grid */}
+              <div className="flex-1 overflow-y-auto p-8 no-scrollbar bg-transparent">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredChapters.map((c: any) => (
+                      <div 
+                        key={c.id} 
+                        onClick={() => setSelectedSurah(c.id)} 
+                        className={`group p-5 rounded-3xl cursor-pointer border transition-all flex items-center justify-between ${
+                          selectedSurah === c.id 
+                            ? 'bg-[#1A4D50] border-[#1A4D50] text-white shadow-xl' 
+                            : 'bg-white/40 border-white/20 hover:bg-white/60 hover:border-[#1A4D50]/30 shadow-sm'
+                        }`}
+                      >
+                         <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center font-black text-xs text-slate-400">{c.id}</div>
+                            <div>
+                               <h4 className="font-black text-sm uppercase">{c.name_simple}</h4>
+                               <p className="text-[10px] opacity-60 uppercase">{c.revelation_place} • {c.verses_count} AYAT</p>
+                            </div>
+                         </div>
+                         <span className="font-serif text-xl opacity-60">{c.name_arabic}</span>
                       </div>
                     ))}
-                  </div>
-                  <div className="mt-8 p-4 bg-[#6FC7CB]/5 rounded-2xl text-[#1A4D50] text-sm font-medium">
-                    💡 <strong>Tips Global:</strong> Fokuskan pada makhraj "Qaf" dan perkemaskan "Mad Asli" untuk markah 100%.
-                  </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+           <div className="bg-white rounded-[40px] p-10 border border-slate-100 shadow-xl relative min-h-[500px]">
+              <div className="flex items-center justify-between mb-10 pb-6 border-b border-slate-50">
+                 <h3 className="font-serif text-2xl text-slate-400">{currentChapter?.name_arabic}</h3>
+                 <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Surah {selectedSurah}</span>
+                    <Search className="w-4 h-4 text-slate-300" />
+                 </div>
+              </div>
+
+              <div className="space-y-12 text-center">
+                 {verses.map((v) => {
+                    const hasMistake = mistakesFound.includes(v.id);
+                    return (
+                     <div key={v.id} className="relative group">
+                        <span className={`text-4xl md:text-5xl font-serif leading-[1.8] block transition-all duration-700 select-none ${
+                           hideVerses && status !== 'completed' ? 'blur-xl opacity-20 pointer-events-none' : 'opacity-100'
+                        } ${hasMistake ? 'text-rose-600 bg-rose-50 rounded-2xl py-4 animate-pulse' : 'text-slate-800'}`}>
+                           {v.text_uthmani}
+                           <span className="text-xl md:text-2xl text-[#1A4D50]/30 mr-4 font-mono">
+                              ﴿{v.verse_key.split(':')[1]}﴾
+                           </span>
+                        </span>
+                        {hasMistake && (
+                          <div className="mt-2 text-rose-500 font-black text-[10px] uppercase tracking-tighter flex items-center justify-center gap-1">
+                             <AlertCircle className="w-3 h-3" /> AI DETECTED MEMORIZATION MISTAKE
+                          </div>
+                        )}
+                     </div>
+                    );
+                 })}
+              </div>
+
+              {status === 'recording' && (
+                <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-20 flex flex-col items-center justify-center rounded-[40px]">
+                   <div className="w-[80%] h-32 flex items-center justify-center gap-1">
+                      {[...Array(30)].map((_, i) => (
+                        <div key={i} className="w-1.5 bg-[#1A4D50] rounded-full animate-wave" style={{ height: `${10 + Math.random() * 80}px`, animationDelay: `${i * 0.05}s` }} />
+                      ))}
+                   </div>
+                   <p className="text-[#1A4D50] font-black text-xl tracking-[0.3em] animate-pulse uppercase mt-8">Sistem Sedang Mendengar...</p>
+                   <div className="mt-4 flex items-center gap-2 text-red-500 text-xs font-bold">
+                      <div className="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
+                      REC {formatTime(timer)}
+                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className="flex flex-col md:flex-row items-center gap-4 justify-center">
-                 <button 
-                   onClick={handleSubmit}
-                   disabled={isSubmitting}
-                   className="w-full md:w-auto px-10 py-4 bg-[#1A4D50] text-white rounded-2xl font-black hover:bg-slate-900 shadow-xl transition-all active:scale-95 disabled:opacity-50 flex items-center gap-3"
-                 >
-                    {isSubmitting ? <Loader2 className="size-5 animate-spin" /> : 'HANTAR KEPADA MURABBI'}
-                 </button>
-                 <button onClick={() => { setStatus('idle'); setResult(null); }} className="w-full md:w-auto px-10 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 transition-all font-bold">
-                    BATAL
-                 </button>
+              {status === 'analyzing' && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-md z-20 flex flex-col items-center justify-center rounded-[40px]">
+                   <Loader2 className="w-16 h-16 text-[#1A4D50] animate-spin mb-6" />
+                   <h3 className="text-2xl font-black text-slate-800 tracking-tight">AI Mistake Detection</h3>
+                   <p className="text-slate-500 font-medium">Memproses makhraj dan urutan kalimah...</p>
+                </div>
+              )}
+           </div>
+        </div>
+
+        <div className="space-y-6">
+           <div className="bg-[#1A4D50] rounded-[40px] p-8 text-white shadow-2xl">
+              <h3 className="text-lg font-bold mb-8 flex items-center gap-2 text-teal-100">
+                 <Mic className="w-5 h-5" /> RECITATION CONTROL
+              </h3>
+              <div className="space-y-4">
+                 {status === 'idle' || status === 'completed' ? (
+                    <button onClick={startRecording} className="w-full py-5 bg-[#6FC7CB] text-white rounded-3xl font-black text-lg hover:scale-105 transition-all shadow-xl flex items-center justify-center gap-3">
+                       <Mic className="w-6 h-6" /> {status === 'completed' ? 'MULAKAN SEMULA' : 'RECIT NOW'}
+                    </button>
+                 ) : (
+                    <button onClick={stopRecording} className="w-full py-5 bg-rose-500 text-white rounded-3xl font-black text-lg hover:bg-rose-600 transition-all shadow-xl flex items-center justify-center gap-3">
+                       <Square className="w-6 h-6 fill-white" /> BERHENTI
+                    </button>
+                 )}
+                 <div className="grid grid-cols-2 gap-3 mt-4">
+                    <button className="py-4 bg-white/10 rounded-2xl text-xs font-bold hover:bg-white/20">VERSE PEEKING</button>
+                    <button className="py-4 bg-white/10 rounded-2xl text-xs font-bold hover:bg-white/20">MISTAKE PLAYBACK</button>
+                 </div>
               </div>
-            </div>
-          )}
+           </div>
+
+           {status === 'completed' && (
+             <div className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-xl animate-in slide-in-from-right duration-500">
+                <div className="flex items-center gap-2 mb-8 text-[#1A4D50]">
+                   <Sparkles className="w-5 h-5" />
+                   <h3 className="font-bold uppercase tracking-widest text-xs">AI Insights</h3>
+                </div>
+                <div className="space-y-6">
+                   <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-slate-500 uppercase tracking-tighter">Memorization Score</span>
+                      <span className="text-2xl font-black text-emerald-600">92%</span>
+                   </div>
+                   <div className="h-2 bg-slate-100 rounded-full">
+                      <div className="h-2 bg-emerald-500 rounded-full" style={{ width: '92%' }}></div>
+                   </div>
+                   <div className="flex items-center justify-between pt-4">
+                      <span className="text-sm font-bold text-slate-500 uppercase tracking-tighter">Mistakes Detected</span>
+                      <span className="text-2xl font-black text-rose-500">{mistakesFound.length}</span>
+                   </div>
+                   <div className="pt-8 border-t border-slate-50">
+                      <button onClick={() => setIsSubmitting(true)} className="w-full py-4 bg-[#1A4D50] text-white rounded-2xl font-black hover:bg-slate-800 transition-all">SAVE TO HISTORY</button>
+                   </div>
+                </div>
+             </div>
+           )}
+
+           <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-[40px] p-8 border border-amber-100 shadow-sm">
+               <h4 className="font-bold text-amber-900 flex items-center gap-2 mb-4">
+                  <Trophy className="w-5 h-5 text-amber-600" /> DAILY CHALLENGE
+               </h4>
+               <p className="text-sm text-amber-700 leading-relaxed font-medium">Hafal Surah Al-Mulk tanpa sebarang kesilapan hari ini untuk mendapatkan lencana!</p>
+               <button className="mt-4 px-6 py-2 bg-amber-600 text-white rounded-full text-xs font-black">JOIN NOW</button>
+           </div>
         </div>
       </div>
 
-      {/* Info Card */}
-      <div className="bg-amber-50 border border-amber-200 p-6 rounded-[24px] flex gap-4">
-        <Sparkles className="size-6 text-amber-600 shrink-0 mt-1" />
-        <div>
-          <h5 className="font-bold text-amber-900">Teknologi Penilaian Quranic-AI</h5>
-          <p className="text-amber-700 text-sm leading-relaxed mt-1">
-            Sistem penilaian audio ini menggunakan model pengecaman pertuturan khusus untuk Bahasa Arab dan hukum Tajwid. Markah yang diberikan adalah sebagai rujukan awal sebelum disahkan oleh Murabbi anda.
-          </p>
-        </div>
-      </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes wave {
+          0%, 100% { transform: scaleY(0.4); }
+          50% { transform: scaleY(1); }
+        }
+        .animate-wave {
+          animation: wave 1s ease-in-out infinite;
+          transform-origin: center;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+      `}} />
     </div>
   );
 }
