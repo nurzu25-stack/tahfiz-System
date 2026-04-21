@@ -61,10 +61,18 @@ class AIController extends Controller
         // AI Engine Computation
         $effectiveRate = $avgSabaqPerDay * $qualityMultiplier * (0.6 + ($attendanceRate * 0.3) + ($paymentScore * 0.1));
         
+        // ── AI Optimization with Historical Data ──
+        $alumniAvgDays = \App\Models\AlumniRecord::avg('duration_days') ?: 1095;
+        $historicalDaysPerJuzuk = $alumniAvgDays / 30;
+        
         $remainingJuzuk = 30 - $student->juzuk_completed;
-        $remainingAyat = $remainingJuzuk * 208; // Rough estimate: 208 ayat per juzuk
+        $remainingAyat = $remainingJuzuk * 208; // 208 ayat per juzuk
         $validEffectiveRate = max($effectiveRate, 0.5);
-        $daysLeft = ceil($remainingAyat / $validEffectiveRate);
+        $calculatedDaysLeft = ceil($remainingAyat / $validEffectiveRate);
+
+        // Weigh the calculation with historical average (50/50 split for balance)
+        $historicalFactor = $remainingJuzuk * $historicalDaysPerJuzuk;
+        $daysLeft = ceil(($calculatedDaysLeft * 0.7) + ($historicalFactor * 0.3));
 
         $completionDate = Carbon::now()->addDays($daysLeft);
 
@@ -74,7 +82,7 @@ class AIController extends Controller
 
         // Trend
         $trend = ($attendanceRate >= 0.9 && $qualityMultiplier >= 1.0) ? 'Cemerlang' :
-                 ($attendanceRate >= 0.75 && $qualityMultiplier >= 0.8) ? 'Baik' : 'Perlu Perhatian';
+                 (($attendanceRate >= 0.75 && $qualityMultiplier >= 0.8) ? 'Baik' : 'Perlu Perhatian');
 
         // Recommendation
         $recommendation = 'Progres konsisten dikekalkan. Dijangka tamat lebih awal.';
@@ -115,6 +123,39 @@ class AIController extends Controller
         });
 
         return response()->json($predictions);
+    }
+
+    public function importAlumni(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        try {
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\AlumniImport, $request->file('file'));
+            return response()->json(['message' => 'Data sejarah berjaya diimport!']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getAIBenchmarks()
+    {
+        $alumni = \App\Models\AlumniRecord::whereNotNull('duration_days')->get();
+        
+        if ($alumni->isEmpty()) {
+            return response()->json([
+                'avg_days_to_khatam' => 1095, // Default 3 years
+                'record_count' => 0
+            ]);
+        }
+
+        return response()->json([
+            'avg_days_to_khatam' => round($alumni->avg('duration_days')),
+            'record_count' => $alumni->count(),
+            'fastest_khatam' => $alumni->min('duration_days'),
+            'slowest_khatam' => $alumni->max('duration_days'),
+        ]);
     }
 
     private function getGradeValue($g)

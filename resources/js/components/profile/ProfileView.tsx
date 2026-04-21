@@ -63,6 +63,25 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
     password_confirmation: '',
   });
 
+  const MALAYSIA_STATES = [
+    'Johor', 'Kedah', 'Kelantan', 'Melaka', 'Negeri Sembilan', 'Pahang', 'Perak', 'Perlis', 
+    'Pulau Pinang', 'Sabah', 'Sarawak', 'Selangor', 'Terengganu', 'W.P. Kuala Lumpur', 'W.P. Labuan', 'W.P. Putrajaya'
+  ];
+
+  const MALAYSIA_PARLIAMENTS = [
+    'P.001 Padang Besar', 'P.002 Kangar', 'P.003 Arau', 'P.092 Sabak Bernam', 'P.093 Sungai Besar',
+    'P.094 Hulu Selangor', 'P.095 Tanjong Karang', 'P.096 Kuala Selangor', 'P.097 Selayang',
+    'P.098 Gombak', 'P.101 Hulu Langat', 'P.102 Bangi', 'P.103 Puchong', 'P.104 Subang',
+    'P.105 Petaling Jaya', 'P.106 Damansara', 'P.107 Sungai Buloh', 'P.108 Shah Alam',
+    'P.109 Kapar', 'P.110 Klang', 'P.111 Kota Raja', 'P.112 Kuala Langat', 'P.113 Sepang'
+  ].sort();
+
+  const CITIZENSHIP_OPTIONS = [
+    { value: 'MAL', label: 'WARGANEGARA (MALAYSIA)' },
+    { value: 'NON-MAL', label: 'BUKAN WARGANEGARA' },
+    { value: 'PR', label: 'PEMASTAUTIN TETAP (PR)' },
+  ];
+
   useEffect(() => {
     fetchProfile();
   }, [userId]);
@@ -181,6 +200,27 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
                   <option value="M">LELAKI (M)</option>
                   <option value="F">PEREMPUAN (F)</option>
                 </>
+              ) : name === 'maritalStatus' ? (
+                <>
+                  <option value="">-- Sila Pilih --</option>
+                  <option value="BUJANG">BUJANG</option>
+                  <option value="BERKAHWIN">BERKAHWIN</option>
+                  <option value="DUDA/BALU">DUDA/BALU</option>
+                </>
+              ) : name === 'stateName' ? (
+                <>
+                  <option value="">-- Pilih Negeri --</option>
+                  {MALAYSIA_STATES.map(s => <option key={s} value={s.toUpperCase()}>{s.toUpperCase()}</option>)}
+                </>
+              ) : name === 'parliament' ? (
+                <>
+                  <option value="">-- Pilih Parlimen --</option>
+                  {MALAYSIA_PARLIAMENTS.map(p => <option key={p} value={p}>{p}</option>)}
+                </>
+              ) : name === 'citizenship' ? (
+                <>
+                  {CITIZENSHIP_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </>
               ) : null}
             </select>
           ) : (
@@ -275,11 +315,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
                  {student && (
                    <>
                      {renderField('Gender', formData.gender, 'gender', 'select')}
-                     {renderField('Marital Status', formData.maritalStatus, 'maritalStatus')}
+                     {renderField('Marital Status', formData.maritalStatus, 'maritalStatus', 'select')}
                      {renderField('Blood Type', formData.bloodType, 'bloodType')}
                      {renderField('Date of Birth', formData.dob, 'dob', 'date')}
                      {renderField('Place of Birth', formData.pob, 'pob')}
-                     {renderField('Citizenship', formData.citizenship, 'citizenship')}
+                     {renderField('Citizenship', formData.citizenship, 'citizenship', 'select')}
                      {renderField('Race', formData.race, 'race')}
                      {renderField('Religion', formData.religion, 'religion')}
                      {renderField('Family Income', formData.familyIncome, 'familyIncome')}
@@ -371,9 +411,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
                     {renderField('Poskod', formData.postcode, 'postcode')}
                     {renderField('Bandar', formData.city, 'city')}
                     {renderField('Daerah (Kod)', formData.district, 'district')}
-                    {renderField('Negeri (Kod)', formData.stateName, 'stateName')}
+                    {renderField('Negeri (Kod)', formData.stateName, 'stateName', 'select')}
                     {renderField('Negara', formData.country, 'country')}
-                    {renderField('Parlimen', formData.parliament, 'parliament')}
+                    {renderField('Parlimen', formData.parliament, 'parliament', 'select')}
                   </div>
                 </div>
               </div>

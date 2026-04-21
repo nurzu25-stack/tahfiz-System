@@ -1,11 +1,16 @@
-import { useState } from 'react';
-import { Brain, TrendingUp, Calendar, Download, RefreshCw } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Brain, TrendingUp, Calendar, Download, RefreshCw, Upload, X, CheckCircle, FileSpreadsheet } from 'lucide-react';
 import { useAppStore, computeAIPrediction } from '../../store/AppContext';
+import axios from 'axios';
 
 export function AIPrediction() {
   const { state } = useAppStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const predictions = state.students.map(s => computeAIPrediction(state, s.id)).filter(Boolean) as NonNullable<ReturnType<typeof computeAIPrediction>>[];
 
@@ -20,6 +25,34 @@ export function AIPrediction() {
     setTimeout(() => { setIsGenerating(false); setGenerated(true); }, 1500);
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    setIsImporting(true);
+    setImportResult(null);
+
+    try {
+      const response = await axios.post('/api/ai/import-alumni', formData);
+      setImportResult({ success: true, message: response.data.message });
+      // Reset after success
+      setTimeout(() => {
+        setShowImportModal(false);
+        setImportResult(null);
+      }, 2000);
+    } catch (error: any) {
+      setImportResult({ 
+        success: false, 
+        message: error.response?.data?.message || 'Gagal mengimport data.' 
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const trendColor = (t: string) => t === 'Mumtaz' ? 'bg-green-100 text-green-700' : t === 'Jayyid' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700';
 
   return (
@@ -30,6 +63,12 @@ export function AIPrediction() {
           <p className="text-gray-600 mt-1">Anggaran khatam dan trend prestasi berkuasa AI</p>
         </div>
         <div className="flex gap-3">
+          <button 
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors font-bold text-sm"
+          >
+            <Upload className="w-4 h-4" /> DATA SEJARAH
+          </button>
           <button onClick={handleGenerate} disabled={isGenerating}
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             {isGenerating ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Brain className="w-5 h-5" />}
@@ -101,6 +140,69 @@ export function AIPrediction() {
           </div>
         ))}
       </div>
+
+      {/* ── IMPORT MODAL ── */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-[32px] max-w-xl w-full p-8 shadow-2xl animate-in zoom-in duration-300">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                  <FileSpreadsheet className="w-6 h-6 text-indigo-500" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">Latih Ramalan AI</h3>
+                  <p className="text-slate-400 text-xs">Muat naik data khatam alumni</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="w-9 h-9 flex items-center justify-center bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {!importResult ? (
+              <div 
+                className="relative border-2 border-dashed border-slate-100 rounded-3xl p-10 text-center hover:border-indigo-200 transition-all cursor-pointer bg-slate-50/50"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="hidden" 
+                  accept=".xlsx,.xls,.csv"
+                />
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
+                  {isImporting ? <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" /> : <Upload className="w-8 h-8 text-indigo-500" />}
+                </div>
+                <p className="font-bold text-slate-700">Klik untuk muat naik fail</p>
+                <p className="text-slate-400 text-xs mt-1">Excel (.xlsx) atau CSV sahaja</p>
+              </div>
+            ) : (
+              <div className={`p-8 rounded-3xl text-center ${importResult.success ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                {importResult.success ? (
+                   <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+                ) : (
+                   <X className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                )}
+                <p className={`font-bold ${importResult.success ? 'text-emerald-700' : 'text-red-700'}`}>
+                  {importResult.message}
+                </p>
+              </div>
+            )}
+
+            <div className="mt-8 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+               <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">Format Header Excel:</p>
+               <p className="text-[10px] text-blue-700 leading-relaxed font-mono">
+                 NAME, TARIKH MULA, TARIKH KHATAM, MURABBI, NO MATRIK, NO MYKAD
+               </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

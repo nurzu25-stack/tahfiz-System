@@ -8,6 +8,10 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ClassRoomController;
 use App\Http\Controllers\AIAssessmentController;
 use App\Http\Controllers\AIPredictionController;
+use App\Http\Controllers\AIController;
+
+Route::post('/ai/import-alumni', [AIController::class, 'importAlumni']);
+Route::get('/ai/benchmarks', [AIController::class, 'getAIBenchmarks']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();
