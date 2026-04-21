@@ -9,7 +9,7 @@ export function ManageTeachers() {
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEditClassModal, setShowEditClassModal] = useState(false);
-  const [addForm, setAddForm] = useState({ name: '', email: '', phone: '', icNo: '', username: '', specialization: '' });
+  const [addForm, setAddForm] = useState({ name: '', email: '', phone: '', icNo: '', username: '', specialization: '', gender: 'M' });
   const [addClassForm, setAddClassForm] = useState({ name: '', capacity: 20, teacherId: '' });
   const [editClassForm, setEditClassForm] = useState<any>(null);
   const [editForm, setEditForm] = useState<any>(null);
@@ -86,7 +86,7 @@ export function ManageTeachers() {
         status: 'Aktif'
       });
       dispatch({ type: 'ADD_TEACHER', payload: response.data });
-      setAddForm({ name: '', email: '', phone: '', icNo: '', username: '', specialization: '' });
+      setAddForm({ name: '', email: '', phone: '', icNo: '', username: '', specialization: '', gender: 'M' });
       setShowAddModal(false);
     } catch (error) {
       console.error('Error adding teacher:', error);
@@ -313,6 +313,13 @@ export function ManageTeachers() {
               </div>
               <div><label className="block text-sm font-medium text-gray-700 mb-2">Phone</label><input type="tel" required className={inputCls} placeholder="+60 12-345 6789" value={addForm.phone} onChange={e => setAddForm({ ...addForm, phone: e.target.value })} /></div>
               <div><label className="block text-sm font-medium text-gray-700 mb-2">Specialization</label><input className={inputCls} placeholder="e.g. Hafazan & Tajweed" value={addForm.specialization} onChange={e => setAddForm({ ...addForm, specialization: e.target.value })} /></div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Jantina</label>
+                <select className={inputCls} value={addForm.gender} onChange={e => setAddForm({ ...addForm, gender: e.target.value })}>
+                  <option value="M">Lelaki (Murabbi)</option>
+                  <option value="F">Perempuan (Murabbiah)</option>
+                </select>
+              </div>
               <div className="flex gap-3 pt-4">
                 <button type="submit" className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Tambah Guru</button>
                 <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50">Batal</button>
@@ -399,6 +406,13 @@ export function ManageTeachers() {
               <div className="space-y-2">
                 <label className="block text-sm font-bold text-gray-500 ml-1">Specialization</label>
                 <input className={inputCls} placeholder="e.g. Hafazan & Tajweed" value={editForm.specialization} onChange={e => setEditForm({ ...editForm, specialization: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-gray-500 ml-1">Jantina</label>
+                <select className={inputCls} value={editForm.gender} onChange={e => setEditForm({ ...editForm, gender: e.target.value })}>
+                  <option value="M">Lelaki (Murabbi)</option>
+                  <option value="F">Perempuan (Murabbiah)</option>
+                </select>
               </div>
               <div className="flex gap-4 pt-8">
                 <button type="submit" className="flex-1 py-4 bg-[#52B788] text-white font-bold rounded-2xl hover:bg-[#40916C] shadow-lg shadow-green-100 transition-all border-none cursor-pointer">

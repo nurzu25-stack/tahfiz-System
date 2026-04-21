@@ -69,6 +69,11 @@ class AttendanceController extends Controller
             $query->where('date', $request->date);
         }
 
+        if ($request->has('month') && $request->has('year')) {
+            $query->whereYear('date', $request->year)
+                  ->whereMonth('date', $request->month);
+        }
+
         $attendances = $query->latest('date')->get();
 
         return response()->json($attendances);

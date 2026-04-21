@@ -81,6 +81,8 @@ export interface Teacher {
   specialization: string;
   status: 'Aktif' | 'Tidak Aktif';
   joinedDate: string;
+  gender?: 'M' | 'F' | string;
+  userId?: string;
   
   // New profile fields
   icNo?: string;

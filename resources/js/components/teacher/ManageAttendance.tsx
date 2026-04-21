@@ -19,6 +19,10 @@ export function ManageAttendance() {
   const [saved, setSaved] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     let scanner: any = null;
@@ -56,17 +60,30 @@ export function ManageAttendance() {
 
   const fetchAttendance = async () => {
     try {
-      const resp = await axios.get(`/api/attendance`, { params: { class_id: selectedClassId, date: date } });
-      const data = resp.data;
-      const map: Record<string, { status: AttendanceStatus; remarks: string }> = {};
-      data.forEach((row: any) => {
-        map[row.student_id] = { status: row.status, remarks: row.remarks || '' };
-      });
-      setAttendanceMap(map);
+      if (viewMode === 'daily') {
+        const resp = await axios.get(`/api/attendance`, { params: { class_id: selectedClassId, date: date } });
+        const data = resp.data;
+        const map: Record<string, { status: AttendanceStatus; remarks: string }> = {};
+        data.forEach((row: any) => {
+          map[row.student_id] = { status: row.status, remarks: row.remarks || '' };
+        });
+        setAttendanceMap(map);
+      } else {
+        const resp = await axios.get(`/api/attendance`, { 
+            params: { class_id: selectedClassId, month: selectedMonth, year: selectedYear } 
+        });
+        setMonthlyData(resp.data);
+      }
     } catch (err) {
       console.error('Failed to fetch attendance', err);
     }
   };
+
+  useEffect(() => {
+    if (selectedClassId && viewMode === 'monthly') {
+      fetchAttendance();
+    }
+  }, [selectedClassId, viewMode, selectedMonth, selectedYear]);
 
   const toggle = (studentId: string, status: AttendanceStatus) => {
     setAttendanceMap(prev => ({ ...prev, [studentId]: { status, remarks: prev[studentId]?.remarks ?? '' } }));
@@ -116,7 +133,23 @@ export function ManageAttendance() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h2 className="text-2xl font-semibold text-gray-900">Urus Kehadiran</h2><p className="text-gray-600 mt-1">Tandakan dan rekod kehadiran pelajar</p></div>
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900">Urus Kehadiran</h2>
+          <div className="flex gap-4 mt-2">
+            <button 
+              onClick={() => setViewMode('daily')}
+              className={`text-sm font-bold pb-1 border-b-2 transition-all ${viewMode === 'daily' ? 'border-teal-600 text-teal-600' : 'border-transparent text-gray-400'}`}
+            >
+              Tanda Kehadiran
+            </button>
+            <button 
+              onClick={() => setViewMode('monthly')}
+              className={`text-sm font-bold pb-1 border-b-2 transition-all ${viewMode === 'monthly' ? 'border-teal-600 text-teal-600' : 'border-transparent text-gray-400'}`}
+            >
+              Laporan Bulanan
+            </button>
+          </div>
+        </div>
         <button 
           onClick={() => setIsScanning(!isScanning)}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${isScanning ? 'bg-red-100 text-red-600' : 'bg-teal-600 text-white shadow-lg shadow-teal-900/20'}`}
@@ -146,70 +179,132 @@ export function ManageAttendance() {
       )}
 
       {/* Controls */}
-      <div className="flex gap-4">
-        <select value={selectedClassId} onChange={e => { setSelectedClassId(e.target.value); setAttendanceMap({}); }} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-          {teacherClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <input type="date" value={date} onChange={e => { setDate(e.target.value); setAttendanceMap({}); }} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
-      </div>
+      {viewMode === 'daily' ? (
+        <div className="flex gap-4">
+          <select value={selectedClassId} onChange={e => { setSelectedClassId(e.target.value); setAttendanceMap({}); }} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            {teacherClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <input type="date" value={date} onChange={e => { setDate(e.target.value); setAttendanceMap({}); }} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
+        </div>
+      ) : (
+        <div className="flex gap-4">
+          <select value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            {teacherClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <select value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            {['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'].map((m, i) => (
+              <option key={m} value={i + 1}>{m}</option>
+            ))}
+          </select>
+          <select value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+      )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: 'Jumlah', value: todayStats.total, color: 'text-gray-900', bg: 'bg-gray-50' },
-          { label: 'Hadir', value: todayStats.present, color: 'text-green-600', bg: 'bg-green-50' },
-          { label: 'Tidak Hadir', value: todayStats.absent, color: 'text-red-600', bg: 'bg-red-50' },
-          { label: 'Lewat', value: todayStats.late, color: 'text-orange-600', bg: 'bg-orange-50' },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center border`}>
-            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-            <p className="text-sm text-gray-600">{s.label}</p>
+      {viewMode === 'daily' && (
+        <>
+          {/* Stats */}
+          <div className="grid grid-cols-4 gap-4">
+            {[
+              { label: 'Jumlah', value: todayStats.total, color: 'text-gray-900', bg: 'bg-gray-50' },
+              { label: 'Hadir', value: todayStats.present, color: 'text-green-600', bg: 'bg-green-50' },
+              { label: 'Tidak Hadir', value: todayStats.absent, color: 'text-red-600', bg: 'bg-red-50' },
+              { label: 'Lewat', value: todayStats.late, color: 'text-orange-600', bg: 'bg-orange-50' },
+            ].map(s => (
+              <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center border`}>
+                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-sm text-gray-600">{s.label}</p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Attendance list */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold text-gray-700">Pelajar — {state.classes.find(c => c.id === selectedClassId)?.name}</span>
-            <div className="flex gap-2">
-              <button onClick={() => { const m: typeof attendanceMap = {}; studentsInClass.forEach(s => { m[s.id] = { status: 'Hadir', remarks: '' }; }); setAttendanceMap(m); }} className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-full hover:bg-green-200">Tandakan Semua Hadir</button>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold text-gray-700">Pelajar — {state.classes.find(c => String(c.id) === String(selectedClassId))?.name}</span>
+                <div className="flex gap-2">
+                  <button onClick={() => { const m: typeof attendanceMap = {}; studentsInClass.forEach(s => { m[s.id] = { status: 'Hadir', remarks: '' }; }); setAttendanceMap(m); }} className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-full hover:bg-green-200">Tandakan Semua Hadir</button>
+                </div>
+              </div>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {studentsInClass.map(student => (
+                <div key={student.id} className="flex items-center gap-4 px-6 py-4">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                    {student.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 text-sm">{student.name}</p>
+                    <p className="text-xs text-gray-500">{student.juzukCompleted} Juzuk dihafal</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {statusBtn(student.id, 'Hadir', 'Hadir', 'text-green-600 bg-green-50')}
+                    {statusBtn(student.id, 'Lewat', 'Lewat', 'text-orange-600 bg-orange-50')}
+                    {statusBtn(student.id, 'Tidak Hadir', 'Tidak Hadir', 'text-red-600 bg-red-50')}
+                  </div>
+                  {getStatusForStudent(student.id) === 'Tidak Hadir' && (
+                    <input
+                      type="text"
+                      placeholder="Sebab..."
+                      className="text-xs px-2 py-1 border border-gray-200 rounded w-32 focus:outline-none focus:ring-1 focus:ring-green-500"
+                      value={attendanceMap[student.id]?.remarks ?? ''}
+                      onChange={e => setAttendanceMap(prev => ({ ...prev, [student.id]: { ...prev[student.id], status: 'Tidak Hadir', remarks: e.target.value } }))}
+                    />
+                  )}
+                </div>
+              ))}
+              {studentsInClass.length === 0 && <p className="px-6 py-10 text-center text-gray-400 text-sm">Tiada pelajar dalam kelas ini.</p>}
+            </div>
+            <div className="p-4 bg-gray-50 border-t border-gray-200">
+              <button onClick={handleSave} className="w-full py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">Simpan Kehadiran</button>
             </div>
           </div>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {studentsInClass.map(student => (
-            <div key={student.id} className="flex items-center gap-4 px-6 py-4">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                {student.name.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm">{student.name}</p>
-                <p className="text-xs text-gray-500">{student.juzukCompleted} Juzuk dihafal</p>
-              </div>
-              <div className="flex gap-2">
-                {statusBtn(student.id, 'Hadir', 'Hadir', 'text-green-600 bg-green-50')}
-                {statusBtn(student.id, 'Lewat', 'Lewat', 'text-orange-600 bg-orange-50')}
-                {statusBtn(student.id, 'Tidak Hadir', 'Tidak Hadir', 'text-red-600 bg-red-50')}
-              </div>
-              {getStatusForStudent(student.id) === 'Tidak Hadir' && (
-                <input
-                  type="text"
-                  placeholder="Sebab..."
-                  className="text-xs px-2 py-1 border border-gray-200 rounded w-32 focus:outline-none focus:ring-1 focus:ring-green-500"
-                  value={attendanceMap[student.id]?.remarks ?? ''}
-                  onChange={e => setAttendanceMap(prev => ({ ...prev, [student.id]: { ...prev[student.id], status: 'Tidak Hadir', remarks: e.target.value } }))}
-                />
+        </>
+      )}
+
+      {viewMode === 'monthly' && (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Nama Pelajar</th>
+                <th className="px-6 py-3 text-[11px] font-bold text-green-600 uppercase tracking-wider text-center">Hadir</th>
+                <th className="px-6 py-3 text-[11px] font-bold text-orange-600 uppercase tracking-wider text-center">Lewat</th>
+                <th className="px-6 py-3 text-[11px] font-bold text-red-600 uppercase tracking-wider text-center">T. Hadir</th>
+                <th className="px-6 py-3 text-[11px] font-bold text-blue-600 uppercase tracking-wider text-right">Peratus (%)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 italic text-sm">
+              {studentsInClass.map(s => {
+                const sData = monthlyData.filter(d => String(d.student_id) === String(s.id));
+                const hadir = sData.filter(d => d.status === 'Hadir').length;
+                const lewat = sData.filter(d => d.status === 'Lewat').length;
+                const takHadir = sData.filter(d => d.status === 'Tidak Hadir').length;
+                const total = hadir + lewat + takHadir;
+                const percent = total > 0 ? Math.round(((hadir + lewat) / total) * 100) : 0;
+
+                return (
+                  <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-gray-900 not-italic">{s.name}</td>
+                    <td className="px-6 py-4 text-center font-bold text-green-600">{hadir}</td>
+                    <td className="px-6 py-4 text-center font-bold text-orange-600">{lewat}</td>
+                    <td className="px-6 py-4 text-center font-bold text-red-600">{takHadir}</td>
+                    <td className="px-6 py-4 text-right">
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${percent >= 90 ? 'bg-green-100 text-green-700' : percent >= 70 ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
+                        {percent}%
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+              {studentsInClass.length === 0 && (
+                <tr><td colSpan={5} className="px-6 py-10 text-center text-gray-400">Tiada data untuk kelas ini.</td></tr>
               )}
-            </div>
-          ))}
-          {studentsInClass.length === 0 && <p className="px-6 py-10 text-center text-gray-400 text-sm">Tiada pelajar dalam kelas ini.</p>}
+            </tbody>
+          </table>
         </div>
-        <div className="p-4 bg-gray-50 border-t border-gray-200">
-          <button onClick={handleSave} className="w-full py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">Simpan Kehadiran</button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

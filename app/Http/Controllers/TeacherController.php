@@ -29,6 +29,7 @@ class TeacherController extends Controller
                 return [
                     'id' => $t->id,
                     'name' => $t->name,
+                    'gender' => $t->gender,
                     'email' => $t->email,
                     'phone' => $t->phone,
                     'icNo' => $t->ic_no,
@@ -43,6 +44,7 @@ class TeacherController extends Controller
                     'dependentsCount' => $t->dependents_count,
                     'residence' => $t->residence,
                     'serviceStartDate' => $t->service_start_date,
+                    'userId' => $t->user_id,
                     'classIds' => $t->classIds
                 ];
             }));
@@ -63,6 +65,7 @@ class TeacherController extends Controller
             return [
                 'id' => $t->id,
                 'name' => $t->name,
+                'gender' => $t->gender,
                 'email' => $t->email,
                 'phone' => $t->phone,
                 'icNo' => $t->ic_no,
@@ -77,6 +80,7 @@ class TeacherController extends Controller
                 'dependentsCount' => $t->dependents_count,
                 'residence' => $t->residence,
                 'serviceStartDate' => $t->service_start_date,
+                'userId' => $t->user_id,
                 'classIds' => $t->classIds
             ];
         });
@@ -95,6 +99,7 @@ class TeacherController extends Controller
             'phone' => 'required|string|max:20',
             'icNo' => 'nullable|string|unique:teachers,ic_no', // IC is now optional
             'username' => 'nullable|string|unique:users,name', // User can provide a custom username
+            'gender' => 'nullable|in:M,F',
             'specialization' => 'nullable|string|max:255',
             'status' => 'string|in:Aktif,Tidak Aktif',
             'joinedDate' => 'nullable|date',
@@ -128,6 +133,7 @@ class TeacherController extends Controller
         $data = [
             'user_id' => $user->id,
             'name' => $validated['name'],
+            'gender' => $validated['gender'] ?? 'M',
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'ic_no' => $validated['icNo'] ?? null,
