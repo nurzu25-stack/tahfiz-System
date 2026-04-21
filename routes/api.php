@@ -21,6 +21,10 @@ Route::get('/teacher/students', [StudentController::class, 'getTeacherStudents']
 // Classes
 Route::apiResource('classes', ClassRoomController::class);
 
+// Attendance
+Route::get('/attendance', [\App\Http\Controllers\AttendanceController::class, 'index']);
+Route::post('/attendance/bulk', [\App\Http\Controllers\AttendanceController::class, 'bulkStore']);
+
 // Hafazan Records
 Route::get('/hafazan-records', [HafazanRecordController::class, 'index']);
 Route::post('/hafazan-records', [HafazanRecordController::class, 'store']);
@@ -32,6 +36,26 @@ Route::apiResource('teachers', TeacherController::class);
 Route::apiResource('ai-assessments', AIAssessmentController::class);
 
 // AI Predictions
-Route::get('/ai-predictions/student/{studentId}', [AIPredictionController::class, 'generate']); // changed to use a method that exists
+Route::get('/ai-predictions/student/{studentId}', [AIPredictionController::class, 'generate']); 
 Route::get('/ai-predictions/class/{classId}', [AIPredictionController::class, 'getByClass']);
 Route::post('/ai-predictions/generate/class/{classId}', [AIPredictionController::class, 'generateClass']);
+
+// Parent Portal
+Route::get('/parent/children', [\App\Http\Controllers\ParentController::class, 'getChildren']);
+
+// User & Access Management
+Route::get('/users/pending', [\App\Http\Controllers\UserController::class, 'pendingUsers']);
+Route::post('/users/{id}/approve', [\App\Http\Controllers\UserController::class, 'approveUser']);
+Route::post('/users/{id}/reject', [\App\Http\Controllers\UserController::class, 'rejectUser']);
+Route::get('/users/students-no-account', [\App\Http\Controllers\UserController::class, 'studentsWithoutAccounts']);
+Route::post('/users/student-account', [\App\Http\Controllers\UserController::class, 'createStudentAccount']);
+
+// Miscellaneous
+Route::get('/students/dashboard/{id}', [StudentController::class, 'studentDashboard']);
+Route::get('/notifications', function() { return response()->json([]); }); // Placeholder for now
+
+// Profile
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show']);
+    Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update']);
+});

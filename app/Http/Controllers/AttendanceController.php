@@ -54,14 +54,21 @@ class AttendanceController extends Controller
      */
     public function index(Request $request)
     {
-        $request->validate([
-            'class_id' => 'required',
-            'date' => 'required|date',
-        ]);
+        $query = Attendance::query();
 
-        $attendances = Attendance::where('class_id', $request->class_id)
-            ->where('date', $request->date)
-            ->get();
+        if ($request->has('student_id')) {
+            $query->where('student_id', $request->student_id);
+        }
+
+        if ($request->has('class_id')) {
+            $query->where('class_id', $request->class_id);
+        }
+
+        if ($request->has('date')) {
+            $query->where('date', $request->date);
+        }
+
+        $attendances = $query->latest('date')->get();
 
         return response()->json($attendances);
     }

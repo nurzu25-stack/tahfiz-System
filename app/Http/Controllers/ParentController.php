@@ -20,12 +20,13 @@ class ParentController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Parent is linked to students via parent_id
-        $children = Student::where('parent_id', $user->id)->get();
+        // Parent is linked to students via ParentProfile
+        $parentProfile = $user->parentProfile;
+        $children = $parentProfile ? $parentProfile->students : collect();
 
         $data = $children->map(function ($student) {
-            $class = ClassRoom::find($student->class_id);
-            $teacher = Teacher::find($student->teacher_id);
+            $class = $student->classRoom;
+            $teacher = $student->teacher;
             
             return [
                 'id' => $student->id,

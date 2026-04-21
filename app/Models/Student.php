@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Student extends Model
 {
     protected $fillable = [
-        'name', 'phone', 'ic_no', 'matric_no', 'intake', 'gender', 'dob', 'age', 'address',
+        'user_id', 'name', 'phone', 'ic_no', 'matric_no', 'intake', 'gender', 'dob', 'age', 'address',
         'marital_status', 'blood_type', 'pob', 'citizenship', 'race', 'religion',
         'education_background', 'emergency_contact_name', 'emergency_contact_phone',
         'family_income', 'class_id', 'teacher_id', 'parent_id', 'parent_name', 
-        'parent_phone', 'enrolled_date', 'juzuk_completed', 'intake_juzuk', 
+        'parent_phone', 'parent_ic', 'enrolled_date', 'juzuk_completed', 'intake_juzuk', 
         'status', 'medical_history', 'admission_type', 'ranking',
         'interview_date', 'interview_type', 'interview_time', 'interview_location', 'hafazan_mark', 'tajwid_mark', 'akhlaq_mark', 'notes'
     ];
@@ -30,5 +30,15 @@ class Student extends Model
     public function teacher()
     {
         return $this->belongsTo(Teacher::class, 'teacher_id');
+    }
+
+    public function parentProfile()
+    {
+        return $this->belongsTo(ParentProfile::class, 'parent_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

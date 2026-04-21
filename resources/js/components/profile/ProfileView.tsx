@@ -56,6 +56,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
     serviceStartDate: '',
     residence: '',
     dependentsCount: 0,
+    // Account Security
+    username: '',
+    current_password: '',
+    password: '',
+    password_confirmation: '',
   });
 
   useEffect(() => {
@@ -75,7 +80,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
       setStudent(sData);
 
       setFormData({
-        name: u.name || '',
+        name: u.full_name || u.name || '',
         email: u.email || '',
         phone: u.phone || tData?.phone || sData?.phone || '', 
         address: u.address || '',
@@ -114,6 +119,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
         serviceStartDate: tData?.service_start_date || '',
         residence: tData?.residence || '',
         dependentsCount: tData?.dependents_count || 0,
+        // Account Security
+        username: u.name || '',
+        current_password: '',
+        password: '',
+        password_confirmation: '',
       });
     } catch (err) {
       console.error('Failed to fetch profile', err);
@@ -124,7 +134,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
 
   const handleSave = async () => {
     try {
-      const payload = { ...formData };
+      const payload = { 
+        ...formData,
+        name: formData.username, // Map username back to 'name' for the API
+      };
       await axios.post('/api/profile', payload);
       
       // Update local state and global context
@@ -246,7 +259,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
                
                <div className="space-y-1">
                  {student && renderField('Student ID', user.linkedId || user.id, 'linkedId', 'text', true)}
-                 {renderField('Student Name', formData.name, 'name', 'text', true)}
+                 {user.role === 'parent' && user.children ? (
+                    <div className="border-b border-slate-100 py-3.5 flex flex-col md:flex-row md:items-center">
+                      <span className="w-full md:w-1/3 text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-loose">Nama Anak-anak</span>
+                      <div className="w-full md:w-2/3 flex flex-wrap gap-2">
+                        {user.children.map((c: any) => (
+                          <span key={c.id} className="bg-cyan-50 text-[#6FC7CB] px-3 py-1 rounded-full text-xs font-bold border border-cyan-100 uppercase">{c.name}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    renderField(user.role === 'teacher' ? 'Nama Penuh' : 'Nama Pelajar', formData.name, 'name', 'text', true)
+                  )}
                  {(teacher || student) && renderField('IC/Passport No.', formData.icNo, 'icNo', 'text', true)}
                  {student && (
                    <>
@@ -358,6 +382,34 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ userId }) => {
 
           {/* Contact Details Sidebar */}
           <div className="space-y-8">
+             <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 relative overflow-hidden">
+               <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-400"></div>
+               <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                 <span className="text-amber-400">●</span> ACCOUNT SECURITY
+               </h2>
+               
+               <div className="space-y-1">
+                 {renderField('Username (Login ID)', formData.username, 'username')}
+                 {isEditing && (
+                   <div className="mt-6 p-6 bg-amber-50 rounded-2xl border border-amber-100">
+                     <p className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-4">Tukar Kata Laluan</p>
+                     {renderField('Kata Laluan Semasa', formData.current_password, 'current_password', 'password')}
+                     {renderField('Kata Laluan Baharu', formData.password, 'password', 'password')}
+                     {renderField('Sahkan Kata Laluan', formData.password_confirmation, 'password_confirmation', 'password')}
+                     <p className="mt-4 text-[11px] text-amber-500 italic leading-relaxed">
+                       * Biarkan kosong jika tidak mahu menukar kata laluan. Kata laluan baharu mestilah sekurang-kurangnya 8 aksara.
+                     </p>
+                   </div>
+                 )}
+                 {!isEditing && (
+                   <div className="border-b border-slate-100 py-3.5 flex flex-col md:flex-row md:items-center">
+                     <span className="w-full md:w-1/3 text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-loose">Password</span>
+                     <span className="text-slate-400 font-medium text-[15px]">********</span>
+                   </div>
+                 )}
+               </div>
+            </div>
+
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 relative overflow-hidden">
                <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-300"></div>
                <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">

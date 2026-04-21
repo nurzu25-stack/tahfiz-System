@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class HafazanRecord extends Model
 {
     protected $fillable = [
-        'student_id', 'teacher_id', 'date',
+        'student_id', 'teacher_id', 'class_room_id', 'date',
         'sabaq_surah', 'sabaq_from', 'sabaq_to', 'sabaq_grade',
         'sabaqi_surah', 'sabaqi_from', 'sabaqi_to', 'sabaqi_grade', // Sabaq Para
         'manzil_surah', 'manzil_from', 'manzil_to', 'manzil_grade', // Dhor
@@ -22,5 +22,10 @@ class HafazanRecord extends Model
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);
+    }
+
+    public function classRoom()
+    {
+        return $this->belongsTo(ClassRoom::class);
     }
 }

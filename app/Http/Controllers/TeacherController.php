@@ -91,9 +91,9 @@ class TeacherController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:teachers,email',
+            'email' => 'required|email|unique:users,email', // Check uniqueness in users table
             'phone' => 'required|string|max:20',
-            'icNo' => 'nullable|string',
+            'icNo' => 'required|string|unique:teachers,ic_no', // IC is mandatory for account creation
             'specialization' => 'nullable|string|max:255',
             'status' => 'string|in:Aktif,Tidak Aktif',
             'joinedDate' => 'nullable|date',
@@ -107,11 +107,23 @@ class TeacherController extends Controller
             'serviceStartDate' => 'nullable|date',
         ]);
 
+        // 1. Create User Account
+        $user = \App\Models\User::create([
+            'name' => $validated['icNo'], // IC as initial username
+            'full_name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => \Illuminate\Support\Facades\Hash::make($validated['icNo']), // IC as initial password
+            'role' => 'teacher',
+            'status' => 'active',
+        ]);
+
+        // 2. Create Teacher Profile
         $data = [
+            'user_id' => $user->id,
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
-            'ic_no' => $validated['icNo'] ?? null,
+            'ic_no' => $validated['icNo'],
             'specialization' => $validated['specialization'] ?? null,
             'status' => $validated['status'] ?? 'Aktif',
             'joined_date' => $validated['joinedDate'] ?? now()->format('Y-m-d'),

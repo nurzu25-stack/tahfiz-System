@@ -9,7 +9,7 @@ class Teacher extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'name', 'email', 'phone', 'ic_no', 'specialization', 
+        'user_id', 'name', 'email', 'phone', 'ic_no', 'specialization', 
         'status', 'joined_date', 'qualification', 'experience',
         'medical_history', 'emergency_contact_name', 'emergency_contact_phone',
         'dependents_count', 'residence', 'service_start_date'
@@ -20,6 +20,13 @@ class Teacher extends Model
      */
     public function classes()
     {
-        return $this->hasMany(ClassRoom::class);
+        return $this->belongsToMany(ClassRoom::class, 'class_teacher', 'teacher_id', 'class_room_id')
+                    ->withPivot('is_primary')
+                    ->withTimestamps();
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

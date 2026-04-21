@@ -22,13 +22,20 @@ class ProfileController extends Controller
         }
 
         $data = $user->toArray();
+        $data['name'] = $user->full_name ?: $user->name; // Prefer full_name for display
+        $data['username'] = $user->name; // Keep IC as username
         
         if ($user->role === 'teacher') {
-            $teacher = Teacher::where('email', $user->email)->first();
-            $data['teacher_data'] = $teacher;
+            $data['teacher_data'] = $user->teacher;
+        } elseif ($user->role === 'parent') {
+            $parentProfile = $user->parentProfile;
+            $data['parent_data'] = $parentProfile;
+            if ($parentProfile) {
+                $children = $parentProfile->students;
+                $data['children'] = $children->map(fn($c) => ['id' => $c->id, 'name' => $c->name]);
+            }
         } elseif ($user->role === 'student') {
-            $student = Student::where('parent_id', $user->id)->orWhere('id', $user->id)->first(); // Simple logic
-            $data['student_data'] = $student;
+            $data['student_data'] = $user->student;
         }
 
         return response()->json($data);
@@ -45,24 +52,30 @@ class ProfileController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
+            'name' => 'sometimes|required|string|max:255|unique:users,name,' . $user->id,
+            'full_name' => 'nullable|string|max:255',
             'email' => 'sometimes|required|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string',
             'address' => 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
+            'current_password' => 'required_with:password|string',
         ]);
 
         if (!empty($validated['password'])) {
+            if (!Hash::check($validated['current_password'], $user->password)) {
+                return response()->json(['message' => 'Kata laluan semasa tidak sah.'], 422);
+            }
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);
         }
+        unset($validated['current_password']);
 
         $user->update($validated);
 
         // If teacher, update teacher record too
         if ($user->role === 'teacher') {
-            $teacher = Teacher::where('email', $user->email)->first();
+            $teacher = $user->teacher;
             if ($teacher) {
                 $teacher->update([
                     'name' => $request->name ?? $teacher->name,
@@ -74,6 +87,20 @@ class ProfileController extends Controller
                     'emergency_contact_name' => $request->emergencyContactName ?? $teacher->emergency_contact_name,
                     'emergency_contact_phone' => $request->emergencyContactPhone ?? $teacher->emergency_contact_phone,
                     'residence' => $request->residence ?? $teacher->residence,
+                ]);
+            }
+        }
+
+        // If parent, update parent record too
+        if ($user->role === 'parent') {
+            $parent = $user->parentProfile;
+            if ($parent) {
+                $parent->update([
+                    'occupation' => $request->job ?? $parent->occupation,
+                    'income' => $request->wage ?? $parent->income,
+                    'phone' => $request->phone ?? $parent->phone,
+                    'address' => $request->address ?? $parent->address,
+                    'relationship_type' => $request->relation ?? $parent->relationship_type,
                 ]);
             }
         }

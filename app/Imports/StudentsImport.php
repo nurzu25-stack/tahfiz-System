@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\Student;
 use App\Models\User;
 use App\Models\ClassRoom;
+use App\Models\ParentProfile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -225,21 +226,38 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 $parentName = $fatherName ?: $motherName;
                 $parentName = str_replace(['(', ')'], '', $parentName); // Clean up "(Father)"
                 $parentIc   = $fatherIc ?: $motherIc;
+                
+                $fatherPhone = $this->pick($row, ['phone_father', 'tel_bapa', 28]);
+                $motherPhone = $this->pick($row, ['phone_mother', 'tel_ibu', 37]);
+                $parentPhone = $fatherPhone ?: $motherPhone;
 
-                // ── Parent User ──
-                $parentId = null;
+                // ── Parent User & Profile ──
+                $parentProfileId = null;
                 if ($parentIc && strlen($parentIc) >= 6) {
                     $parentEmail = $parentIc . '@parent.tahfiz.edu.my';
-                    $parentUser  = User::updateOrCreate(
+                    
+                    // Create User Account (Central identity)
+                    $parentUser = User::updateOrCreate(
                         ['email' => $parentEmail],
                         [
-                            'name'     => trim($parentName) ?: 'Ibu Bapa',
-                            'password' => Hash::make($parentIc),
-                            'role'     => 'parent',
-                            'status'   => 'active',
+                            'name'      => $parentIc, // Use IC as Username
+                            'full_name' => $parentName,
+                            'password'  => Hash::make($parentIc),
+                            'role'      => 'parent',
+                            'status'    => 'active',
                         ]
                     );
-                    $parentId = $parentUser->id;
+
+                    // Create Parent Profile (Specific details)
+                    $parentProfile = ParentProfile::updateOrCreate(
+                        ['user_id' => $parentUser->id],
+                        [
+                            'ic_no' => $parentIc,
+                            'phone' => $parentPhone,
+                            'relationship_type' => 'parent',
+                        ]
+                    );
+                    $parentProfileId = $parentProfile->id;
                 }
 
                 // ── Create/Update Student ──
@@ -256,14 +274,16 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                     'intake_juzuk'     => $intakeJuzuk,
                     'juzuk_completed'  => $intakeJuzuk,
                     'status'           => $status,
-                    'parent_id'        => $parentId,
+                    'parent_id'        => $parentProfileId,
                     'parent_name'      => $parentName ?: null,
+                    'parent_ic'        => $parentIc ?: null,
+                    'parent_phone'     => $parentPhone ?: null,
                     'admission_type'   => 'tetap',
                 ];
 
                 $existingStudent = $icNo ? Student::where('ic_no', $icNo)->first() : null;
                 if ($existingStudent) {
-                    if (!$parentId) unset($studentData['parent_id']);
+                    if (!$parentProfileId) unset($studentData['parent_id']);
                     if (!$parentName) unset($studentData['parent_name']);
                     if (!$classId) unset($studentData['class_id']);
                     $existingStudent->update($studentData);
