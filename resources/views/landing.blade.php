@@ -1087,6 +1087,42 @@
             </div>
         </div>
     </section>
+    
+    <!-- STATS COUNTER SECTION -->
+    <section style="background: #00a693; padding: 4rem 1rem; position: relative; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.25rem;">
+            
+            <div style="background: #0b5b54; padding: 2rem 1rem; border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;" onmouseenter="this.style.transform='translateY(-8px)'; this.style.backgroundColor='#0e6e65';" onmouseleave="this.style.transform='translateY(0)'; this.style.backgroundColor='#0b5b54';">
+                <div style="font-size: 2.5rem; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; margin-bottom: 0.25rem;">2018</div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Ditubuhkan</div>
+            </div>
+
+            <div style="background: #0b5b54; padding: 2rem 1rem; border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;" onmouseenter="this.style.transform='translateY(-8px)'; this.style.backgroundColor='#0e6e65';" onmouseleave="this.style.transform='translateY(0)'; this.style.backgroundColor='#0b5b54';">
+                <div style="font-size: 2.5rem; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; margin-bottom: 0.25rem;">10</div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Cawangan</div>
+            </div>
+
+            <div style="background: #0b5b54; padding: 2rem 1rem; border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;" onmouseenter="this.style.transform='translateY(-8px)'; this.style.backgroundColor='#0e6e65';" onmouseleave="this.style.transform='translateY(0)'; this.style.backgroundColor='#0b5b54';">
+                <div style="font-size: 2.5rem; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; margin-bottom: 0.25rem;">20</div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">bakal dibuka</div>
+            </div>
+
+            <div style="background: #0b5b54; padding: 2rem 1rem; border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;" onmouseenter="this.style.transform='translateY(-8px)'; this.style.backgroundColor='#0e6e65';" onmouseleave="this.style.transform='translateY(0)'; this.style.backgroundColor='#0b5b54';">
+                <div style="font-size: 2.5rem; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; margin-bottom: 0.25rem;">564</div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Al-Hafiz</div>
+            </div>
+
+            <div style="background: #0b5b54; padding: 2rem 1rem; border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;" onmouseenter="this.style.transform='translateY(-8px)'; this.style.backgroundColor='#0e6e65';" onmouseleave="this.style.transform='translateY(0)'; this.style.backgroundColor='#0b5b54';">
+                <div style="font-size: 2.5rem; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; margin-bottom: 0.25rem;">36</div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Syahadah</div>
+            </div>
+
+            <div style="background: #0b5b54; padding: 2rem 1rem; border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;" onmouseenter="this.style.transform='translateY(-8px)'; this.style.backgroundColor='#0e6e65';" onmouseleave="this.style.transform='translateY(0)'; this.style.backgroundColor='#0b5b54';">
+                <div style="font-size: 2.5rem; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; margin-bottom: 0.25rem;">637</div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Pelajar</div>
+            </div>
+        </div>
+    </section>
 
     <!-- MEDIA VIDEO SECTION -->
     <section id="media" style="padding: 6rem 1rem; background: linear-gradient(135deg, #f8fafc 0%, #e8f4f5 100%);">
@@ -1228,6 +1264,79 @@
         </div>
     </section>
 
+    <!-- ONLINE TAHFIZ PROGRAMS SECTION -->
+    <section id="online-programs" style="padding: 6rem 1rem; background: #f1f5f9;">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+            <p style="text-transform: uppercase; letter-spacing: 0.1em; color: #6FC7CB; font-weight: 700; margin-bottom: 0.5rem;">Pembelajaran Digital</p>
+            <h2 style="font-size: 2.5rem; font-weight: 800; color: #5FB3B7; margin-bottom: 4rem;">Program Tahfiz Online AKMAL</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2.5rem; align-items: stretch;">
+                
+                <!-- PREMIUM (FULL TIME) -->
+                <div style="background: white; border-radius: 32px; padding: 3rem 2rem; border: 2px solid #5FB3B7; box-shadow: 0 25px 50px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column;">
+                    <div style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: #5FB3B7; color: white; padding: 0.5rem 1.5rem; border-radius: 999px; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.1em;">FULL TIME</div>
+                    <h3 style="font-size: 1.6rem; color: #1e293b; margin-bottom: 0.5rem; font-weight: 800;">AKMAL Tahfiz Online Premium</h3>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 2rem;">Fokus khatam hafazan dalam tempoh singkat dengan bimbingan intensif.</p>
+                    
+                    <div style="text-align: left; margin-bottom: 2.5rem; flex-grow: 1;">
+                        <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; color: #4b5563; font-size: 0.95rem;">
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>Bermula 10 Tahun & Ke Atas (❌had umur)</span></li>
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>Lelaki & Perempuan</span></li>
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>6 Hari seminggu (Ahad – Jumaat)</span></li>
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>3 rukun (Sabaq, Sabqi, Manzil)</span></li>
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>Kelas secara Halaqah (10-12 Max 1 Guru)</span></li>
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>Perlu buat penangguhan sesi akademik</span></li>
+                            <li style="display: flex; gap: 0.75rem;">⭐ <strong style="color: #5FB3B7;">Target Khatam Hafazan &lt; 1 Tahun</strong></li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #f8fafc; border-radius: 20px; padding: 1.5rem; border: 1px solid #e2e8f0;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Senarai Yuran</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                            <span style="font-size: 0.95rem; color: #1e293b; font-weight: 600;">Pendaftaran</span>
+                            <span style="font-size: 1.25rem; color: #5FB3B7; font-weight: 800;">RM 1000</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+                            <span style="font-size: 0.95rem; color: #1e293b; font-weight: 600;">Bulanan</span>
+                            <span style="font-size: 1.25rem; color: #5FB3B7; font-weight: 800;">RM 1050</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ELITE (PART TIME) -->
+                <div style="background: white; border-radius: 32px; padding: 3rem 2rem; border: 1px solid #e2e8f0; box-shadow: 0 15px 30px rgba(0,0,0,0.03); display: flex; flex-direction: column;">
+                    <div style="align-self: center; background: #e2f3f2; color: #5FB3B7; padding: 0.4rem 1.2rem; border-radius: 999px; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.1em; margin-bottom: 2rem;">PART TIME</div>
+                    <h3 style="font-size: 1.6rem; color: #1e293b; margin-bottom: 0.5rem; font-weight: 800;">AKMAL Tahfiz Online Elite</h3>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 2rem;">Sesuai untuk pelajar dan dewasa yang mempunyai komitmen lain.</p>
+                    
+                    <div style="text-align: left; margin-bottom: 2.5rem; flex-grow: 1;">
+                        <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; color: #4b5563; font-size: 0.95rem;">
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>Bermula 10 Tahun & Ke Atas (❌had umur)</span></li>
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>Lelaki & Perempuan</span></li>
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>1 Kali Seminggu (1 Jam sesi kelas)</span></li>
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>Kelas secara One to One (1 Jam)</span></li>
+                            <li style="display: flex; gap: 0.75rem;">✅ <span>Fokus hantar Tasmik hafalan harian</span></li>
+                            <li style="display: flex; gap: 0.75rem;">📘 <span>Modul Murajaah disediakan</span></li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #f8fafc; border-radius: 20px; padding: 1.5rem; border: 1px solid #e2e8f0;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Senarai Yuran</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                            <span style="font-size: 0.95rem; color: #1e293b; font-weight: 600;">Pendaftaran</span>
+                            <span style="font-size: 1.25rem; color: #64748b; font-weight: 800;">RM 300</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+                            <span style="font-size: 0.95rem; color: #1e293b; font-weight: 600;">Bulanan</span>
+                            <span style="font-size: 1.25rem; color: #64748b; font-weight: 800;">RM 500</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
     <!-- LOCATIONS SECTION -->
     <section id="locations" style="padding: 5rem 1rem; background: #f8fafc;">
         <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
@@ -1318,63 +1427,7 @@
         </div>
     </section>
 
-    <!-- AUTH CARD SECTION -->
-    <section class="auth-section" id="auth">
-        <div class="auth-card">
-            <div class="auth-card-left">
-                <div class="auth-title">Access your Tahfiz account</div>
-                <div class="auth-subtitle">Select your role and sign in or register through our secure portal.</div>
 
-                <div class="form-grid" style="margin-top: 1.5rem;">
-                    <a href="/app/role-selection" style="display: block;">
-                        <button type="button" class="btn-primary" style="width: 100%; font-size: 0.95rem; padding: 0.8rem 1.6rem;">
-                            🔐 Login to your account
-                        </button>
-                    </a>
-                    <a href="/app/role-selection?action=register" style="display: block;">
-                        <button type="button" class="btn-secondary" style="width: 100%; font-size: 0.95rem; padding: 0.8rem 1.6rem;">
-                            ✨ Create a new account
-                        </button>
-                    </a>
-                    <div class="auth-footer-text">
-                        You'll be asked to select your role (Admin, Teacher, Parent, or Student) before signing in.
-                    </div>
-                </div>
-            </div>
-
-            <div class="auth-card-right">
-                <div class="auth-right-title">One login for every role</div>
-                <div class="auth-right-text">
-                    Admins, teachers, parents, and students all sign in through the same secure portal,
-                    powered by the Tahfiz Management System.
-                </div>
-                <ul class="auth-right-bullets">
-                    <li><span>✓</span> Centralized authentication</li>
-                    <li><span>✓</span> Role-based access control</li>
-                    <li><span>✓</span> Secure student and hafazan data</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <script>
-        function switchAuthTab(targetId) {
-            const tabs = document.querySelectorAll('.auth-tab');
-            const forms = document.querySelectorAll('.auth-form');
-
-            tabs.forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.target === targetId);
-            });
-
-            forms.forEach(form => {
-                form.classList.toggle('active', form.id === targetId);
-            });
-        }
-
-        document.querySelectorAll('.auth-tab').forEach(tab => {
-            tab.addEventListener('click', () => switchAuthTab(tab.dataset.target));
-        });
-    </script>
 
     <!-- TESTIMONI -->
     <section id="testimoni" style="padding: 80px 1rem; background: #f8fafc;">
@@ -1423,14 +1476,14 @@
                             <div style="width: 40px; height: 40px; background: #E8F6F7; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📍</div>
                             <div>
                                 <h4 style="margin: 0; font-weight: 700;">Lokasi</h4>
-                                <p style="margin: 0.25rem 0 0; color: #64748b; font-size: 0.9rem;">Lot 1096 Jalan 1D/1, Bandar Baru Sungai Buloh, 47000 Sungai Buloh, Selangor</p>
+                                <p style="margin: 0.25rem 0 0; color: #64748b; font-size: 0.9rem;">Lot 2123, Kampung Tebakang Bukit Payung, 21400 Marang, Terengganu</p>
                             </div>
                         </div>
                         <div style="display: flex; gap: 1rem;">
                             <div style="width: 40px; height: 40px; background: #E8F6F7; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📞</div>
                             <div>
                                 <h4 style="margin: 0; font-weight: 700;">Telefon</h4>
-                                <p style="margin: 0.25rem 0 0; color: #64748b; font-size: 0.9rem;">+60 12-657 0773</p>
+                                <p style="margin: 0.25rem 0 0; color: #64748b; font-size: 0.9rem;">+60 11-1987 4963</p>
                             </div>
                         </div>
                         <div style="display: flex; gap: 1rem;">
@@ -1445,7 +1498,7 @@
                 
                 <div style="border-radius: 32px; overflow: hidden; height: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border: 8px solid white;">
                     <iframe 
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3983.823907008332!2d101.5583!3d3.2104!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc47a83d78c339%3A0x6a0c4f80875e5482!2sSungai%20Buloh%2C%20Selangor!5e0!3m2!1sen!2smy!4v1712165000000!5m2!1sen!2smy" 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3972.637!2d103.091!3d5.234!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31b79f8263795b5b%3A0xe9f796d119c4d!2sAkademi%20Al-Quran%20Amalillah!5e0!3m2!1sen!2smy!4v1713750000000!5m2!1sen!2smy" 
                         width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
                 </div>
             </div>
@@ -1471,7 +1524,6 @@
                     <li><a href="#" style="color: inherit; transition: color 0.2s;">Utama</a></li>
                     <li><a href="#testimoni" style="color: inherit; transition: color 0.2s;">Testimoni</a></li>
                     <li><a href="#contact" style="color: inherit; transition: color 0.2s;">Hubungi</a></li>
-                    <li><a href="#auth" style="color: inherit; transition: color 0.2s;">Akses Portal</a></li>
                 </ul>
             </div>
         </div>

@@ -2,11 +2,17 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useAppStore } from '../../store/AppContext';
 import { Download, User } from 'lucide-react';
 
-export function StudentQRCode() {
+interface StudentQRCodeProps {
+  student?: any;
+}
+
+export function StudentQRCode({ student: propStudent }: StudentQRCodeProps) {
   const { state } = useAppStore();
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
+  
+  // Use prop if provided, otherwise fallback to store logic
   const studentUser = state.users.find(u => u.name === authUser.name && u.role === 'student') ?? state.users.find(u => u.role === 'student')!;
-  const student = state.students.find(s => s.id === studentUser?.linkedId) ?? state.students[0];
+  const student = propStudent ?? (state.students.find(s => s.id === studentUser?.linkedId) ?? state.students[0]);
 
   const qrValue = JSON.stringify({
     type: 'student_attendance',
