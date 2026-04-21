@@ -40,9 +40,9 @@ Route::apiResource('teachers', TeacherController::class);
 Route::apiResource('ai-assessments', AIAssessmentController::class);
 
 // AI Predictions
-Route::get('/ai-predictions/student/{studentId}', [AIPredictionController::class, 'generate']); 
-Route::get('/ai-predictions/class/{classId}', [AIPredictionController::class, 'getByClass']);
-Route::post('/ai-predictions/generate/class/{classId}', [AIPredictionController::class, 'generateClass']);
+Route::post('/ai-predictions/generate', [AIController::class, 'generateForStudent']);
+Route::get('/ai-predictions/student/{studentId}', [AIController::class, 'getPrediction']); 
+Route::get('/ai-predictions/class/{classId}', [AIController::class, 'getClassPredictions']);
 
 // Parent Portal
 Route::get('/parent/children', [\App\Http\Controllers\ParentController::class, 'getChildren']);

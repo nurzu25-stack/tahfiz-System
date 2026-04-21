@@ -8,10 +8,27 @@ use App\Models\Attendance;
 use App\Models\Payment;
 use App\Models\AIPrediction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class AIController extends Controller
 {
+    public function generateForStudent(Request $request)
+    {
+        Log::info('Generating AI prediction for student', ['request' => $request->all()]);
+        
+        try {
+            $request->validate([
+                'student_id' => 'required|exists:students,id'
+            ]);
+
+            return $this->getPrediction($request->student_id);
+        } catch (\Exception $e) {
+            Log::error('AI Generation Failed: ' . $e->getMessage());
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
     public function getPrediction(string $studentId)
     {
         $student = Student::findOrFail($studentId);

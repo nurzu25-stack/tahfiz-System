@@ -22,13 +22,21 @@ export function StudentAIPrediction() {
   const [loading, setLoading] = useState(true);
 
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
-  const studentUser = state.users.find(u => u.name === authUser.name && u.role === 'student') ?? state.users.find(u => u.role === 'student')!;
-  const student = state.students.find(s => s.id === studentUser?.linkedId) ?? state.students[0];
-  const streak = getStudentStreak(state, student?.id ?? '');
+  const studentUser = state.users?.find(u => u.name === authUser.name && u.role === 'student') 
+    || state.users?.find(u => u.role === 'student');
+  
+  const student = state.students?.find(s => s.id === studentUser?.linkedId) 
+    || state.students?.[0];
+    
+  console.log('AI Debug:', { studentUser, student, authUser });
+
+  const streak = student ? getStudentStreak(state, String(student.id)) : 0;
 
   useEffect(() => {
     if (student?.id) {
       fetchPrediction(String(student.id));
+    } else {
+      setLoading(false);
     }
   }, [student?.id]);
 
@@ -50,14 +58,17 @@ export function StudentAIPrediction() {
       setLoading(true);
       const resp = await axios.post('/api/ai-predictions/generate', { student_id: student.id });
       setPrediction(resp.data);
-    } catch (err) {
-      alert('Gagal menjana ramalan AI.');
+    } catch (err: any) {
+      console.error('AI Generation Error:', err);
+      const msg = err.response?.data?.message || 'Sila pastikan anda mempunyai rekod hafazan yang mencukupi untuk dianalisis.';
+      alert('Gagal menjana ramalan AI: ' + msg);
     } finally {
       setLoading(false);
     }
   };
 
   const trendColor = (t: string) => {
+    if (!t) return 'from-slate-400 to-slate-600';
     const trend = t.toLowerCase();
     if (trend.includes('cemerlang') || trend === 'mumtaz') return 'from-green-400 to-emerald-600';
     if (trend.includes('baik') || trend === 'jayyid') return 'from-blue-400 to-blue-600';
@@ -65,6 +76,7 @@ export function StudentAIPrediction() {
   }
 
   const trendBg = (t: string) => {
+    if (!t) return 'bg-slate-50 border-slate-300 text-slate-800';
     const trend = t.toLowerCase();
     if (trend.includes('cemerlang') || trend === 'mumtaz') return 'bg-green-50 border-green-300 text-green-800';
     if (trend.includes('baik') || trend === 'jayyid') return 'bg-blue-50 border-blue-300 text-blue-800';
@@ -72,6 +84,7 @@ export function StudentAIPrediction() {
   }
 
   if (loading) return <div className="p-8 text-slate-500 text-center">Menjana analisis AI anda...</div>;
+  if (!student) return <div className="p-8 text-slate-500 text-center">Maklumat profil pelajar tidak dijumpai.</div>;
 
   return (
     <div className="space-y-6">

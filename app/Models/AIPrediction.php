@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AIPrediction extends Model
 {
+    protected $table = 'ai_predictions';
+
     protected $fillable = [
         'student_id',
         'current_progress',
