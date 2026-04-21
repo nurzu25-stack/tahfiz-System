@@ -9,7 +9,11 @@ use App\Http\Controllers\ClassRoomController;
 use App\Http\Controllers\AIAssessmentController;
 use App\Http\Controllers\AIPredictionController;
 use App\Http\Controllers\AIController;
+use App\Http\Controllers\AchievementController;
+use App\Http\Controllers\FinancialAnalyticsController;
 
+Route::get('/achievements/student/{studentId}', [AchievementController::class, 'index']);
+Route::get('/analytics/financial', [FinancialAnalyticsController::class, 'index']);
 Route::post('/ai/import-alumni', [AIController::class, 'importAlumni']);
 Route::get('/ai/benchmarks', [AIController::class, 'getAIBenchmarks']);
 

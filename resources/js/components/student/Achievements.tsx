@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Trophy, Award, Star, Shield, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useAppStore, getStudentRank, getClassLeaderboard } from '../../store/AppContext';
+import { CertificateModal } from '../shared/CertificateModal';
 
 export function Achievements() {
   const { state } = useAppStore();
   const [loading, setLoading] = useState(true);
   const [earnedAchievements, setEarnedAchievements] = useState<any[]>([]);
+  const [selectedCert, setSelectedCert] = useState<any>(null);
   
   const authUser = JSON.parse(sessionStorage.getItem('authUser') || '{}');
   const studentUser = state.users.find(u => u.name === authUser.name && u.role === 'student') ?? state.users.find(u => u.role === 'student')!;
@@ -38,18 +40,18 @@ export function Achievements() {
   const rank = getStudentRank(dashboardData?.juzukCompleted ?? 0);
   // leaderboard is now state-based
 
-  // Badge definitions
+  // Badge definitions synced with backend
   const badges = [
-    { name: 'Warrior', icon: '🛡️', description: 'Tamat 1 Juzuk', earnedName: 'Warrior' },
-    { name: 'Elite', icon: '🥈', description: 'Tamat 5 Juzuk', earnedName: 'Elite' },
-    { name: 'Legend Al-Hafiz', icon: '🏆', description: 'Tamat 30 Juzuk', earnedName: 'Legend Al-Hafiz' },
+    { name: 'Juzuk Opener', icon: '📖', description: 'Tamat juzuk pertama', earnedName: 'Juzuk Opener' },
+    { name: 'Warrior', icon: '🛡️', description: 'Tamat 5 Juzuk', earnedName: 'Warrior' },
+    { name: 'Hafiz Junior', icon: '✨', description: 'Tamat 15 Juzuk', earnedName: 'Hafiz Junior' },
+    { name: 'Al-Hafiz', icon: '🏆', description: 'Tamat 30 Juzuk', earnedName: 'Al-Hafiz' },
   ];
 
   const specialtyAchievements = [
-    { title: 'Kehadiran Terbaik', description: '30 hari berturutan', icon: Star, color: 'blue', earnedName: 'Kehadiran Terbaik' },
-    { title: 'Pelajar Pantas', description: 'Hafal 50 Ayat dalam sehari', icon: Award, color: 'green', earnedName: 'Pelajar Pantas' },
-    { title: 'Raja Konsistensi', description: '100 hari belajar', icon: Trophy, color: 'purple', earnedName: 'Raja Konsistensi' },
-    { title: 'Anugerah Kecemerlangan', description: '10 gred Mumtaz berturutan', icon: Shield, color: 'orange', earnedName: 'Anugerah Kecemerlangan' },
+    { title: 'Raja Sabaq', description: 'Hafal 15+ ayat dalam sehari', icon: Award, color: 'green', earnedName: 'Raja Sabaq' },
+    { title: 'Istiqamah Hafiz', description: 'Hantar rekod 7 hari berturut-turut', icon: Trophy, color: 'purple', earnedName: 'Istiqamah Hafiz' },
+    { title: 'Mumtaz Award', description: '5 gred Mumtaz berturutan', icon: Star, color: 'blue', earnedName: 'Mumtaz Award' },
   ];
 
   const isEarned = (name: string) => earnedAchievements.some(a => a.name === name);
@@ -101,18 +103,24 @@ export function Achievements() {
       {/* AKMAL Badges */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Sistem Lencana AKMAL</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {badges.map(badge => {
             const earned = isEarned(badge.earnedName);
             const date = getEarnedDate(badge.earnedName);
+            const rawAchievement = earnedAchievements.find(a => a.name === badge.earnedName);
+
             return (
-              <div key={badge.name} className={`p-6 rounded-xl border-2 text-center ${earned ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
+              <div 
+                key={badge.name} 
+                onClick={() => earned && setSelectedCert({ name: student.name, achievement: badge.name, date: rawAchievement?.earned_at || new Date().toISOString() })}
+                className={`p-6 rounded-xl border-2 text-center transition-all cursor-pointer ${earned ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300 hover:scale-105 hover:shadow-lg' : 'bg-gray-50 border-gray-200 opacity-60 grayscale'}`}
+              >
                 <div className="text-5xl mb-3">{badge.icon}</div>
                 <h4 className="font-semibold text-gray-900 text-lg">{badge.name}</h4>
                 <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
                 <div className="mt-3">
                   {earned
-                    ? <div className="px-3 py-1 bg-green-600 text-white rounded-full text-xs font-medium inline-block">✓ Diperoleh: {date}</div>
+                    ? <div className="px-3 py-1 bg-green-600 text-white rounded-full text-xs font-medium inline-block">✓ LIHAT SIJIL</div>
                     : <div className="px-3 py-1 bg-gray-300 text-gray-600 rounded-full text-xs font-medium inline-block">🔒 Terkunci</div>}
                 </div>
               </div>
@@ -173,6 +181,14 @@ export function Achievements() {
             : `Anda #${leaderboard.findIndex(e => e.id === student?.id) + 1} dalam kelas! ${rank.progressToNext < 100 ? `Selesaikan ${Math.ceil((29 - (student?.juzukCompleted ?? 0)) * 0.3)} juzuk lagi untuk mencapai pangkat seterusnya!` : ''}`}
         </p>
       </div>
+
+      <CertificateModal
+        isOpen={!!selectedCert}
+        onClose={() => setSelectedCert(null)}
+        studentName={selectedCert?.name || ''}
+        achievementName={selectedCert?.achievement || ''}
+        date={selectedCert?.date || ''}
+      />
     </div>
   );
 }

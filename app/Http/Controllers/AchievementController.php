@@ -6,123 +6,125 @@ use App\Models\Achievement;
 use App\Models\Student;
 use App\Models\HafazanRecord;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class AchievementController extends Controller
 {
+    /**
+     * Get achievements for a student.
+     */
     public function index($studentId)
     {
-        $this->sync($studentId);
-        return Achievement::where('student_id', $studentId)->get();
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'name' => 'required|string',
-            'type' => 'required|string',
-        ]);
-
-        $achievement = Achievement::firstOrCreate([
-            'student_id' => $validated['student_id'],
-            'name' => $validated['name'],
-            'type' => $validated['type']
-        ], [
-            'earned_at' => now(),
-        ]);
-
-        return response()->json($achievement, 201);
-    }
-
-    public function destroy($id)
-    {
-        $achievement = Achievement::findOrFail($id);
-        $achievement->delete();
-        return response()->json(null, 204);
-    }
-
-    public function sync($studentId)
-    {
-        $student = Student::findOrFail($studentId);
-        $records = HafazanRecord::where('student_id', $studentId)->get();
+        // Sync achievements first to ensure they are up to date
+        $this->syncStudentAchievements($studentId);
         
-        $achievements = [];
+        $achievements = Achievement::where('student_id', $studentId)
+            ->orderBy('earned_at', 'desc')
+            ->get();
+            
+        return response()->json($achievements);
+    }
 
-        // 1. Juzuk Badges
-        if ($student->juzuk_completed >= 1) $achievements[] = ['name' => 'Warrior', 'type' => 'badge'];
-        if ($student->juzuk_completed >= 5) $achievements[] = ['name' => 'Elite', 'type' => 'badge'];
-        if ($student->juzuk_completed >= 30) $achievements[] = ['name' => 'Legend Al-Hafiz', 'type' => 'badge'];
-
-        // 2. Consistency / Streak
-        $streak = $this->calculateStreak($studentId);
-        if ($streak >= 30) $achievements[] = ['name' => 'Kehadiran Terbaik', 'type' => 'achievement'];
+    /**
+     * Logic to evaluate and award achievements.
+     */
+    public function syncStudentAchievements($studentId)
+    {
+        $student = Student::with(['hafazanRecords' => function($q) {
+            $q->orderBy('date', 'desc');
+        }])->findOrFail($studentId);
         
-        // 3. Quick Learner
-        $maxAyah = $records->max('ayah_count');
-        if ($maxAyah >= 50) $achievements[] = ['name' => 'Pelajar Pantas', 'type' => 'achievement'];
+        $records = $student->hafazanRecords;
+        
+        // --- 1. Milestone: Juzuk Completion ---
+        $this->checkJuzukMilestones($student);
+        
+        // --- 2. High Performance: Raja Sabaq ---
+        $this->checkRajaSabaq($student, $records);
+        
+        // --- 3. Consistency: Istiqamah (Streak) ---
+        $this->checkStreakAchievement($student, $records);
+        
+        // --- 4. Quality: Mumtaz Award ---
+        $this->checkQualityAchievement($student, $records);
+    }
 
-        // 4. Consistency King (100 days)
-        $uniqueDays = $records->pluck('date')->unique()->count();
-        if ($uniqueDays >= 100) $achievements[] = ['name' => 'Raja Konsistensi', 'type' => 'achievement'];
+    private function checkJuzukMilestones($student)
+    {
+        $milestones = [
+            1 => ['name' => 'Juzuk Opener', 'desc' => 'Tamat juzuk pertama. Tahniah!'],
+            5 => ['name' => 'Warrior', 'desc' => 'Berjaya menamatkan 5 juzuk.'],
+            15 => ['name' => 'Hafiz Junior', 'desc' => 'Separuh jalan! 15 juzuk telah dihafal.'],
+            30 => ['name' => 'Al-Hafiz', 'desc' => 'MashaAllah! Tamat 30 Juzuk Al-Quran.'],
+        ];
 
-        // 5. Excellence (10 Mumtaz)
-        // Note: grade is stored in sabaq column as json? or separate table?
-        // Checking existing records...
-        $mumtazCount = 0;
-        foreach($records as $record) {
-            $sabaq = is_string($record->sabaq) ? json_decode($record->sabaq, true) : $record->sabaq;
-            if (isset($sabaq['grade']) && $sabaq['grade'] === 'Mumtaz') {
-                $mumtazCount++;
+        foreach ($milestones as $juzuk => $info) {
+            if ($student->juzuk_completed >= $juzuk) {
+                Achievement::firstOrCreate(
+                    ['student_id' => $student->id, 'name' => $info['name']],
+                    ['type' => 'badge', 'meta' => ['description' => $info['desc']]]
+                );
             }
         }
-        if ($mumtazCount >= 10) $achievements[] = ['name' => 'Anugerah Kecemerlangan', 'type' => 'achievement'];
+    }
 
-        // Store new achievements
-        foreach ($achievements as $a) {
-            Achievement::firstOrCreate([
-                'student_id' => $studentId,
-                'name' => $a['name'],
-                'type' => $a['type']
-            ]);
+    private function checkRajaSabaq($student, $records)
+    {
+        $hasHighSabaq = $records->contains(function($r) {
+            return $r->ayah_count >= 15;
+        });
+
+        if ($hasHighSabaq) {
+            Achievement::firstOrCreate(
+                ['student_id' => $student->id, 'name' => 'Raja Sabaq'],
+                ['type' => 'badge', 'meta' => ['description' => 'Berjaya menghafal 15+ ayat dalam satu sesi.']]
+            );
         }
     }
 
-    private function calculateStreak($studentId)
+    private function checkStreakAchievement($student, $records)
     {
-        $dates = HafazanRecord::where('student_id', $studentId)
-            ->orderBy('date', 'desc')
-            ->pluck('date')
-            ->unique()
-            ->toArray();
-
-        if (empty($dates)) return 0;
+        // Simple 7-day streak check
+        $uniqueDates = $records->pluck('date')->unique()->sortDesc();
+        if ($uniqueDates->count() < 7) return;
 
         $streak = 0;
-        $currentDate = new \DateTime();
-        
-        // check if last record was today or yesterday
-        $lastRecordDate = new \DateTime($dates[0]);
-        $diff = $currentDate->diff($lastRecordDate)->days;
-        
-        if ($diff > 1) return 0; // Streak broken
-
         $prevDate = null;
-        foreach ($dates as $dateStr) {
-            $date = new \DateTime($dateStr);
-            if ($prevDate === null) {
+        
+        foreach ($uniqueDates as $d) {
+            $current = Carbon::parse($d);
+            if (!$prevDate) {
                 $streak = 1;
             } else {
-                $interval = $prevDate->diff($date);
-                if ($interval->days === 1) {
+                if ($prevDate->diffInDays($current) <= 1) {
                     $streak++;
                 } else {
                     break;
                 }
             }
-            $prevDate = $date;
+            $prevDate = $current;
         }
 
-        return $streak;
+        if ($streak >= 7) {
+            Achievement::firstOrCreate(
+                ['student_id' => $student->id, 'name' => 'Istiqamah Hafiz'],
+                ['type' => 'badge', 'meta' => ['description' => 'Hantar rekod hafazan 7 hari berturut-turut!']]
+            );
+        }
+    }
+
+    private function checkQualityAchievement($student, $records)
+    {
+        $mumtazCount = 0;
+        foreach ($records->take(5) as $r) {
+            if ($r->sabaq_grade === 'Mumtaz') $mumtazCount++;
+        }
+
+        if ($mumtazCount >= 5) {
+            Achievement::firstOrCreate(
+                ['student_id' => $student->id, 'name' => 'Mumtaz Award'],
+                ['type' => 'badge', 'meta' => ['description' => '5 rekod terakhir berpangkat Mumtaz. Kualiti hebat!']]
+            );
+        }
     }
 }

@@ -9,6 +9,7 @@ import { AIPrediction } from './AIPrediction';
 import { EnrollmentHub } from './EnrollmentHub';
 import { UserApproval } from './UserApproval';
 import { ManageParents } from './ManageParents';
+import { FinancialAnalytics } from './FinancialAnalytics';
 import { useAppStore, getMonthlyRevenue, timeAgo } from '../../store/AppContext';
 
 interface AdminDashboardProps {
@@ -16,7 +17,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminView = 'home' | 'students' | 'enrollment' | 'teachers' | 'parents' | 'payments' | 'reports' | 'ai' | 'users' | 'hostels';
+type AdminView = 'home' | 'students' | 'enrollment' | 'teachers' | 'parents' | 'payments' | 'reports' | 'ai' | 'users' | 'hostels' | 'analytics';
 
 const navItems: { id: AdminView; label: string; icon: React.ReactNode }[] = [
   { id: 'home',       label: 'Papan Pemuka',        icon: <LayoutDashboard size={20} /> },
@@ -29,6 +30,7 @@ const navItems: { id: AdminView; label: string; icon: React.ReactNode }[] = [
   { id: 'payments',   label: 'Bayaran & Invois',     icon: <DollarSign size={20} /> },
   { id: 'reports',    label: 'Lihat Laporan',        icon: <FileText size={20} /> },
   { id: 'ai',         label: 'Ramalan AI',           icon: <Brain size={20} /> },
+  { id: 'analytics',  label: 'Analitik Kewangan',    icon: <DollarSign size={20} /> },
 ];
 
 export function AdminDashboard({ userName, onLogout }: AdminDashboardProps) {
@@ -61,6 +63,7 @@ export function AdminDashboard({ userName, onLogout }: AdminDashboardProps) {
       case 'reports':    return <ViewReports />;
       case 'ai':         return <AIPrediction />;
       case 'users':      return <UserApproval />;
+      case 'analytics':  return <FinancialAnalytics />;
       default:
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

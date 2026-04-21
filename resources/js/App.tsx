@@ -19,9 +19,10 @@ function getSessionUser() {
 }
 
 function handleLogout() {
-  sessionStorage.removeItem('authUser');
+  sessionStorage.clear();
   localStorage.removeItem('authUser');
-  window.location.href = '/';
+  // Use replace to prevent the logout action from being in history
+  window.location.replace('/app/role-selection');
 }
 
 /** Guard: redirect to role-selection if not authenticated */
