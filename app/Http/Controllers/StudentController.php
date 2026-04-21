@@ -19,8 +19,8 @@ class StudentController extends Controller
     {
         $classId = $request->query('classId');
         $students = $classId 
-            ? Student::with(['classRoom.teacher', 'teacher'])->where('class_id', $classId)->get() 
-            : Student::with(['classRoom.teacher', 'teacher'])->get();
+            ? Student::with(['classRoom.primaryTeacher', 'teacher'])->where('class_id', $classId)->get() 
+            : Student::with(['classRoom.primaryTeacher', 'teacher'])->get();
         // Map snake_case to camelCase for frontend
         return $students->map(function ($s) {
             return [
@@ -57,7 +57,7 @@ class StudentController extends Controller
                 'matricNo' => $s->matric_no,
                 'matric_no' => $s->matric_no,
                 'intake' => $s->intake,
-                'teacherName' => $s->teacher?->name ?? $s->classRoom?->teacher?->name ?? 'Belum Ditapis',
+                'teacherName' => $s->teacher?->name ?? $s->classRoom?->primaryTeacher?->name ?? 'Belum Ditapis',
                 'className' => $s->classRoom?->name ?? 'Belum Ditapis',
             ];
         });
@@ -261,7 +261,7 @@ class StudentController extends Controller
 
     public function dashboard($id)
     {
-        $student = Student::with(['classRoom.teacher', 'teacher'])->findOrFail($id);
+        $student = Student::with(['classRoom.primaryTeacher', 'teacher'])->findOrFail($id);
         
         // Calculate streak
         $dates = HafazanRecord::where('student_id', $id)
@@ -311,7 +311,7 @@ class StudentController extends Controller
                 'id' => $student->id,
                 'name' => $student->name,
                 'className' => $student->classRoom?->name ?? 'Tiada Kelas',
-                'teacherName' => $student->classRoom?->teacher?->name ?? $student->teacher?->name ?? 'Tiada Murabbi',
+                'teacherName' => $student->classRoom?->primaryTeacher?->name ?? $student->teacher?->name ?? 'Tiada Murabbi',
             ]
         ]);
     }

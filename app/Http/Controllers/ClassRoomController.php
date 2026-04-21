@@ -9,7 +9,7 @@ class ClassRoomController extends Controller
 {
     public function index()
     {
-        $classes = ClassRoom::with('teacher')->get()->map(function ($cls) {
+        $classes = ClassRoom::with('primaryTeacher')->get()->map(function ($cls) {
             $cls->teacherId = $cls->teacher_id;
             $cls->studentIds = \App\Models\Student::where('class_id', $cls->id)->pluck('id');
             return $cls;

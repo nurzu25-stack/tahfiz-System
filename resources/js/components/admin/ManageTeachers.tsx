@@ -9,7 +9,7 @@ export function ManageTeachers() {
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEditClassModal, setShowEditClassModal] = useState(false);
-  const [addForm, setAddForm] = useState({ name: '', email: '', phone: '', specialization: '' });
+  const [addForm, setAddForm] = useState({ name: '', email: '', phone: '', icNo: '', username: '', specialization: '' });
   const [addClassForm, setAddClassForm] = useState({ name: '', capacity: 20, teacherId: '' });
   const [editClassForm, setEditClassForm] = useState<any>(null);
   const [editForm, setEditForm] = useState<any>(null);
@@ -86,7 +86,7 @@ export function ManageTeachers() {
         status: 'Aktif'
       });
       dispatch({ type: 'ADD_TEACHER', payload: response.data });
-      setAddForm({ name: '', email: '', phone: '', specialization: '' });
+      setAddForm({ name: '', email: '', phone: '', icNo: '', username: '', specialization: '' });
       setShowAddModal(false);
     } catch (error) {
       console.error('Error adding teacher:', error);
@@ -307,6 +307,10 @@ export function ManageTeachers() {
             <form className="space-y-4" onSubmit={handleAdd}>
               <div><label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label><input required className={inputCls} placeholder="Ustaz / Ustazah name" value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} /></div>
               <div><label className="block text-sm font-medium text-gray-700 mb-2">Email</label><input type="email" required className={inputCls} placeholder="teacher@akmal.edu.my" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className="block text-sm font-medium text-gray-700 mb-2">ID Log Masuk (Username)</label><input className={inputCls} placeholder="e.g. murabbi_alif" value={addForm.username} onChange={e => setAddForm({ ...addForm, username: e.target.value })} /></div>
+                <div><label className="block text-sm font-medium text-gray-700 mb-2">No. IC (Opsional)</label><input className={inputCls} placeholder="Jika ada" value={addForm.icNo} onChange={e => setAddForm({ ...addForm, icNo: e.target.value })} /></div>
+              </div>
               <div><label className="block text-sm font-medium text-gray-700 mb-2">Phone</label><input type="tel" required className={inputCls} placeholder="+60 12-345 6789" value={addForm.phone} onChange={e => setAddForm({ ...addForm, phone: e.target.value })} /></div>
               <div><label className="block text-sm font-medium text-gray-700 mb-2">Specialization</label><input className={inputCls} placeholder="e.g. Hafazan & Tajweed" value={addForm.specialization} onChange={e => setAddForm({ ...addForm, specialization: e.target.value })} /></div>
               <div className="flex gap-3 pt-4">

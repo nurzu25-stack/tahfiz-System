@@ -34,6 +34,7 @@ class AttendanceController extends Controller
                     ],
                     [
                         'class_id' => $record['classId'],
+                        'teacher_id' => $request->teacherId ?? $record['teacherId'] ?? null,
                         'status' => $record['status'],
                         'remarks' => $record['remarks'] ?? null,
                     ]

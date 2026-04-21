@@ -93,7 +93,8 @@ class TeacherController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email', // Check uniqueness in users table
             'phone' => 'required|string|max:20',
-            'icNo' => 'required|string|unique:teachers,ic_no', // IC is mandatory for account creation
+            'icNo' => 'nullable|string|unique:teachers,ic_no', // IC is now optional
+            'username' => 'nullable|string|unique:users,name', // User can provide a custom username
             'specialization' => 'nullable|string|max:255',
             'status' => 'string|in:Aktif,Tidak Aktif',
             'joinedDate' => 'nullable|date',
@@ -107,12 +108,18 @@ class TeacherController extends Controller
             'serviceStartDate' => 'nullable|date',
         ]);
 
+        // Determine Login ID (Username)
+        // Order: Custom Username -> IC No -> Email Prefix
+        $loginId = $validated['username'] 
+                   ?? $validated['icNo'] 
+                   ?? explode('@', $validated['email'])[0];
+
         // 1. Create User Account
         $user = \App\Models\User::create([
-            'name' => $validated['icNo'], // IC as initial username
+            'name' => $loginId,
             'full_name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => \Illuminate\Support\Facades\Hash::make($validated['icNo']), // IC as initial password
+            'password' => \Illuminate\Support\Facades\Hash::make($loginId), // Use login ID as initial password
             'role' => 'teacher',
             'status' => 'active',
         ]);
@@ -123,7 +130,7 @@ class TeacherController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
-            'ic_no' => $validated['icNo'],
+            'ic_no' => $validated['icNo'] ?? null,
             'specialization' => $validated['specialization'] ?? null,
             'status' => $validated['status'] ?? 'Aktif',
             'joined_date' => $validated['joinedDate'] ?? now()->format('Y-m-d'),
